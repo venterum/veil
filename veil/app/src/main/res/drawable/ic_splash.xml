@@ -1,0 +1,10 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="48dp"
+        android:height="48dp"
+        android:gravity="center">
+        <inset
+            android:drawable="@drawable/ic_launcher_foreground"
+            android:inset="6.25%" />
+    </item>
+</layer-list>

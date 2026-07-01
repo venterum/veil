@@ -3,7 +3,7 @@
     <background android:drawable="@color/ic_banner_background" />
     <foreground>
         <inset
-            android:drawable="@mipmap/ic_launcher_foreground"
+            android:drawable="@drawable/ic_launcher_foreground"
             android:inset="10%" />
     </foreground>
     <monochrome>

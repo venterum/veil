@@ -58,6 +58,10 @@
         <item name="android:statusBarColor">@color/md_theme_surface</item>
         <item name="android:navigationBarColor">@color/md_theme_surface</item>
         <item name="preferenceTheme">@style/ThemeOverlay.App.Preference</item>
+
+        <!-- Splash screen (Android 12+) -->
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_splash</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="31">@color/ic_launcher_background</item>
     </style>
 
     <!-- Day/Night theme: inherit common values and set light-mode-specific items -->
