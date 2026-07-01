@@ -1,5 +1,4 @@
-# Документация veil
+# veil documentation
 
-- [Архитектура](architecture.md) — устройство ядра, Xray + olcRTC
-- [Сборка](build.md) — инструкция по сборке APK
-- [olcRTC](olcrtc.md) — настройка olcRTC-профилей
+- [EN](en/index.md)
+- [RU](ru/index.md)

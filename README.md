@@ -134,7 +134,6 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 - [Xray-core](https://github.com/XTLS/Xray-core) and [v2fly/v2ray-core](https://github.com/v2fly/v2ray-core)
 - [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) by heiher
 - [olcRTC](https://github.com/openlibrecommunity/olcrtc) by openlibrecommunity
-- Google Sans Flex (bundled under its respective font license)
 
 ## License
 

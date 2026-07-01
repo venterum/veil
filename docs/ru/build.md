@@ -15,7 +15,7 @@ git clone --recurse-submodules <repo-url>
 git submodule update --init --recursive
 ```
 
-olcrtc должен быть расположен рядом с проектом:
+Репозиторий `olcrtc` должен быть рядом с проектом:
 
 ```
 ../olcrtc/
@@ -39,7 +39,7 @@ mage aar:android ANDROIDLIBXRAYLITE=../AndroidLibXrayLite
 cp build/olcrtc.aar ../veil/veil/app/libs/libv2ray.aar
 ```
 
-Либо скачать стандартный `libv2ray.aar` из [релизов AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite/releases) — в этом случае olcRTC работать **не будет**, так как в стандартном AAR нет пакета `mobile.*`.
+Либо скачать стандартный `libv2ray.aar` из [релизов AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite/releases) — olcRTC работать **не будет** (в стандартном AAR нет пакета `mobile.*`).
 
 ## Шаг 3: APK
 
@@ -49,7 +49,7 @@ cd veil
 ./gradlew assembleDebug
 ```
 
-APK будут в `veil/app/build/outputs/apk/debug/`.
+APK в `veil/app/build/outputs/apk/debug/`.
 
 ## Файлы на выходе
 
@@ -62,8 +62,8 @@ veil/app/libs/
   └── x86_64/libhev-socks5-tunnel.so
 ```
 
-## Что важно знать
+## Примечания
 
-- `libv2ray.aar` НЕ инклюдится в git (`.gitignore`). Это локальный артефакт сборки.
-- Стандартный AAR от 2dust **не содержит** `mobile.*` — olcRTC не заработает.
+- `libv2ray.aar` не отслеживается в git (`.gitignore`). Это локальный артефакт сборки.
+- Стандартный AAR от 2dust **не содержит** `mobile.*` — olcRTC не будет работать без кастомной сборки.
 - `olcrtc/` — отдельный проект со своей git-историей.
