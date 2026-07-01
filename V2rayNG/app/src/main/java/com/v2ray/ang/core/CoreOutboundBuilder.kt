@@ -32,6 +32,7 @@ object CoreOutboundBuilder {
             EConfigType.WIREGUARD -> toOutboundWireguard(profileItem)
             EConfigType.HYSTERIA2 -> toOutboundHysteria2(profileItem)
             EConfigType.HTTP -> toOutboundHttp(profileItem)
+            EConfigType.OLCRTC -> toOutboundOlcrtc(profileItem)
             else -> null
         }
 
@@ -247,6 +248,17 @@ object CoreOutboundBuilder {
                 socksUsersBean.pass = profileItem.password.orEmpty()
                 server.users = listOf(socksUsersBean)
             }
+        }
+
+        return outboundBean
+    }
+
+    private fun toOutboundOlcrtc(profileItem: ProfileItem): OutboundBean? {
+        val outboundBean = createInitOutbound(EConfigType.SOCKS) ?: return null
+
+        outboundBean.settings?.servers?.first()?.let { server ->
+            server.address = AppConfig.LOOPBACK
+            server.port = (profileItem.serverPort ?: AppConfig.PORT_OLCRTC_SOCKS).toInt()
         }
 
         return outboundBean

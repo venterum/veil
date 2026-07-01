@@ -12,7 +12,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:titleTextAppearance="@style/TextAppearance.AppCompat.Title" />
+        app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge" />
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progress_bar"
@@ -21,7 +21,7 @@
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         android:indeterminate="true"
         android:visibility="gone"
-        app:indicatorColor="@color/color_fab_active" />
+        app:indicatorColor="?attr/colorPrimary" />
 
     <FrameLayout
         android:id="@+id/content_container"

@@ -1,7 +1,7 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
@@ -65,7 +65,7 @@ class CheckUpdateActivity : BaseActivity() {
     }
 
     private fun showUpdateDialog(result: CheckUpdateResult) {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.update_new_version_found, result.latestVersion))
             .setMessage(result.releaseNotes)
             .setPositiveButton(R.string.update_now) { _, _ ->

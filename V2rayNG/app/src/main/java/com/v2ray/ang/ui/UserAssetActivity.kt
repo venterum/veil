@@ -1,7 +1,7 @@
 package com.v2ray.ang.ui
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -78,7 +78,7 @@ class UserAssetActivity : HelperBaseActivity() {
     }
 
     private fun setGeoFilesSources() {
-        AlertDialog.Builder(this).setItems(AppConfig.GEO_FILES_SOURCES.toTypedArray()) { _, i ->
+        MaterialAlertDialogBuilder(this).setItems(AppConfig.GEO_FILES_SOURCES.toTypedArray()) { _, i ->
             try {
                 val value = AppConfig.GEO_FILES_SOURCES[i]
                 MmkvManager.encodeSettings(AppConfig.PREF_GEO_FILES_SOURCES, value)
@@ -219,7 +219,7 @@ class UserAssetActivity : HelperBaseActivity() {
                 ?: return
             val file = extDir.listFiles()?.find { it.name == asset.assetUrl.remarks }
 
-            AlertDialog.Builder(ownerActivity).setMessage(R.string.del_config_comfirm)
+            MaterialAlertDialogBuilder(ownerActivity).setMessage(R.string.del_config_comfirm)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     file?.delete()
                     MmkvManager.removeAssetUrl(guid)

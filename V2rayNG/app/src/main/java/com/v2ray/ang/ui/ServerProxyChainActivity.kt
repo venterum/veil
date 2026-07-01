@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.v2ray.ang.AppConfig
@@ -13,6 +13,7 @@ import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ActivityServerProxyChainBinding
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.extension.finishWithMaterialTransition
 import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastSuccess
@@ -131,7 +132,7 @@ class ServerProxyChainActivity : BaseActivity() {
             SettingsChangeManager.makeRestartService()
         }
         toastSuccess(R.string.toast_success)
-        finish()
+        finishWithMaterialTransition()
         return true
     }
 
@@ -139,10 +140,10 @@ class ServerProxyChainActivity : BaseActivity() {
         if (editGuid.isNotEmpty()) {
             if (editGuid != MmkvManager.getSelectServer()) {
                 if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
-                    AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
+                    MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
                         .setPositiveButton(android.R.string.ok) { _, _ ->
                             MmkvManager.removeServer(editGuid)
-                            finish()
+                            finishWithMaterialTransition()
                         }
                         .setNegativeButton(android.R.string.cancel) { _, _ ->
                             // do nothing
@@ -150,7 +151,7 @@ class ServerProxyChainActivity : BaseActivity() {
                         .show()
                 } else {
                     MmkvManager.removeServer(editGuid)
-                    finish()
+                    finishWithMaterialTransition()
                 }
             } else {
                 toast(R.string.toast_action_not_allowed)

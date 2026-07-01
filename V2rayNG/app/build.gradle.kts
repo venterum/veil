@@ -9,7 +9,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.v2ray.ang"
+        applicationId = "com.vntrum.veil"
         minSdk = 24
         targetSdk = 37
         versionCode = 735
@@ -48,19 +48,6 @@ android {
         }
     }
 
-    flavorDimensions.add("distribution")
-    productFlavors {
-        create("fdroid") {
-            dimension = "distribution"
-            applicationIdSuffix = ".fdroid"
-            buildConfigField("String", "DISTRIBUTION", "\"F-Droid\"")
-        }
-        create("playstore") {
-            dimension = "distribution"
-            buildConfigField("String", "DISTRIBUTION", "\"Play Store\"")
-        }
-    }
-
     sourceSets {
         getByName("main") {
             jniLibs.srcDirs("libs")
@@ -81,46 +68,21 @@ android {
 
     applicationVariants.all {
         val variant = this
-        val isFdroid = variant.productFlavors.any { it.name == "fdroid" }
-        if (isFdroid) {
-            val versionCodes =
-                mapOf(
-                    "armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0
-                )
+        val versionCodes =
+            mapOf(
+                "armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0
+            )
 
-            variant.outputs
-                .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-                .forEach { output ->
-                    val abi = output.getFilter("ABI") ?: "universal"
-                    output.outputFileName = "v2rayNG_${variant.versionName}-fdroid_${abi}.apk"
-                    if (versionCodes.containsKey(abi)) {
-                        output.versionCodeOverride =
-                            (100 * variant.versionCode + versionCodes[abi]!!).plus(5000000)
-                    } else {
-                        return@forEach
-                    }
+        variant.outputs
+            .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
+            .forEach { output ->
+                val abi = output.getFilter("ABI") ?: "universal"
+                output.outputFileName = "veil_${variant.versionName}_${abi}.apk"
+                if (versionCodes.containsKey(abi)) {
+                    output.versionCodeOverride =
+                        (100 * variant.versionCode + versionCodes[abi]!!).plus(5000000)
                 }
-        } else {
-            val versionCodes =
-                mapOf("armeabi-v7a" to 4, "arm64-v8a" to 4, "x86" to 4, "x86_64" to 4, "universal" to 4)
-
-            variant.outputs
-                .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-                .forEach { output ->
-                    val abi = if (output.getFilter("ABI") != null)
-                        output.getFilter("ABI")
-                    else
-                        "universal"
-
-                    output.outputFileName = "v2rayNG_${variant.versionName}_${abi}.apk"
-                    if (versionCodes.containsKey(abi)) {
-                        output.versionCodeOverride =
-                            (1000000 * versionCodes[abi]!!).plus(variant.versionCode)
-                    } else {
-                        return@forEach
-                    }
-                }
-        }
+            }
     }
 
     buildFeatures {
@@ -173,6 +135,9 @@ dependencies {
     // Intent and Utility Libraries
     implementation(libs.quickie.foss)
     implementation(libs.core)
+
+    // Animation
+    implementation(libs.dynamicanimation)
 
     // AndroidX Lifecycle and Architecture Components
     implementation(libs.lifecycle.viewmodel.ktx)

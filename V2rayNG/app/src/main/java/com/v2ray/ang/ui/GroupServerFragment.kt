@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -20,9 +20,12 @@ import com.v2ray.ang.databinding.ItemQrcodeBinding
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isComplexType
+import com.v2ray.ang.extension.launchWithMaterialTransition
+import com.v2ray.ang.extension.startActivityWithMaterialTransition
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
+import androidx.recyclerview.widget.DefaultItemAnimator
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
@@ -72,8 +75,13 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
         } else {
             binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
         }
-        addCustomDividerToRecyclerView(binding.recyclerView, R.drawable.custom_divider)
         binding.recyclerView.adapter = adapter
+        binding.recyclerView.itemAnimator = DefaultItemAnimator().apply {
+            addDuration = 300L
+            removeDuration = 300L
+            moveDuration = 300L
+            changeDuration = 250L
+        }
 
         itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false))
         itemTouchHelper?.attachToRecyclerView(binding.recyclerView)
@@ -109,7 +117,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
      * @param skip The number of options to skip
      */
     private fun shareServer(guid: String, profile: ProfileItem, position: Int, shareOptions: List<String>, skip: Int) {
-        AlertDialog.Builder(ownerActivity).setItems(shareOptions.toTypedArray()) { _, i ->
+        MaterialAlertDialogBuilder(ownerActivity).setItems(shareOptions.toTypedArray()) { _, i ->
             try {
                 when (i + skip) {
                     0 -> showQRCode(guid)
@@ -137,7 +145,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
         } else {
             ivBinding.ivQcode.contentDescription = "QR Code"
         }
-        AlertDialog.Builder(ownerActivity).setView(ivBinding.root).show()
+        MaterialAlertDialogBuilder(ownerActivity).setView(ivBinding.root).show()
     }
 
     /**
@@ -180,6 +188,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
             EConfigType.CUSTOM -> ServerCustomConfigActivity::class.java
             EConfigType.POLICYGROUP -> ServerGroupActivity::class.java
             EConfigType.PROXYCHAIN -> ServerProxyChainActivity::class.java
+            EConfigType.OLCRTC -> OlcrtcActivity::class.java
             else -> ServerActivity::class.java
         }
 
@@ -189,7 +198,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
             .putExtra("createConfigType", profile.configType.value)
             .putExtra("subscriptionId", subId)
 
-        launcher.launch(intent)
+        launcher.launchWithMaterialTransition(ownerActivity, intent)
     }
 
     /**
@@ -205,7 +214,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
         }
 
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
-            AlertDialog.Builder(ownerActivity).setMessage(R.string.del_config_comfirm)
+            MaterialAlertDialogBuilder(ownerActivity).setMessage(R.string.del_config_comfirm)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     removeServerSub(guid, position)
                 }
@@ -238,6 +247,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
         val selected = MmkvManager.getSelectServer()
         if (guid != selected) {
             MmkvManager.setSelectServer(guid)
+            LogUtil.w(AppConfig.TAG, "GroupServerFragment: selected server changed to guid=$guid")
             val fromPosition = mainViewModel.getPosition(selected.orEmpty())
             val toPosition = mainViewModel.getPosition(guid)
             adapter.setSelectServer(fromPosition, toPosition)

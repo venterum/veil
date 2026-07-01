@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +16,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ActivitySubSettingBinding
 import com.v2ray.ang.databinding.ItemQrcodeBinding
+import com.v2ray.ang.extension.startActivityWithMaterialTransition
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
@@ -67,7 +68,7 @@ class SubSettingActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.add_config -> {
-            startActivity(Intent(this, SubEditActivity::class.java))
+            startActivityWithMaterialTransition(Intent(this, SubEditActivity::class.java))
             true
         }
 
@@ -110,7 +111,7 @@ class SubSettingActivity : BaseActivity() {
 
     private inner class ActivityAdapterListener : BaseAdapterListener {
         override fun onEdit(guid: String, position: Int) {
-            startActivity(
+            startActivityWithMaterialTransition(
                 Intent(ownerActivity, SubEditActivity::class.java)
                     .putExtra("subId", guid)
             )
@@ -118,7 +119,7 @@ class SubSettingActivity : BaseActivity() {
 
         override fun onRemove(guid: String, position: Int) {
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
-                AlertDialog.Builder(ownerActivity)
+                MaterialAlertDialogBuilder(ownerActivity)
                     .setMessage(R.string.del_config_comfirm)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         viewModel.remove(guid)
@@ -133,7 +134,7 @@ class SubSettingActivity : BaseActivity() {
         }
 
         override fun onShare(url: String) {
-            AlertDialog.Builder(ownerActivity)
+            MaterialAlertDialogBuilder(ownerActivity)
                 .setItems(share_method.asList().toTypedArray()) { _, i ->
                     try {
                         when (i) {
@@ -146,7 +147,7 @@ class SubSettingActivity : BaseActivity() {
 
                                     )
                                 )
-                                AlertDialog.Builder(ownerActivity).setView(ivBinding.root).show()
+                                MaterialAlertDialogBuilder(ownerActivity).setView(ivBinding.root).show()
                             }
 
                             1 -> {

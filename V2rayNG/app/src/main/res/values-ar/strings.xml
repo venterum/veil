@@ -420,6 +420,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>بروكسي فقط</item>
+        <item>Proxy + TUN</item>
     </string-array>
 
     <string-array name="ui_mode_night">

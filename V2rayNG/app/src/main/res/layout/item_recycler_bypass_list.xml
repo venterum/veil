@@ -1,48 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackground"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="2dp"
     android:clickable="true"
     android:focusable="true"
-    android:gravity="center_vertical"
-    android:padding="@dimen/padding_spacing_dp8">
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icon"
-        android:layout_width="@dimen/view_height_dp48"
-        android:layout_height="@dimen/view_height_dp48"
-        android:padding="@dimen/padding_spacing_dp8" />
+    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:rippleColor="?attr/colorPrimary"
+    app:strokeWidth="0dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1.0"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/padding_spacing_dp16"
+        android:paddingTop="@dimen/padding_spacing_dp8"
+        android:paddingEnd="@dimen/padding_spacing_dp8"
+        android:paddingBottom="@dimen/padding_spacing_dp8">
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/package_name"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:maxLines="3"
-            android:paddingTop="@dimen/padding_spacing_dp8"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+            android:layout_marginStart="@dimen/padding_spacing_dp16"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/package_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:paddingTop="2dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/check_box"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/padding_spacing_dp8"
+            android:clickable="false"
+            android:focusable="false" />
+
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatCheckBox
-        android:id="@+id/check_box"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="false"
-        android:focusable="false"
-        android:padding="@dimen/padding_spacing_dp8" />
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -12,7 +12,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.DEFAULT_PORT
@@ -24,6 +24,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.enums.NetworkType
+import com.v2ray.ang.extension.finishWithMaterialTransition
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.extension.nullIfBlank
 import com.v2ray.ang.extension.toast
@@ -546,7 +547,7 @@ class ServerActivity : BaseActivity() {
             SettingsChangeManager.makeRestartService()
         }
         toastSuccess(R.string.toast_success)
-        finish()
+        finishWithMaterialTransition()
         return true
     }
 
@@ -725,10 +726,10 @@ class ServerActivity : BaseActivity() {
         if (editGuid.isNotEmpty()) {
             if (editGuid != MmkvManager.getSelectServer()) {
                 if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
-                    AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
+                    MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
                         .setPositiveButton(android.R.string.ok) { _, _ ->
                             MmkvManager.removeServer(editGuid)
-                            finish()
+                            finishWithMaterialTransition()
                         }
                         .setNegativeButton(android.R.string.cancel) { _, _ ->
                             // do nothing
@@ -736,7 +737,7 @@ class ServerActivity : BaseActivity() {
                         .show()
                 } else {
                     MmkvManager.removeServer(editGuid)
-                    finish()
+                    finishWithMaterialTransition()
                 }
             } else {
                 toast(R.string.toast_action_not_allowed)

@@ -7,13 +7,14 @@ import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.ImageButton
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivitySubEditBinding
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.extension.finishWithMaterialTransition
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
@@ -167,7 +168,7 @@ class SubEditActivity : BaseActivity() {
         MmkvManager.encodeSubscription(editSubId, subItem)
         SubscriptionUpdater.syncOne(subId = editSubId)
         toastSuccess(R.string.toast_success)
-        finish()
+        finishWithMaterialTransition()
         return true
     }
 
@@ -177,12 +178,12 @@ class SubEditActivity : BaseActivity() {
     private fun deleteServer(): Boolean {
         if (editSubId.isNotEmpty()) {
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
-                AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
+                MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         lifecycleScope.launch(Dispatchers.IO) {
                             SettingsManager.removeSubscriptionWithDefault(editSubId)
                             launch(Dispatchers.Main) {
-                                finish()
+                                finishWithMaterialTransition()
                             }
                         }
                     }
@@ -194,7 +195,7 @@ class SubEditActivity : BaseActivity() {
                 lifecycleScope.launch(Dispatchers.IO) {
                     SettingsManager.removeSubscriptionWithDefault(editSubId)
                     launch(Dispatchers.Main) {
-                        finish()
+                        finishWithMaterialTransition()
                     }
                 }
             }

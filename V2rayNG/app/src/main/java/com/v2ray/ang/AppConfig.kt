@@ -46,12 +46,18 @@ object AppConfig {
     const val SUBSCRIPTION_UPDATE_TASK_NAME = "subscription_updater"
     const val SUBSCRIPTION_MIN_INTERVAL_MINUTES = 15L
     const val PREF_SPEED_ENABLED = "pref_speed_enabled"
+    const val PREF_SPEED_TOOLBAR_ENABLED = "pref_speed_toolbar_enabled"
     const val PREF_CONFIRM_REMOVE = "pref_confirm_remove"
     const val PREF_START_SCAN_IMMEDIATE = "pref_start_scan_immediate"
     const val PREF_DOUBLE_COLUMN_DISPLAY = "pref_double_column_display"
     const val PREF_GROUP_ALL_DISPLAY = "pref_group_all_display"
     const val PREF_LANGUAGE = "pref_language"
     const val PREF_UI_MODE_NIGHT = "pref_ui_mode_night"
+    const val PREF_DYNAMIC_COLOR = "pref_dynamic_color"
+    const val PREF_SYSTEM_FONT = "pref_system_font"
+    const val PREF_MAIN_UI_MODE = "pref_main_ui_mode"
+    const val PREF_TOOLBAR_POSITION_TOP = "pref_toolbar_position_top"
+    const val PREF_SERVER_CARD_STYLE = "pref_server_card_style"
     const val PREF_IPV6_ENABLED = "pref_ipv6_enabled"
     const val PREF_PREFER_IPV6 = "pref_prefer_ipv6"
     const val PREF_PROXY_SHARING = "pref_proxy_sharing_enabled"
@@ -72,12 +78,15 @@ object AppConfig {
     const val PREF_IS_BOOTED = "pref_is_booted"
     const val PREF_CHECK_UPDATE_PRE_RELEASE = "pref_check_update_pre_release"
     const val PREF_GEO_FILES_SOURCES = "pref_geo_files_sources"
+    const val PREF_TUN_ENABLED = "pref_tun_enabled"
     const val PREF_USE_HEV_TUNNEL = "pref_use_hev_tunnel_v2"
     const val PREF_HEV_TUNNEL_LOGLEVEL = "pref_hev_tunnel_loglevel"
     const val PREF_HEV_TUNNEL_RW_TIMEOUT = "pref_hev_tunnel_rw_timeout_v2"
     const val PREF_AUTO_REMOVE_INVALID_AFTER_TEST = "pref_auto_remove_invalid_after_test"
     const val PREF_AUTO_SORT_AFTER_TEST = "pref_auto_sort_after_test"
     const val PREF_REAL_PING_CONCURRENCY = "pref_real_ping_concurrency"
+    const val PREF_OLCRTC_SOCKS_PORT = "pref_olcrtc_socks_port"
+    const val PREF_OLCRTC_MODE = "pref_olcrtc_mode"
 
     /** Cache keys. */
     const val CACHE_SUBSCRIPTION_ID = "cache_subscription_id"
@@ -147,6 +156,7 @@ object AppConfig {
     /** Ports and addresses for various services. */
     const val PORT_LOCAL_DNS = "10853"
     const val PORT_SOCKS = "10808"
+    const val PORT_OLCRTC_SOCKS = "10809"
     const val WIREGUARD_LOCAL_ADDRESS_V4 = "172.16.0.2/32"
     const val WIREGUARD_LOCAL_ADDRESS_V6 = "2606:4700:110:8f81:d551:a0:532e:a2b3/128"
     const val WIREGUARD_LOCAL_MTU = "1420"
@@ -156,6 +166,7 @@ object AppConfig {
     const val MSG_REGISTER_CLIENT = 1
     const val MSG_STATE_RUNNING = 11
     const val MSG_STATE_NOT_RUNNING = 12
+    const val MSG_NET_SPEED = 13
     const val MSG_UNREGISTER_CLIENT = 2
     const val MSG_STATE_START = 3
     const val MSG_STATE_START_SUCCESS = 31
@@ -170,6 +181,7 @@ object AppConfig {
     const val MSG_MEASURE_CONFIG_SUCCESS = 72
     const val MSG_MEASURE_CONFIG_NOTIFY = 73
     const val MSG_MEASURE_CONFIG_FINISH = 74
+    const val ACTION_STOP_TUN = "com.v2ray.ang.ACTION_STOP_TUN"
 
     /** Notification channel IDs and names. */
     const val RAY_NG_CHANNEL_ID = "RAY_NG_M_CH_ID"
@@ -190,9 +202,11 @@ object AppConfig {
     const val HYSTERIA = "hysteria://"
     const val HYSTERIA2 = "hysteria2://"
     const val HY2 = "hy2://"
+    const val OLCRTC = "olcrtc://"
 
     /** Give a good name to this, IDK*/
     const val VPN = "VPN"
+    const val PROXY_TUN = "ProxyTun"
     const val VPN_MTU = 1500
 
     /** hev-sock5-tunnel read-write-timeout value */

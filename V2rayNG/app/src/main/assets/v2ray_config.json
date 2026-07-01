@@ -7,9 +7,7 @@
       "levels": {
         "8": {
           "handshake": 4,
-          "connIdle": 300,
-          "uplinkOnly": 1,
-          "downlinkOnly": 1
+          "connIdle": 300
         }
       },
       "system": {

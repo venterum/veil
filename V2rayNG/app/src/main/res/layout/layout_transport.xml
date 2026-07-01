@@ -208,7 +208,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp4"
             android:text="@string/server_lab_browser_dialer_tip"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>

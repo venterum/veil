@@ -15,6 +15,7 @@ import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.fmt.CustomFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
+import com.v2ray.ang.fmt.OlcrtcFmt
 import com.v2ray.ang.fmt.ShadowsocksFmt
 import com.v2ray.ang.fmt.SocksFmt
 import com.v2ray.ang.fmt.TrojanFmt
@@ -42,7 +43,8 @@ object AngConfigManager {
             EConfigType.VLESS.protocolScheme to VlessFmt::parse,
             EConfigType.WIREGUARD.protocolScheme to WireguardFmt::parse,
             EConfigType.HYSTERIA2.protocolScheme to Hysteria2Fmt::parse,
-            AppConfig.HY2 to Hysteria2Fmt::parse
+            AppConfig.HY2 to Hysteria2Fmt::parse,
+            EConfigType.OLCRTC.protocolScheme to OlcrtcFmt::parse
         )
     }
 
@@ -158,6 +160,7 @@ object AngConfigManager {
                 EConfigType.TROJAN -> TrojanFmt.toUri(config)
                 EConfigType.WIREGUARD -> WireguardFmt.toUri(config)
                 EConfigType.HYSTERIA2 -> Hysteria2Fmt.toUri(config)
+                EConfigType.OLCRTC -> OlcrtcFmt.toUri(config)
                 else -> {}
             }
         } catch (e: Exception) {

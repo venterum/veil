@@ -3,27 +3,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="@string/title_ui_settings">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_speed_enabled"
             android:summary="@string/summary_pref_speed_enabled"
             android:title="@string/title_pref_speed_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:key="pref_speed_toolbar_enabled"
+            android:summary="@string/summary_pref_speed_toolbar_enabled"
+            android:title="@string/title_pref_speed_toolbar_enabled" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_confirm_remove"
             android:summary="@string/summary_pref_confirm_remove"
             android:title="@string/title_pref_confirm_remove" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_start_scan_immediate"
             android:summary="@string/summary_pref_start_scan_immediate"
             android:title="@string/title_pref_start_scan_immediate" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:defaultValue="true"
             android:key="pref_double_column_display"
             android:summary="@string/summary_pref_double_column_display"
             android:title="@string/title_pref_double_column_display" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:defaultValue="true"
+            android:key="pref_server_card_style"
+            android:summary="@string/summary_pref_server_card_style"
+            android:title="@string/title_pref_server_card_style" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_group_all_display"
             android:summary="@string/summary_pref_group_all_display"
             android:title="@string/title_pref_group_all_display" />
@@ -44,35 +63,61 @@
             android:summary="%s"
             android:title="@string/title_pref_ui_mode_night" />
 
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:defaultValue="true"
+            android:key="pref_dynamic_color"
+            android:summary="@string/summary_pref_dynamic_color"
+            android:title="@string/title_pref_dynamic_color" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:defaultValue="false"
+            android:key="pref_system_font"
+            android:summary="@string/summary_pref_system_font"
+            android:title="@string/title_pref_system_font" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:defaultValue="false"
+            android:key="pref_toolbar_position_top"
+            android:summary="@string/summary_pref_toolbar_position_top"
+            android:title="@string/title_pref_toolbar_position_top" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/title_vpn_settings">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_ipv6_enabled"
             android:summary="@string/summary_pref_ipv6_enabled"
             android:title="@string/title_pref_ipv6_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_prefer_ipv6"
             android:summary="@string/summary_pref_prefer_ipv6"
             android:title="@string/title_pref_prefer_ipv6" />
 
-<!--        <CheckBoxPreference-->
+<!--        <SwitchPreferenceCompat-->
 <!--            android:key="pref_per_app_proxy"-->
 <!--            android:summary="@string/summary_pref_per_app_proxy"-->
 <!--            android:title="@string/title_pref_per_app_proxy" />-->
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_local_dns_enabled"
             android:summary="@string/summary_pref_local_dns_enabled"
             android:title="@string/title_pref_local_dns_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_fake_dns_enabled"
             android:summary="@string/summary_pref_fake_dns_enabled"
             android:title="@string/title_pref_fake_dns_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_append_http_proxy"
             android:summary="@string/summary_pref_append_http_proxy"
             android:title="@string/title_pref_append_http_proxy" />
@@ -110,7 +155,8 @@
             android:summary="1500"
             android:title="@string/title_pref_vpn_mtu" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="true"
             android:key="pref_use_hev_tunnel_v2"
             android:summary="@string/summary_pref_use_hev_tunnel"
@@ -132,25 +178,29 @@
 
     <PreferenceCategory android:title="@string/title_core_settings">
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="true"
             android:key="pref_sniffing_enabled"
             android:summary="@string/summary_pref_sniffing_enabled"
             android:title="@string/title_pref_sniffing_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="false"
             android:key="pref_route_only_enabled"
             android:summary="@string/summary_pref_route_only_enabled"
             android:title="@string/title_pref_route_only_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="true"
             android:key="pref_enable_local_proxy"
             android:summary="@string/summary_pref_enable_local_proxy"
             android:title="@string/title_pref_enable_local_proxy" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="false"
             android:key="pref_proxy_sharing_enabled"
             android:summary="@string/summary_pref_proxy_sharing_enabled"
@@ -162,7 +212,8 @@
             android:summary="10808"
             android:title="@string/title_pref_socks_port" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="false"
             android:key="pref_dynamic_socks_port"
             android:summary="@string/summary_pref_dynamic_socks_port"
@@ -174,12 +225,18 @@
             android:title="@string/title_pref_socks_username" />
 
         <EditTextPreference
-            android:inputType="textPassword"
+            android:inputType="text"
             android:key="pref_socks_password"
             android:summary="@string/summary_pref_socks_password"
             android:title="@string/title_pref_socks_password" />
 
-        <CheckBoxPreference
+        <Preference
+            android:key="pref_socks_generate_credentials"
+            android:summary="@string/summary_pref_socks_generate_credentials"
+            android:title="@string/title_pref_socks_generate_credentials" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="true"
             android:key="pref_socks_enable_udp"
             android:summary="@string/summary_pref_socks_enable_udp"
@@ -221,7 +278,8 @@
     <PreferenceCategory
         android:title="@string/title_mux_settings"
         app:initialExpandedChildrenCount="0">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_mux_enabled"
             android:summary="@string/summary_pref_mux_enabled"
             android:title="@string/title_pref_mux_enabled" />
@@ -250,7 +308,8 @@
     <PreferenceCategory
         android:title="@string/title_fragment_settings"
         app:initialExpandedChildrenCount="0">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_fragment_enabled"
             android:title="@string/title_pref_fragment_enabled" />
 
@@ -276,18 +335,21 @@
 
     <PreferenceCategory android:title="@string/title_advanced">
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_is_booted"
             android:summary="@string/summary_pref_is_booted"
             android:title="@string/title_pref_is_booted" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_auto_remove_invalid_after_test"
             android:defaultValue="false"
             android:summary="@string/summary_pref_auto_remove_invalid_after_test"
             android:title="@string/title_pref_auto_remove_invalid_after_test" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_auto_sort_after_test"
             android:defaultValue="false"
             android:summary="@string/summary_pref_auto_sort_after_test"

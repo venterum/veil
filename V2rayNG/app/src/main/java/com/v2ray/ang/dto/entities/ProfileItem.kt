@@ -70,6 +70,14 @@ data class ProfileItem(
 
     var browserDialerMode: String? = null,
 
+    var olcrtcCarrier: String? = null,
+    var olcrtcTransport: String? = null,
+    var olcrtcServerUrl: String? = null,
+    var olcrtcRoomId: String? = null,
+    var olcrtcClientId: String? = null,
+    var olcrtcKeyHex: String? = null,
+    var olcrtcEngine: String? = null,
+
     ) {
     companion object {
         fun create(configType: EConfigType): ProfileItem {
@@ -126,6 +134,13 @@ data class ProfileItem(
                 && this.portHoppingInterval == obj.portHoppingInterval
                 && this.pinnedCA256 == obj.pinnedCA256
                 && this.proxyChainProfiles == obj.proxyChainProfiles
+
+                && this.olcrtcCarrier == obj.olcrtcCarrier
+                && this.olcrtcTransport == obj.olcrtcTransport
+                && this.olcrtcServerUrl == obj.olcrtcServerUrl
+                && this.olcrtcRoomId == obj.olcrtcRoomId
+                && this.olcrtcClientId == obj.olcrtcClientId
+                && this.olcrtcKeyHex == obj.olcrtcKeyHex
                 )
     }
 }

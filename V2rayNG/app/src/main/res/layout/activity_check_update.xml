@@ -25,7 +25,7 @@
                 android:importantForAccessibility="no"
                 app:srcCompat="@drawable/ic_source_code_24dp" />
 
-            <androidx.appcompat.widget.SwitchCompat
+            <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/check_pre_release"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

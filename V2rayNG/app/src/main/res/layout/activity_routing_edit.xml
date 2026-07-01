@@ -42,7 +42,7 @@
                 android:layout_marginTop="@dimen/padding_spacing_dp16"
                 android:orientation="vertical">
 
-                <androidx.appcompat.widget.SwitchCompat
+                <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/chk_locked"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

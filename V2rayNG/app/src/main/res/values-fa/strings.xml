@@ -416,6 +416,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>فقط پروکسی</item>
+        <item>Proxy + TUN</item>
     </string-array>
     <string name="menu_item_add_asset">افزودن منبع</string>
     <string name="menu_item_add_url">افزودن لینک</string>

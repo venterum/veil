@@ -15,27 +15,35 @@ class LogcatViewModel : ViewModel() {
 
     fun loadLogcat() {
         try {
-            val lst = LinkedHashSet<String>()
-            lst.add("logcat")
-            lst.add("-d")
-            lst.add("-v")
-            lst.add("time")
-            lst.add("-s")
-            lst.add("GoLog,${ANG_PACKAGE},AndroidRuntime,System.err")
+            val lst = mutableListOf("logcat", "-d", "-v", "time", "-s")
+            lst.add("GoLog:I")
+            lst.add("${ANG_PACKAGE}:I")
+            lst.add("AndroidRuntime:E")
+            lst.add("System.err:E")
             val process = Runtime.getRuntime().exec(lst.toTypedArray())
-            val allText = process.inputStream.bufferedReader().use { it.readLines() }.reversed()
+            val stdout = process.inputStream.bufferedReader().use { it.readLines() }
+            val stderr = process.errorStream.bufferedReader().use { it.readLines() }
+            process.waitFor()
 
             logsetsAll.clear()
-            logsetsAll.addAll(allText)
+            logsetsAll.addAll(stdout.reversed())
+            if (stdout.isEmpty() && stderr.isNotEmpty()) {
+                logsetsAll.add("logcat error: ${stderr.joinToString("\n")}")
+            }
             applyFilter()
         } catch (e: IOException) {
             LogUtil.e(AppConfig.TAG, "Failed to get logcat", e)
+            logsetsAll.clear()
+            logsetsAll.add("Failed to get logcat: ${e.message}")
+            applyFilter()
+        } catch (e: InterruptedException) {
+            LogUtil.e(AppConfig.TAG, "Logcat interrupted", e)
         }
     }
 
     fun clearLogcat() {
         try {
-            val lst = LinkedHashSet<String>()
+            val lst = mutableListOf<String>()
             lst.add("logcat")
             lst.add("-c")
             val process = Runtime.getRuntime().exec(lst.toTypedArray())

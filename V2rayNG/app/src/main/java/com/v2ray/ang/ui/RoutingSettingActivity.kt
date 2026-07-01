@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -86,7 +86,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
     }
 
     private fun setDomainStrategy() {
-        android.app.AlertDialog.Builder(this).setItems(routing_domain_strategy.asList().toTypedArray()) { _, i ->
+        MaterialAlertDialogBuilder(this).setItems(routing_domain_strategy.asList().toTypedArray()) { _, i ->
             try {
                 val value = routing_domain_strategy[i]
                 MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY, value)
@@ -98,8 +98,8 @@ class RoutingSettingActivity : HelperBaseActivity() {
     }
 
     private fun importPredefined() {
-        AlertDialog.Builder(this).setItems(preset_rulesets.asList().toTypedArray()) { _, i ->
-            AlertDialog.Builder(this).setMessage(R.string.routing_settings_import_rulesets_tip)
+        MaterialAlertDialogBuilder(this).setItems(preset_rulesets.asList().toTypedArray()) { _, i ->
+            MaterialAlertDialogBuilder(this).setMessage(R.string.routing_settings_import_rulesets_tip)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     try {
                         lifecycleScope.launch(Dispatchers.IO) {
@@ -121,7 +121,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
     }
 
     private fun importFromClipboard() {
-        AlertDialog.Builder(this).setMessage(R.string.routing_settings_import_rulesets_tip)
+        MaterialAlertDialogBuilder(this).setMessage(R.string.routing_settings_import_rulesets_tip)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 val clipboard = try {
                     Utils.getClipboard(this)
@@ -169,7 +169,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
 
 
     private fun importRulesetsFromQRcode(qrcode: String?): Boolean {
-        AlertDialog.Builder(this).setMessage(R.string.routing_settings_import_rulesets_tip)
+        MaterialAlertDialogBuilder(this).setMessage(R.string.routing_settings_import_rulesets_tip)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     val result = SettingsManager.resetRoutingRulesets(qrcode)

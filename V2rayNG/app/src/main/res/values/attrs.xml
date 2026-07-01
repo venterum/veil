@@ -1,7 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="TabLayoutTextStyle" parent="TextAppearance.Design.Tab">
+    <style name="TabLayoutTextStyle" parent="TextAppearance.Material3.TitleSmall">
+        <item name="textAllCaps">false</item>
+        <item name="android:textFontWeight">600</item>
+    </style>
+
+    <style name="Widget.App.TabLayout.Expressive" parent="Widget.Material3.TabLayout">
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="tabMode">scrollable</item>
+        <item name="tabGravity">start</item>
+        <item name="tabIndicatorAnimationMode">elastic</item>
+        <item name="tabIndicatorGravity">stretch</item>
+        <item name="tabIndicatorFullWidth">true</item>
+        <item name="tabIndicator">@drawable/tab_indicator_expressive</item>
+        <item name="tabIndicatorColor">?attr/colorPrimaryContainer</item>
+        <item name="tabSelectedTextColor">?attr/colorOnPrimaryContainer</item>
+        <item name="tabTextColor">?attr/colorOnSurfaceVariant</item>
+        <item name="tabRippleColor">@color/tab_ripple_expressive</item>
+        <item name="tabTextAppearance">@style/TabLayoutTextStyle</item>
+        <item name="tabPaddingStart">@dimen/padding_spacing_dp16</item>
+        <item name="tabPaddingEnd">@dimen/padding_spacing_dp16</item>
+        <item name="tabMinWidth">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.App.NavItem" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.Drawer" parent="">
+        <item name="cornerSizeTopRight">22dp</item>
+        <item name="cornerSizeBottomRight">22dp</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.RoundedSquare" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.ListItem.Top" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">20dp</item>
+        <item name="cornerSizeTopRight">20dp</item>
+        <item name="cornerSizeBottomLeft">4dp</item>
+        <item name="cornerSizeBottomRight">4dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.ListItem.Middle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.ListItem.Bottom" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">4dp</item>
+        <item name="cornerSizeTopRight">4dp</item>
+        <item name="cornerSizeBottomLeft">20dp</item>
+        <item name="cornerSizeBottomRight">20dp</item>
+    </style>
+
+    <style name="Widget.App.ToolbarPill" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="cardElevation">2dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.App.Pill</item>
+    </style>
+
+    <style name="Widget.App.FabExpressive" parent="Widget.Material3.CardView.Filled">
+        <item name="cardElevation">3dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <style name="Widget.App.ListItem" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <style name="TextAppearance.App.NavItem" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textFontWeight">500</item>
         <item name="textAllCaps">false</item>
     </style>
+
+    <style name="Widget.App.NavigationView.Expressive" parent="Widget.Material3.NavigationView">
+        <item name="android:background">?attr/colorSurfaceContainerLow</item>
+        <item name="itemShapeAppearance">@style/ShapeAppearance.App.NavItem</item>
+        <item name="itemShapeFillColor">@color/nav_item_shape_color</item>
+        <item name="itemShapeInsetStart">12dp</item>
+        <item name="itemShapeInsetEnd">12dp</item>
+        <item name="itemShapeInsetTop">3dp</item>
+        <item name="itemShapeInsetBottom">3dp</item>
+        <item name="itemIconTint">@color/nav_item_color</item>
+        <item name="itemTextColor">@color/nav_item_color</item>
+        <item name="itemTextAppearance">@style/TextAppearance.App.NavItem</item>
+        <item name="itemIconSize">24dp</item>
+        <item name="itemHorizontalPadding">20dp</item>
+        <item name="itemVerticalPadding">6dp</item>
+        <item name="dividerInsetStart">28dp</item>
+        <item name="dividerInsetEnd">28dp</item>
+        <item name="subheaderColor">?attr/colorPrimary</item>
+        <item name="subheaderTextAppearance">@style/TextAppearance.Material3.TitleSmall</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Preference" parent="PreferenceThemeOverlay">
+        <item name="preferenceStyle">@style/Preference.App.Card</item>
+        <item name="preferenceCategoryStyle">@style/Preference.App.Category</item>
+        <item name="switchPreferenceCompatStyle">@style/Preference.App.Switch</item>
+        <item name="checkBoxPreferenceStyle">@style/Preference.App.CheckBox</item>
+        <item name="dialogPreferenceStyle">@style/Preference.App.Dialog</item>
+        <item name="editTextPreferenceStyle">@style/Preference.App.EditText</item>
+    </style>
+
+    <style name="Preference.App.Card" parent="Preference.Material">
+        <item name="android:layout">@layout/preference_card</item>
+    </style>
+
+    <style name="Preference.App.Switch" parent="Preference.SwitchPreferenceCompat.Material">
+        <item name="android:layout">@layout/preference_card</item>
+    </style>
+
+    <style name="Preference.App.CheckBox" parent="Preference.CheckBoxPreference.Material">
+        <item name="android:layout">@layout/preference_card</item>
+    </style>
+
+    <style name="Preference.App.Dialog" parent="Preference.DialogPreference.Material">
+        <item name="android:layout">@layout/preference_card</item>
+    </style>
+
+    <style name="Preference.App.EditText" parent="Preference.DialogPreference.EditTextPreference.Material">
+        <item name="android:layout">@layout/preference_card</item>
+    </style>
+
+    <style name="Preference.App.Category" parent="Preference.Category.Material">
+        <item name="android:layout">@layout/preference_category_card</item>
+    </style>
+
+    <style name="ThemeOverlay.App.SystemFont" parent="">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="fontFamily">sans-serif</item>
+    </style>
+
 </resources>

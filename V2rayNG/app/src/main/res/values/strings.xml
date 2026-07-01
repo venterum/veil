@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">v2rayNG</string>
+    <string name="app_name" translatable="false">Veil</string>
+    <string name="nav_header_subtitle">Material edition</string>
+    <string name="title_drawer_section_main">General</string>
+    <string name="title_drawer_section_more">More</string>
     <string name="app_widget_name">Switch</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">First use of this feature, please use the app to add server</string>
@@ -40,6 +43,7 @@
     <string name="menu_item_import_config_manually_trojan">Add [Trojan]</string>
     <string name="menu_item_import_config_manually_wireguard">Add [Wireguard]</string>
     <string name="menu_item_import_config_manually_hysteria2">Add [Hysteria2]</string>
+    <string name="menu_item_import_config_manually_olcrtc">Add [olcRTC]</string>
     <string name="del_config_comfirm">Confirm delete ?</string>
     <string name="del_invalid_config_comfirm">Please test before deleting! Confirm delete ?</string>
     <string name="server_lab_remarks">remarks</string>
@@ -122,6 +126,15 @@
     <string name="server_lab_pinned_ca256">Certificate fingerprint (SHA-256)</string>
     <string name="server_lab_browser_dialer">Enable Browser Dialer</string>
     <string name="server_lab_browser_dialer_tip">Only supports xhttp (packet-up) and ws outbound; TLS-related settings may be ignored or conflict</string>
+    <string name="olcrtc_lab_carrier">Carrier (auth provider)</string>
+    <string name="olcrtc_lab_transport">Transport</string>
+    <string name="olcrtc_lab_room_id">Room ID</string>
+    <string name="olcrtc_lab_server_url">Server URL (host[:port] for jitsi/telemost)</string>
+    <string name="olcrtc_hint_server_url">meet.egovm.ru</string>
+    <string name="olcrtc_lab_client_id">Client ID (device identifier)</string>
+    <string name="olcrtc_hint_client_id">Auto-generated UUID if empty</string>
+    <string name="olcrtc_lab_key_hex">Encryption key (64 hex chars)</string>
+    <string name="olcrtc_lab_engine">Transport parameters (key=value&amp;...)</string>
     <string name="toast_allow_insecure_deprecated">WARNING: Skipping certificate verification "allowInsecure" will be disabled in August 2026. Please use certificate fingerprints as soon as possible. This feature will not be available after its expiration.</string>
     <string name="pinned_ca256_action_fetch">Fetch and fill certificate fingerprint</string>
     <string name="toast_fetch_cert_sha256_success">Certificate fingerprint fetched successfully</string>
@@ -186,6 +199,24 @@
     <string name="summary_pref_speed_enabled">Display current speed in the notification.\nNotification icon would change based on
         usage.</string>
 
+    <string name="title_pref_speed_toolbar_enabled">Show speed in toolbar</string>
+    <string name="summary_pref_speed_toolbar_enabled">Display current up/down speed in the bottom toolbar.</string>
+
+    <string name="title_pref_main_ui_mode">Main screen layout</string>
+    <string name="summary_pref_main_ui_mode">Choose the style of the main screen control panel.</string>
+    <string name="title_main_ui_mode_expressive">Expressive toolbar</string>
+    <string name="title_main_ui_mode_classic">Classic bottom bar</string>
+    <string name="title_main_ui_mode_big_button">Big button</string>
+
+    <string name="title_pref_toolbar_position_top">Toolbar at top</string>
+    <string name="summary_pref_toolbar_position_top">Place the expressive toolbar above the server list instead of at the bottom.</string>
+
+    <string name="connection_info_title">Connection info</string>
+    <string name="connection_info_ip">External IP</string>
+    <string name="connection_info_location">Location</string>
+    <string name="connection_info_isp">ISP</string>
+    <string name="connection_info_speed">Speed</string>
+
     <string name="title_pref_sniffing_enabled">Enable Sniffing</string>
     <string name="summary_pref_sniffing_enabled">Try sniff domain from the packet (default on)</string>
     <string name="title_pref_route_only_enabled">Enable routeOnly</string>
@@ -243,6 +274,9 @@
     <string name="summary_pref_socks_username">Username</string>
     <string name="title_pref_socks_password">Local proxy password (optional)</string>
     <string name="summary_pref_socks_password">Password</string>
+    <string name="title_pref_socks_generate_credentials">Generate random credentials</string>
+    <string name="summary_pref_socks_generate_credentials">Create a random username and password</string>
+    <string name="toast_socks_credentials_generated">Random credentials generated</string>
 
     <string name="title_pref_local_dns_port">Local DNS port</string>
     <string name="summary_pref_local_dns_port">Local DNS port</string>
@@ -258,6 +292,9 @@
 
     <string name="title_pref_double_column_display">Enable double column display</string>
     <string name="summary_pref_double_column_display">The profile list is displayed in double columns, allowing more content to be displayed on the screen. You need to restart the application to take effect.</string>
+
+    <string name="title_pref_server_card_style">New server card style</string>
+    <string name="summary_pref_server_card_style">Compact card with overflow menu and country flag display. Disable to use the classic card with action buttons.</string>
 
     <string name="title_pref_group_all_display">Enable show all groups</string>
     <string name="summary_pref_group_all_display">Add an extra "All Tabs" page</string>
@@ -287,6 +324,10 @@
     <string name="title_language">Language</string>
     <string name="title_ui_settings">UI settings</string>
     <string name="title_pref_ui_mode_night">UI mode settings</string>
+    <string name="title_pref_dynamic_color">Dynamic colors</string>
+    <string name="summary_pref_dynamic_color">Use Material You colors from the system wallpaper (Android 12+)</string>
+    <string name="title_pref_system_font">Use system font</string>
+    <string name="summary_pref_system_font">Use the device default font instead of the bundled brand font</string>
     <string name="title_pref_use_hev_tunnel">Enable Hev TUN Feature</string>
     <string name="summary_pref_use_hev_tunnel">When enabled, TUN will use hev-socks5-tunnel; otherwise, it will use xray-core.</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>
@@ -367,6 +408,7 @@
     <string name="connection_test_error_status_code">Error code: #%d</string>
     <string name="connection_connected">Connected, tap to check connection</string>
     <string name="connection_not_connected">Not connected</string>
+    <string name="connection_ip_format">IP: %1$s</string>
     <string name="connection_runing_task_left">Number of running test tasks: %s</string>
 
     <string name="import_subscription_success">Subscription imported Successfully</string>
@@ -429,6 +471,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>Proxy only</item>
+        <item>Proxy + TUN</item>
     </string-array>
 
     <string-array name="browser_dialer_mode">
@@ -475,4 +518,8 @@
         <item>WebDAV</item>
     </string-array>
 
+    <string name="toggle_tun_on">TUN on</string>
+    <string name="toggle_tun_off">TUN off</string>
+    <string name="title_tun_enabled">TUN enabled</string>
+    <string name="title_tun_disabled">TUN disabled</string>
 </resources>

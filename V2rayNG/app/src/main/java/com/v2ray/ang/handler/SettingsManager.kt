@@ -488,6 +488,71 @@ object SettingsManager {
     }
 
     /**
+     * Check if Proxy + TUN mode is enabled.
+     * @return True if Proxy + TUN mode is enabled, false otherwise.
+     */
+    fun isProxyTunMode(): Boolean {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) == AppConfig.PROXY_TUN
+    }
+
+    /**
+     * Check if TUN is currently enabled (runtime toggle in Proxy + TUN mode).
+     * @return True if TUN is enabled, false otherwise.
+     */
+    fun isTunEnabled(): Boolean {
+        return isProxyTunMode() && MmkvManager.decodeSettingsBool(AppConfig.PREF_TUN_ENABLED, false)
+    }
+
+    /**
+     * Set the TUN enabled state.
+     * @param enabled True to enable TUN, false to disable.
+     */
+    fun setTunEnabled(enabled: Boolean) {
+        MmkvManager.encodeSettings(AppConfig.PREF_TUN_ENABLED, enabled)
+    }
+
+    /**
+     * Returns the selected main screen UI mode.
+     * Only the expressive toolbar is exposed to users; other modes are kept
+     * in the codebase but hidden from selection.
+     * @return Always [MainUiMode.EXPRESSIVE].
+     */
+    fun getMainUiMode(): MainUiMode {
+        return MainUiMode.EXPRESSIVE
+    }
+
+    /**
+     * Returns whether the expressive toolbar should be placed at the top
+     * of the main screen (above the server list).
+     */
+    fun isToolbarAtTop(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_TOOLBAR_POSITION_TOP, false) == true
+    }
+
+    /**
+     * Returns the server card display style.
+     * "classic" shows all action buttons; "new" shows a compact card with
+     * overflow menu and country flag extraction.
+     * @return Always "new" for now (classic preserved as fallback in code).
+     */
+    fun getServerCardStyle(): String {
+        return if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SERVER_CARD_STYLE, true)) "new" else "classic"
+    }
+
+    /**
+     * Main screen UI mode.
+     */
+    enum class MainUiMode(val value: String) {
+        EXPRESSIVE("expressive"),
+        CLASSIC("classic"),
+        BIG_BUTTON("big_button");
+
+        companion object {
+            fun fromValue(value: String?) = entries.find { it.value == value } ?: EXPRESSIVE
+        }
+    }
+
+    /**
      *  Check if process routing can be used.
      */
     fun canUseProcessRouting(): Boolean {

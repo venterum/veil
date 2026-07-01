@@ -42,6 +42,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val isRunning by lazy { MutableLiveData<Boolean>() }
     val updateListAction by lazy { MutableLiveData<Int>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
+    val netSpeed by lazy { MutableLiveData<Pair<Long, Long>>() }
+    val connectionPing by lazy { MutableLiveData<String>() }
+    val connectionIp by lazy { MutableLiveData<String>() }
+    val connectionIpDetail by lazy { MutableLiveData<com.v2ray.ang.dto.IPAPIInfo?>() }
 
     /**
      * Refer to the official documentation for [registerReceiver](https://developer.android.com/reference/androidx/core/content/ContextCompat#registerReceiver(android.content.Context,android.content.BroadcastReceiver,android.content.IntentFilter,int):
@@ -428,6 +432,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 AppConfig.MSG_STATE_NOT_RUNNING -> {
                     isRunning.value = false
+                    netSpeed.value = 0L to 0L
+                    connectionPing.value = ""
+                    connectionIp.value = ""
                 }
 
                 AppConfig.MSG_STATE_START_SUCCESS -> {
@@ -447,10 +454,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 AppConfig.MSG_STATE_STOP_SUCCESS -> {
                     isRunning.value = false
+                    netSpeed.value = 0L to 0L
+                    connectionPing.value = ""
+                    connectionIp.value = ""
+                }
+
+                AppConfig.MSG_NET_SPEED -> {
+                    val parts = intent.getStringExtra("content")?.split(";")
+                    if (parts != null && parts.size == 2) {
+                        val up = parts[0].toLongOrNull() ?: 0L
+                        val down = parts[1].toLongOrNull() ?: 0L
+                        netSpeed.value = up to down
+                    }
                 }
 
                 AppConfig.MSG_MEASURE_DELAY_SUCCESS -> {
-                    updateTestResultAction.value = intent.getStringExtra("content")
+                    val content = intent.getStringExtra("content") ?: ""
+                    updateTestResultAction.value = content
+                    val lines = content.split("\n")
+                    if (lines.isNotEmpty() && lines[0].startsWith("Success")) {
+                        val delayMatch = Regex("""(\d+)ms""").find(lines[0])
+                        connectionPing.value = delayMatch?.value ?: ""
+                        if (lines.size >= 2) {
+                            connectionIp.value = lines[1]
+                        } else {
+                            connectionIp.value = ""
+                        }
+                    } else {
+                        connectionPing.value = ""
+                        connectionIp.value = ""
+                    }
                 }
 
                 AppConfig.MSG_MEASURE_CONFIG_SUCCESS -> {

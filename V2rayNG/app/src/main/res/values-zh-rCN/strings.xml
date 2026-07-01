@@ -423,6 +423,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>仅代理</item>
+        <item>代理 + TUN</item>
     </string-array>
 
     <string-array name="ui_mode_night">

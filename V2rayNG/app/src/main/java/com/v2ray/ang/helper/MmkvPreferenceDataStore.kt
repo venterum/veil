@@ -82,6 +82,14 @@ class MmkvPreferenceDataStore : PreferenceDataStore() {
         if (key == AppConfig.PREF_UI_MODE_NIGHT) {
             SettingsManager.setNightMode()
         }
+        // Re-apply dynamic colors immediately by recreating all live activities
+        if (key == AppConfig.PREF_DYNAMIC_COLOR) {
+            com.v2ray.ang.AngApplication.application.recreateAllActivities()
+        }
+        // Re-apply the font choice immediately by recreating all live activities
+        if (key == AppConfig.PREF_SYSTEM_FONT) {
+            com.v2ray.ang.AngApplication.application.recreateAllActivities()
+        }
         // Notify listeners that require service restart or reinit
         SettingsChangeManager.makeRestartService()
         SettingsChangeManager.makeSetupGroupTab()

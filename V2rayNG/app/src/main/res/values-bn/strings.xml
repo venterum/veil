@@ -419,6 +419,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>শুধুমাত্র প্রোক্সি</item>
+        <item>Proxy + TUN</item>
     </string-array>
 
     <string-array name="ui_mode_night">

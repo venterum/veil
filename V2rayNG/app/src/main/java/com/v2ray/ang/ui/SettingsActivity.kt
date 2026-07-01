@@ -5,7 +5,14 @@ import android.view.View
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceGroupAdapter
+import androidx.preference.PreferenceScreen
+import androidx.preference.PreferenceViewHolder
+import androidx.preference.SwitchPreferenceCompat
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
@@ -21,9 +28,9 @@ class SettingsActivity : BaseActivity() {
 
     class SettingsFragment : PreferenceFragmentCompat() {
 
-        private val localDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
-        private val fakeDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FAKE_DNS_ENABLED) }
-        private val appendHttpProxy by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_APPEND_HTTP_PROXY) }
+        private val localDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
+        private val fakeDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_FAKE_DNS_ENABLED) }
+        private val appendHttpProxy by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_APPEND_HTTP_PROXY) }
 
         //        private val localDnsPort by lazy { findPreference<EditTextPreference>(AppConfig.PREF_LOCAL_DNS_PORT) }
         private val vpnDns by lazy { findPreference<EditTextPreference>(AppConfig.PREF_VPN_DNS) }
@@ -31,12 +38,12 @@ class SettingsActivity : BaseActivity() {
         private val vpnInterfaceAddress by lazy { findPreference<ListPreference>(AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX) }
         private val vpnMtu by lazy { findPreference<EditTextPreference>(AppConfig.PREF_VPN_MTU) }
 
-        private val mux by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_MUX_ENABLED) }
+        private val mux by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_MUX_ENABLED) }
         private val muxConcurrency by lazy { findPreference<EditTextPreference>(AppConfig.PREF_MUX_CONCURRENCY) }
         private val muxXudpConcurrency by lazy { findPreference<EditTextPreference>(AppConfig.PREF_MUX_XUDP_CONCURRENCY) }
         private val muxXudpQuic by lazy { findPreference<ListPreference>(AppConfig.PREF_MUX_XUDP_QUIC) }
 
-        private val fragment by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FRAGMENT_ENABLED) }
+        private val fragment by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_FRAGMENT_ENABLED) }
         private val fragmentPackets by lazy { findPreference<ListPreference>(AppConfig.PREF_FRAGMENT_PACKETS) }
         private val fragmentLength by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_LENGTH) }
         private val fragmentInterval by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_INTERVAL) }
@@ -45,15 +52,26 @@ class SettingsActivity : BaseActivity() {
 
         private val hevTunLogLevel by lazy { findPreference<ListPreference>(AppConfig.PREF_HEV_TUNNEL_LOGLEVEL) }
         private val hevTunRwTimeout by lazy { findPreference<EditTextPreference>(AppConfig.PREF_HEV_TUNNEL_RW_TIMEOUT) }
-        private val useHevTun by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_USE_HEV_TUNNEL) }
+        private val useHevTun by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_USE_HEV_TUNNEL) }
 
-        private val enableLocalProxy by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_ENABLE_LOCAL_PROXY) }
+        private val enableLocalProxy by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_ENABLE_LOCAL_PROXY) }
         private val socksPort by lazy { findPreference<EditTextPreference>(AppConfig.PREF_SOCKS_PORT) }
-        private val dynamicSocksPort by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_DYNAMIC_SOCKS_PORT) }
+        private val dynamicSocksPort by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_DYNAMIC_SOCKS_PORT) }
         private val socksUsername by lazy { findPreference<EditTextPreference>(AppConfig.PREF_SOCKS_USERNAME) }
         private val socksPassword by lazy { findPreference<EditTextPreference>(AppConfig.PREF_SOCKS_PASSWORD) }
-        private val socksEnableUdp by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_SOCKS_ENABLE_UDP) }
-        private val proxySharing by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_PROXY_SHARING) }
+        private val socksGenerateCredentials by lazy { findPreference<androidx.preference.Preference>("pref_socks_generate_credentials") }
+        private val socksEnableUdp by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_SOCKS_ENABLE_UDP) }
+        private val proxySharing by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_PROXY_SHARING) }
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+            setDivider(null)
+            setDividerHeight(0)
+        }
+
+        override fun onCreateAdapter(preferenceScreen: PreferenceScreen): RecyclerView.Adapter<PreferenceViewHolder> {
+            return CardPreferenceGroupAdapter(preferenceScreen)
+        }
 
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
             // Use MMKV as the storage backend for all Preferences
@@ -112,23 +130,38 @@ class SettingsActivity : BaseActivity() {
                 updateDynamicSocksPort(newValue as Boolean)
                 true
             }
+
+            socksGenerateCredentials?.setOnPreferenceClickListener {
+                generateRandomCredentials()
+                true
+            }
+        }
+
+        private fun generateRandomCredentials() {
+            val charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            fun random(len: Int) = buildString {
+                repeat(len) { append(charset[kotlin.random.Random.nextInt(charset.length)]) }
+            }
+            val username = random(8)
+            val password = random(16)
+            socksUsername?.text = username
+            socksPassword?.text = password
+            socksUsername?.summary = username
+            socksPassword?.summary = password
+            android.widget.Toast.makeText(
+                requireContext(),
+                R.string.toast_socks_credentials_generated,
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
         }
 
         private fun initPreferenceSummaries() {
             fun updateSummary(pref: androidx.preference.Preference) {
                 when (pref) {
                     is EditTextPreference -> {
-                        if (pref.key == AppConfig.PREF_SOCKS_PASSWORD) {
-                            pref.summary = if (pref.text.isNullOrEmpty()) "" else "******"
-                        } else {
-                            pref.summary = pref.text.orEmpty()
-                        }
+                        pref.summary = pref.text.orEmpty()
                         pref.setOnPreferenceChangeListener { p, newValue ->
-                            if (p.key == AppConfig.PREF_SOCKS_PASSWORD) {
-                                p.summary = if ((newValue as? String).isNullOrEmpty()) "" else "******"
-                            } else {
-                                p.summary = (newValue as? String).orEmpty()
-                            }
+                            p.summary = (newValue as? String).orEmpty()
                             true
                         }
                     }
@@ -180,7 +213,7 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun updateMode(value: String?) {
-            val vpn = value == VPN
+            val vpn = value == VPN || value == AppConfig.PROXY_TUN
             localDns?.isEnabled = vpn
             fakeDns?.isEnabled = vpn
             appendHttpProxy?.isEnabled = vpn
@@ -255,6 +288,7 @@ class SettingsActivity : BaseActivity() {
             dynamicSocksPort?.isEnabled = enabled
             socksUsername?.isEnabled = enabled
             socksPassword?.isEnabled = enabled
+            socksGenerateCredentials?.isEnabled = enabled
             socksEnableUdp?.isEnabled = enabled
             proxySharing?.isEnabled = enabled
 
@@ -284,6 +318,26 @@ class SettingsActivity : BaseActivity() {
                 enableLocalProxy?.isEnabled = true
             }
             updateEnableLocalProxy(enableLocalProxy?.isChecked == true)
+        }
+
+        private class CardPreferenceGroupAdapter(group: PreferenceScreen) : PreferenceGroupAdapter(group) {
+            override fun onBindViewHolder(holder: PreferenceViewHolder, position: Int) {
+                super.onBindViewHolder(holder, position)
+                val card = holder.itemView as? MaterialCardView ?: return
+                val density = card.resources.displayMetrics.density
+                val large = 24f * density
+                val small = 4f * density
+                val isFirst = position == 0 || getItem(position - 1) is PreferenceCategory
+                val isLast = position == itemCount - 1 || getItem(position + 1) is PreferenceCategory
+                val topCorner = if (isFirst) large else small
+                val bottomCorner = if (isLast) large else small
+                card.shapeAppearanceModel = card.shapeAppearanceModel.toBuilder()
+                    .setTopLeftCornerSize(topCorner)
+                    .setTopRightCornerSize(topCorner)
+                    .setBottomLeftCornerSize(bottomCorner)
+                    .setBottomRightCornerSize(bottomCorner)
+                    .build()
+            }
         }
     }
 

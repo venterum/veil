@@ -44,8 +44,6 @@ class PerAppProxyActivity : BaseActivity() {
         //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.per_app_proxy_settings))
 
-        addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
-
         initList()
 
         binding.switchPerAppProxy.setOnCheckedChangeListener { _, isChecked ->

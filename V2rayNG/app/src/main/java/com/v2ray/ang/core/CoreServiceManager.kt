@@ -147,7 +147,10 @@ object CoreServiceManager {
                 error(context.getString(R.string.toast_config_file_invalid))
             }
 
+        LogUtil.w(AppConfig.TAG, "StartCore-Manager: starting service guid=$guid configType=${config.configType} server=${config.server} port=${config.serverPort}")
+
         if (!config.configType.isComplexType()
+            && config.configType != EConfigType.OLCRTC
             && !Utils.isValidUrl(config.server)
             && !Utils.isPureIpAddress(config.server.orEmpty())
         ) {
@@ -232,6 +235,18 @@ object CoreServiceManager {
         val config = MmkvManager.decodeServerConfig(guid) ?: error("Failed to decode server config")
 
         LogUtil.i(AppConfig.TAG, "StartCore-Manager: Starting core loop for ${config.remarks}")
+
+        if (config.configType == EConfigType.OLCRTC) {
+            LogUtil.w(AppConfig.TAG, "StartCore-Manager: OLCRTC config detected, starting olcRTC transport carrier=${config.olcrtcCarrier} transport=${config.olcrtcTransport} room=${config.olcrtcRoomId}")
+            OlcrtcManager.socketProtector = serviceControl?.get()?.let { sc ->
+                { fd -> sc.vpnProtect(fd) }
+            }
+            if (!OlcrtcManager.start(config)) {
+                error("Failed to start olcRTC")
+            }
+            MmkvManager.encodeServerConfig(guid, config)
+        }
+
         val result = CoreConfigManager.getV2rayConfig(service, guid)
         LogUtil.d(AppConfig.TAG, result.content)
         if (!result.status) {
@@ -303,6 +318,11 @@ object CoreServiceManager {
         if (browserDialer != null) {
             browserDialer!!.stop()
             browserDialer = null
+        }
+
+        if (currentConfig?.configType == EConfigType.OLCRTC) {
+            OlcrtcManager.stop()
+            OlcrtcManager.socketProtector = null
         }
 
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")

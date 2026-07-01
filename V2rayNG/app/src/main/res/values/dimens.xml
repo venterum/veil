@@ -2,11 +2,20 @@
 <resources>
     <dimen name="padding_spacing_dp4">4dp</dimen>
     <dimen name="padding_spacing_dp8">8dp</dimen>
+    <dimen name="padding_spacing_dp10">10dp</dimen>
     <dimen name="padding_spacing_dp16">16dp</dimen>
+    <dimen name="padding_spacing_dp20">20dp</dimen>
+    <dimen name="padding_spacing_dp30">30dp</dimen>
+    <dimen name="padding_spacing_dp40">40dp</dimen>
     <dimen name="image_size_dp24">24dp</dimen>
     <dimen name="view_height_dp36">36dp</dimen>
     <dimen name="view_height_dp48">48dp</dimen>
+    <dimen name="view_height_dp56">56dp</dimen>
     <dimen name="view_height_dp64">64dp</dimen>
+    <dimen name="view_height_dp72">72dp</dimen>
+    <dimen name="view_height_dp76">76dp</dimen>
+    <dimen name="view_height_dp80">80dp</dimen>
+    <dimen name="view_height_dp96">96dp</dimen>
     <dimen name="view_height_dp120">120dp</dimen>
     <dimen name="view_height_dp160">160dp</dimen>
 </resources>

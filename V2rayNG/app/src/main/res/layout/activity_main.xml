@@ -13,12 +13,15 @@
 
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:background="?attr/colorSurface"
+            app:elevation="0dp">
 
-            <androidx.appcompat.widget.Toolbar
+            <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize" />
+                android:layout_height="?attr/actionBarSize"
+                app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -42,89 +45,61 @@
                         android:layout_height="wrap_content"
                         android:indeterminate="true"
                         android:visibility="invisible"
-                        app:indicatorColor="@color/color_fab_active" />
+                        app:indicatorColor="?attr/colorPrimary" />
+
+                    <FrameLayout
+                        android:id="@+id/top_control_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
 
                     <com.google.android.material.tabs.TabLayout
                         android:id="@+id/tab_group"
+                        style="@style/Widget.App.TabLayout.Expressive"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:tabIndicatorFullWidth="false"
-                        app:tabMode="scrollable"
-                        app:tabTextAppearance="@style/TabLayoutTextStyle" />
+                        android:layout_height="wrap_content" />
 
                     <androidx.viewpager2.widget.ViewPager2
                         android:id="@+id/view_pager"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:nextFocusRight="@+id/fab"
-                        android:scrollbars="vertical"
-                        android:layout_weight="1" />
+                        android:layout_weight="1"
+                        android:scrollbars="vertical" />
 
-                    <LinearLayout
-                        android:id="@+id/layout_test"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/view_height_dp64"
-                        android:clickable="true"
-                        android:contentDescription="@string/connection_test_pending"
-                        android:focusable="true"
-                        android:nextFocusLeft="@+id/view_pager"
-                        android:nextFocusRight="@+id/fab"
-                        android:orientation="vertical">
-
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="1dp"
-                            android:background="@color/divider_color_light" />
-
-                        <TextView
-                            android:id="@+id/tv_test_state"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:gravity="start|center"
-                            android:maxLines="2"
-                            android:minLines="1"
-                            android:paddingStart="@dimen/padding_spacing_dp16"
-                            android:text="@string/connection_test_pending"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
-
-                    </LinearLayout>
                 </LinearLayout>
 
                 <FrameLayout
-                    android:layout_width="wrap_content"
+                    android:id="@+id/bottom_control_container"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|end"
-                    android:layout_marginBottom="-16dp"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp16">
+                    android:layout_gravity="bottom"
+                    android:clipChildren="false"
+                    android:clipToPadding="false" />
 
-                    <com.google.android.material.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/fab"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|end"
-                        android:layout_marginBottom="@dimen/view_height_dp36"
-                        android:clickable="true"
-                        android:contentDescription="@string/tasker_start_service"
-                        android:focusable="true"
-                        android:nextFocusLeft="@+id/layout_test"
-                        android:src="@drawable/ic_play_24dp"
-                        app:tint="@color/colorWhite"
-                        app:useCompatPadding="true"
-                        app:layout_anchorGravity="bottom|right|end" />
-
-                </FrameLayout>
             </androidx.coordinatorlayout.widget.CoordinatorLayout>
         </RelativeLayout>
     </LinearLayout>
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/nav_drawer"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/menu_drawer">
+        android:background="@drawable/drawer_background"
+        android:clipToOutline="true"
+        android:orientation="vertical">
 
-    </com.google.android.material.navigation.NavigationView>
+        <include layout="@layout/nav_header" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/nav_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingTop="0dp"
+            android:paddingBottom="12dp"
+            android:scrollbars="none" />
+
+    </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

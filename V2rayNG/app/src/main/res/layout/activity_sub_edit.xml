@@ -124,7 +124,7 @@
                     android:layout_weight="1.0"
                     android:text="@string/sub_setting_enable" />
 
-                <androidx.appcompat.widget.SwitchCompat
+                <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/chk_enable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -146,7 +146,7 @@
                     android:layout_weight="1.0"
                     android:text="@string/sub_auto_update" />
 
-                <androidx.appcompat.widget.SwitchCompat
+                <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/auto_update_check"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -188,7 +188,7 @@
                     android:layout_weight="1.0"
                     android:text="@string/sub_allow_insecure_url" />
 
-                <androidx.appcompat.widget.SwitchCompat
+                <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/allow_insecure_url"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

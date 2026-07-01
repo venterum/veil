@@ -18,6 +18,7 @@ import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.extension.toSpeedString
 import com.v2ray.ang.ui.MainActivity
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.util.MessageUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,7 +45,9 @@ object NotificationManager {
      * @param currentConfig The current profile configuration.
      */
     fun startSpeedNotification() {
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) != true) return
+        val notificationEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true
+        val toolbarEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_TOOLBAR_ENABLED) == true
+        if (!notificationEnabled && !toolbarEnabled) return
         if (speedNotificationJob != null || CoreServiceManager.isRunning() == false) return
 
         var lastZeroSpeed = false
@@ -252,7 +255,14 @@ object NotificationManager {
         val proxyTotal = proxyUplink + proxyDownlink
         val directTotal = directUplink + directDownlink
         val zeroSpeed = proxyTotal + directTotal == 0L
-        if (!zeroSpeed || !lastZeroSpeed) {
+
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_TOOLBAR_ENABLED) == true) {
+            val up = ((proxyUplink + directUplink) / sinceLastQueryInSeconds).toLong()
+            val down = ((proxyDownlink + directDownlink) / sinceLastQueryInSeconds).toLong()
+            getService()?.let { MessageUtil.sendMsg2UI(it, AppConfig.MSG_NET_SPEED, "$up;$down") }
+        }
+
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true && (!zeroSpeed || !lastZeroSpeed)) {
             val text = StringBuilder()
             appendSpeedString(
                 text, AppConfig.TAG_PROXY,

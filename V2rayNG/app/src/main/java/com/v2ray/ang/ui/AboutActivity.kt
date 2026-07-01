@@ -1,6 +1,7 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
@@ -27,7 +28,7 @@ class AboutActivity : BaseActivity() {
         binding.layoutOssLicenses.setOnClickListener {
             val webView = android.webkit.WebView(this)
             webView.loadUrl("file:///android_asset/open_source_licenses.html")
-            android.app.AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("Open source licenses")
                 .setView(webView)
                 .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }

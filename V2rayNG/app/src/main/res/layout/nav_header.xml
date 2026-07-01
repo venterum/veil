@@ -1,21 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/view_height_dp160"
-    android:background="@drawable/nav_header_bg"
-    android:gravity="center"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurfaceContainerLow"
     android:orientation="vertical"
-    android:padding="@dimen/padding_spacing_dp16">
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="60dp"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp8">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:fontFamily="@font/montserrat_thin"
-        android:gravity="center"
-        android:paddingTop="@dimen/padding_spacing_dp8"
-        android:text="@string/app_name"
-        android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_app_icon"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="?attr/colorPrimaryContainer"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@mipmap/ic_launcher_foreground"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
+            app:tint="?attr/colorOnPrimaryContainer" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/padding_spacing_dp8"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_app_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/google_sans_flex"
+                android:text="@string/app_name"
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/tv_app_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="2dp"
+                android:text="@string/nav_header_subtitle"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

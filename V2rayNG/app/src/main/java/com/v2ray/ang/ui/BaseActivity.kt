@@ -1,12 +1,17 @@
 package com.v2ray.ang.ui
 
 import android.content.Context
+import android.content.res.Resources
+import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
@@ -15,7 +20,10 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.extension.finishWithMaterialTransition
+import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.CustomDividerItemDecoration
 import com.v2ray.ang.util.MyContextWrapper
@@ -37,6 +45,17 @@ abstract class BaseActivity : AppCompatActivity() {
     // Progress indicator that sits at the bottom of the toolbar
     private var progressBar: LinearProgressIndicator? = null
 
+    override fun getTheme(): android.content.res.Resources.Theme {
+        val theme = super.getTheme()
+        try {
+            if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SYSTEM_FONT, false)) {
+                theme.applyStyle(R.style.ThemeOverlay_App_SystemFont, true)
+            }
+        } catch (_: Exception) {
+        }
+        return theme
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -46,6 +65,49 @@ abstract class BaseActivity : AppCompatActivity() {
                 isAppearanceLightStatusBars = true
             }
         }
+
+        registerPredictiveBackCallback()
+        registerBackDispatcherCallback()
+    }
+
+    /**
+     * Registers the system predictive back callback on Android 13+ so that
+     * the back gesture plays nicely with Material 3 Expressive transitions.
+     */
+    private fun registerPredictiveBackCallback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                onBackPressedDispatcher.onBackPressed()
+            }
+        }
+    }
+
+    /**
+     * Controls whether the base back dispatcher callback should finish the Activity
+     * with a transition. Subclasses such as [MainActivity] that need special back
+     * handling (e.g. move task to back) can override this and return `false`.
+     */
+    protected open fun shouldFinishOnBackPress(): Boolean = true
+
+    /**
+     * Registers a low-priority back dispatcher callback that finishes the Activity
+     * with a Material 3 Expressive transition. Subclasses can register their own
+     * callbacks with higher priority to intercept back navigation.
+     */
+    private fun registerBackDispatcherCallback() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (shouldFinishOnBackPress()) {
+                    finishWithMaterialTransition()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
     }
 
     /**
@@ -66,6 +128,14 @@ abstract class BaseActivity : AppCompatActivity() {
         }
 
         else -> super.onOptionsItemSelected(item)
+    }
+
+    /**
+     * Finishes the Activity using a Material 3 Expressive backward transition.
+     * Subclasses that override [onBackPressed] should call this instead of [finish].
+     */
+    open fun finishActivityWithTransition() {
+        finishWithMaterialTransition()
     }
 
     /**

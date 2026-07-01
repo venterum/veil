@@ -20,8 +20,10 @@ class PerAppProxyAdapter(
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         if (holder is AppViewHolder) {
-            val appInfo = apps[position - 1]
+            val index = position - 1
+            val appInfo = apps[index]
             holder.bind(appInfo)
+            holder.applyCardShape(index, apps.size)
         }
     }
 
@@ -66,6 +68,25 @@ class PerAppProxyAdapter(
             itemBypassBinding.checkBox.isChecked = viewModel.contains(appInfo.packageName)
 
             itemView.setOnClickListener(this)
+        }
+
+        fun applyCardShape(index: Int, count: Int) {
+            val card = itemBypassBinding.root
+            val density = card.resources.displayMetrics.density
+            val large = 24f * density
+            val small = 4f * density
+            val (topCorner, bottomCorner) = when {
+                count <= 1 -> large to large
+                index == 0 -> large to small
+                index == count - 1 -> small to large
+                else -> small to small
+            }
+            card.shapeAppearanceModel = card.shapeAppearanceModel.toBuilder()
+                .setTopLeftCornerSize(topCorner)
+                .setTopRightCornerSize(topCorner)
+                .setBottomLeftCornerSize(bottomCorner)
+                .setBottomRightCornerSize(bottomCorner)
+                .build()
         }
 
         override fun onClick(v: View?) {

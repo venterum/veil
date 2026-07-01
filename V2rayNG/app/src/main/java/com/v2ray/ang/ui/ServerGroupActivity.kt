@@ -5,11 +5,12 @@ import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityServerGroupBinding
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.extension.finishWithMaterialTransition
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastSuccess
@@ -105,7 +106,7 @@ class ServerGroupActivity : BaseActivity() {
             SettingsChangeManager.makeRestartService()
         }
         toastSuccess(R.string.toast_success)
-        finish()
+        finishWithMaterialTransition()
         return true
     }
 
@@ -114,10 +115,10 @@ class ServerGroupActivity : BaseActivity() {
      */
     private fun deleteServer(): Boolean {
         if (editGuid.isNotEmpty()) {
-            AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
+            MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     MmkvManager.removeServer(editGuid)
-                    finish()
+                    finishWithMaterialTransition()
                 }
                 .setNegativeButton(android.R.string.cancel) { _, _ ->
                     // do nothing

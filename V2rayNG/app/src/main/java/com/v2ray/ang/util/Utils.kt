@@ -542,14 +542,7 @@ object Utils {
      *
      * @return True if the package is Xray, false otherwise.
      */
-    fun isXray(): Boolean = BuildConfig.APPLICATION_ID.startsWith("com.v2ray.ang")
-
-    /**
-     * Check if it is the Google Play version.
-     *
-     * @return True if the package is Google Play, false otherwise.
-     */
-    fun isGoogleFlavor(): Boolean = BuildConfig.FLAVOR == "playstore"
+    fun isXray(): Boolean = BuildConfig.APPLICATION_ID.startsWith("com.vntrum.")
 
     /**
      * Converts an InetAddress to its long representation

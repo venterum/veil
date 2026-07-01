@@ -94,11 +94,8 @@ object UpdateCheckerManager {
             (it.name.contains(abi, true))
         }
 
-        val asset = if (BuildConfig.APPLICATION_ID.contains(fDroid, ignoreCase = true)) {
-            assetsByAbi.firstOrNull { it.name.contains(fDroid) }
-        } else {
-            assetsByAbi.firstOrNull { !it.name.contains(fDroid) }
-        }
+        val asset = assetsByAbi.firstOrNull { it.name.contains(fDroid) }
+            ?: assetsByAbi.firstOrNull()
 
         return asset?.browserDownloadUrl
             ?: throw IllegalStateException("No compatible APK found")

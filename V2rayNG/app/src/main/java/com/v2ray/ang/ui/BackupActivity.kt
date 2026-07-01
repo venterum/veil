@@ -1,6 +1,6 @@
 package com.v2ray.ang.ui
 
-import android.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.content.FileProvider
@@ -42,7 +42,7 @@ class BackupActivity : HelperBaseActivity() {
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_configuration_backup_restore))
 
         binding.layoutBackup.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.title_configuration_backup)
                 .setItems(config_backup_options) { dialog, which ->
                     when (which) {
@@ -74,7 +74,7 @@ class BackupActivity : HelperBaseActivity() {
         }
 
         binding.layoutRestore.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.title_configuration_restore)
                 .setItems(config_backup_options) { dialog, which ->
                     when (which) {
@@ -296,7 +296,7 @@ class BackupActivity : HelperBaseActivity() {
             dialogBinding.etWebdavRemotePath.setText(cfg.remoteBasePath ?: "/")
         }
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.title_webdav_config_setting)
             .setView(dialogBinding.root)
             .setPositiveButton(R.string.menu_item_save_config) { _, _ ->
