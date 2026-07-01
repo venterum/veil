@@ -19,7 +19,7 @@
 
 <h3>Development guide</h3>
 
-<p>Android project under V2rayNG folder can be compiled directly in Android Studio, or using Gradle wrapper. But the v2ray core inside the aar is (probably) outdated.
+<p>Android project under veil folder can be compiled directly in Android Studio, or using Gradle wrapper. But the v2ray core inside the aar is (probably) outdated.
 The aar can be compiled from the Golang project <a href="https://github.com/2dust/AndroidLibV2rayLite">AndroidLibV2rayLite</a> or <a href="https://github.com/2dust/AndroidLibXrayLite">AndroidLibXrayLite</a>.
 For a quick start, read guide for <a href="https://github.com/golang/go/wiki/Mobile">Go Mobile</a> and <a href="https://tutorialedge.net/golang/makefiles-for-go-developers/">Makefiles for Go Developers</a></p>
 

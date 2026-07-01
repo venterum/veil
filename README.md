@@ -22,28 +22,47 @@ Based on [v2rayNG](https://github.com/2dust/v2rayNG) by 2dust.
 ## Architecture
 
 ```text
-app -> Xray core -> SOCKS5 -> olcrtc client -> WebRTC/SFU -> olcrtc server -> internet
+App traffic
+     ↓
+VPN / Proxy Android service
+     ↓
+Xray core (routing, DNS, mux, fragmentation)
+     ↓
+SOCKS5 → 127.0.0.1:{port}      ← olcRTC profile only; standard protocols go direct
+     ↓
+olcRTC Go transport (WebRTC → SFU server → remote olcRTC → internet)
 ```
 
-olcRTC runs as a separate Go process (gomobile AAR), Xray core routes traffic to its local SOCKS5 port.
+### Core integration
+
+The Xray core and olcRTC transport are compiled together into a **single `libv2ray.aar`** via gomobile:
+
+| Go module | Package | Role |
+|---|---|---|
+| `github.com/2dust/AndroidLibXrayLite` | `libv2ray.*` | Xray core (routing, protocols, DNS) |
+| `olcrtc/mobile` | `mobile.*` | olcRTC WebRTC transport (SOCKS5 server) |
+
+Both modules are unmodified. They share one process (`:RunSoLibV2RayDaemon`) and communicate via loopback SOCKS5 — Xray's outbound points to `127.0.0.1:{olcrtc_port}` using a standard SOCKS outbound config. No custom patching of either core.
+
+For standard protocols Xray connects directly to the remote server. For olcRTC profiles, Xray routes traffic through the local olcRTC SOCKS5 proxy which tunnels it via WebRTC.
 
 ## Project layout
 
 ```
 .
-├── V2rayNG/                 # Android application (Gradle project)
+├── veil/                     # Android application (Gradle project)
 │   └── app/
 │       ├── src/main/java/com/v2ray/ang/core/OlcrtcManager.kt
 │       ├── src/main/java/com/v2ray/ang/fmt/OlcrtcFmt.kt
 │       ├── src/main/java/com/v2ray/ang/ui/OlcrtcActivity.kt
 │       └── ...
-├── hev-socks5-tunnel/       # git submodule – native TUN tunnel
-├── AndroidLibXrayLite/      # git submodule – Go sources for libv2ray.aar
+├── hev-socks5-tunnel/       # git submodule — native TUN tunnel
+├── AndroidLibXrayLite/      # git submodule — Go sources for Xray core bindings
 ├── compile-hevtun.sh        # builds the native libhev-socks5-tunnel libraries
 └── README.md
 ```
 
-> `olcrtc/` and `olcbox/` are separate projects maintained independently.
+> `olcrtc/` and `olcbox/` are separate projects maintained independently and must be checked out alongside veil.
 
 ## Building from source
 
@@ -52,15 +71,20 @@ olcRTC runs as a separate Go process (gomobile AAR), Xray core routes traffic to
 - JDK 17+
 - Android SDK: `platforms;android-37`, `build-tools;37.0.0`, `platform-tools`
 - Android NDK for the native tunnel
-- Go 1.26+ and [mage](https://github.com/magefile/mage) (for olcrtc AAR)
+- Go 1.26+ with gomobile (`go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init`)
 
 ### Steps
 
-1. **Clone with submodules**
+1. **Clone**
 
    ```bash
    git clone --recurse-submodules <repo-url>
    git submodule update --init --recursive
+   ```
+
+   Place `olcrtc/` checkout next to the veil project root:
+   ```
+   ../olcrtc/
    ```
 
 2. **Build `hev-socks5-tunnel` native libraries**
@@ -68,36 +92,41 @@ olcRTC runs as a separate Go process (gomobile AAR), Xray core routes traffic to
    ```bash
    export NDK_HOME=$ANDROID_HOME/ndk/<ndk-version>
    bash compile-hevtun.sh
-   cp -r libs V2rayNG/app/
+   cp -r libs veil/app/
    ```
 
-3. **Build olcrtc AAR** (from your olcrtc checkout)
+3. **Build the combined `libv2ray.aar`** (Xray core + olcRTC in one AAR)
 
    ```bash
-   cd olcrtc
-   mage mobile
-   cp build/olcrtc.aar ../V2rayNG/app/libs/
+   cd ../olcrtc
+   git clone https://github.com/2dust/AndroidLibXrayLite ../AndroidLibXrayLite  # or symlink
+   mage aar:android ANDROIDLIBXRAYLITE=../AndroidLibXrayLite
+   cp build/olcrtc.aar ../veil/veil/app/libs/libv2ray.aar
    ```
 
-4. **Provide Xray core (`libv2ray.aar`)**
+   This produces a single `libv2ray.aar` containing:
+   - `libv2ray.*` — standard Xray core bindings from `AndroidLibXrayLite`
+   - `mobile.*` — olcRTC Go transport via gomobile
+   - `libgojni.so` — native Go binary for all ABIs
+   - `geoip.dat`, `geosite.dat` — rule assets
 
-   Download from [AndroidLibXrayLite releases](https://github.com/2dust/AndroidLibXrayLite/releases) and place in `V2rayNG/app/libs/`.
-
-5. **Build the APK**
+4. **Build the APK**
 
    ```bash
-   echo "sdk.dir=$ANDROID_HOME" > V2rayNG/local.properties
-   cd V2rayNG
+   echo "sdk.dir=$ANDROID_HOME" > veil/local.properties
+   cd veil
    ./gradlew assembleDebug
    ```
+
+   APK outputs: `veil/app/build/outputs/apk/debug/`, split per ABI (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`).
 
 ## Tech stack
 
 - Kotlin, Android View system with View Binding
 - Material Components for Android (Material 3 Expressive theme)
 - MMKV, OkHttp, Gson, Coroutines
-- Xray core via `libv2ray.aar`, native TUN via `hev-socks5-tunnel`
-- olcRTC (Go) via gomobile AAR
+- Xray core + olcRTC Go transport bundled in a single `libv2ray.aar` via gomobile
+- Native TUN via `hev-socks5-tunnel`
 
 ## Credits
 

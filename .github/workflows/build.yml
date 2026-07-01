@@ -36,7 +36,7 @@ jobs:
         echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
         sed -i '10i\
         \
-            ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+            ndkVersion = "29.0.14206865"' ${{ github.workspace }}/veil/app/build.gradle.kts
 
     - name: Restore cached libhevtun
       id: cache-libhevtun-restore
@@ -59,7 +59,7 @@ jobs:
 
     - name: Copy libhevtun
       run: |
-        cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
+        cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/veil/app
 
     - name: Fetch AndroidLibXrayLite tag
       run: |
@@ -75,7 +75,7 @@ jobs:
         repository: '2dust/AndroidLibXrayLite'
         tag: ${{ env.CURRENT_TAG }}
         fileName: 'libv2ray.aar'
-        out-file-path: V2rayNG/app/libs/
+        out-file-path: veil/app/libs/
 
     - name: Setup Java
       uses: actions/setup-java@v5
@@ -92,7 +92,7 @@ jobs:
 
     - name: Build APK
       run: |
-        cd ${{ github.workspace }}/V2rayNG
+        cd ${{ github.workspace }}/veil
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         ./gradlew licenseFdroidReleaseReport
@@ -103,27 +103,27 @@ jobs:
       if: ${{  success() }}
       with:
         name: arm64-v8a
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*arm64-v8a*.apk
+        path: ${{ github.workspace }}/veil/app/build/outputs/apk/*/release/*arm64-v8a*.apk
 
     - name: Upload armeabi-v7a APK
       uses: actions/upload-artifact@v7
       if: ${{  success() }}
       with:
         name: armeabi-v7a
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*armeabi-v7a*.apk
+        path: ${{ github.workspace }}/veil/app/build/outputs/apk/*/release/*armeabi-v7a*.apk
 
     - name: Upload x86 APK
       uses: actions/upload-artifact@v7
       if: ${{  success() }}
       with:
         name: x86-apk
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*x86*.apk
+        path: ${{ github.workspace }}/veil/app/build/outputs/apk/*/release/*x86*.apk
 
     - name: Upload to release
       uses: svenstaro/upload-release-action@v2
       if: github.event.inputs.release_tag != ''
       with:
-        file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*.apk
+        file: ${{ github.workspace }}/veil/app/build/outputs/apk/*/release/*.apk
         tag: ${{ github.event.inputs.release_tag }}
         file_glob: true
         prerelease: true
