@@ -8,7 +8,7 @@
     </foreground>
     <monochrome>
         <inset
-            android:drawable="@mipmap/ic_launcher_foreground"
+            android:drawable="@mipmap/ic_launcher_foreground_mono"
             android:inset="10%" />
     </monochrome>
 </adaptive-icon>
