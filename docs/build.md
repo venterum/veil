@@ -1,0 +1,69 @@
+# Сборка
+
+## Требования
+
+- JDK 17+
+- Android SDK: `platforms;android-37`, `build-tools;37.0.0`, `platform-tools`
+- Android NDK (тестировалось с r27c)
+- Go 1.26+, gomobile (`go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init`)
+- mage (`go install github.com/magefile/mage@latest`)
+
+## Подготовка
+
+```bash
+git clone --recurse-submodules <repo-url>
+git submodule update --init --recursive
+```
+
+olcrtc должен быть расположен рядом с проектом:
+
+```
+../olcrtc/
+```
+
+## Шаг 1: hev-socks5-tunnel
+
+```bash
+export NDK_HOME=$ANDROID_HOME/ndk/<ndk-version>
+bash compile-hevtun.sh
+cp -r libs veil/app/
+```
+
+## Шаг 2: libv2ray.aar (Xray + olcRTC)
+
+Сборка объединённого AAR из двух Go-модулей:
+
+```bash
+cd ../olcrtc
+mage aar:android ANDROIDLIBXRAYLITE=../AndroidLibXrayLite
+cp build/olcrtc.aar ../veil/veil/app/libs/libv2ray.aar
+```
+
+Либо скачать стандартный `libv2ray.aar` из [релизов AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite/releases) — в этом случае olcRTC работать **не будет**, так как в стандартном AAR нет пакета `mobile.*`.
+
+## Шаг 3: APK
+
+```bash
+echo "sdk.dir=$ANDROID_HOME" > veil/local.properties
+cd veil
+./gradlew assembleDebug
+```
+
+APK будут в `veil/app/build/outputs/apk/debug/`.
+
+## Файлы на выходе
+
+```
+veil/app/libs/
+  ├── libv2ray.aar          # Xray core + olcRTC (gomobile)
+  ├── arm64-v8a/libhev-socks5-tunnel.so
+  ├── armeabi-v7a/libhev-socks5-tunnel.so
+  ├── x86/libhev-socks5-tunnel.so
+  └── x86_64/libhev-socks5-tunnel.so
+```
+
+## Что важно знать
+
+- `libv2ray.aar` НЕ инклюдится в git (`.gitignore`). Это локальный артефакт сборки.
+- Стандартный AAR от 2dust **не содержит** `mobile.*` — olcRTC не заработает.
+- `olcrtc/` — отдельный проект со своей git-историей.
