@@ -5,6 +5,6 @@
         android:gravity="center">
         <inset
             android:drawable="@drawable/ic_launcher_foreground"
-            android:inset="6.25%" />
+            android:inset="12%" />
     </item>
 </layer-list>
