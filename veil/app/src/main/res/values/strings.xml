@@ -30,6 +30,9 @@
     <string name="menu_item_save_config">Save config</string>
     <string name="menu_item_edit_config">Edit config</string>
     <string name="menu_item_del_config">Delete config</string>
+    <string name="menu_item_share">Share</string>
+    <string name="menu_item_edit">Edit</string>
+    <string name="menu_item_delete">Delete</string>
     <string name="menu_item_import_config_qrcode">Import from QRcode</string>
     <string name="menu_item_import_config_clipboard">Import from Clipboard</string>
     <string name="menu_item_import_config_local">Import from locally</string>
@@ -293,8 +296,8 @@
     <string name="title_pref_double_column_display">Enable double column display</string>
     <string name="summary_pref_double_column_display">The profile list is displayed in double columns, allowing more content to be displayed on the screen. You need to restart the application to take effect.</string>
 
-    <string name="title_pref_server_card_style">New server card style</string>
-    <string name="summary_pref_server_card_style">Compact card with overflow menu and country flag display. Disable to use the classic card with action buttons.</string>
+    <string name="title_pref_server_card_style">Compact server style</string>
+    <string name="summary_pref_server_card_style">Compact card with overflow menu. Disable to use the classic card with action buttons.</string>
 
     <string name="title_pref_group_all_display">Enable show all groups</string>
     <string name="summary_pref_group_all_display">Add an extra "All Tabs" page</string>
@@ -309,9 +312,11 @@
     <string name="title_about">About</string>
     <string name="title_source_code">Source code</string>
     <string name="title_oss_license">Open Source licenses</string>
-    <string name="title_tg_channel">Telegram channel</string>
+    <string name="title_tg_channel">Developer Telegram</string>
+    <string name="title_original_repo">Original v2rayNG repository</string>
+    <string name="summary_app_fork">Veil is a fork of v2rayNG by 2dust</string>
 
-    <string name="title_pref_promotion">Promotion</string>
+    <string name="title_kill_app">Kill App</string>
 
     <string name="title_pref_auto_update_subscription">Automatic update subscriptions</string>
     <string name="summary_pref_auto_update_subscription">Update your subscriptions automatically at set intervals in the background. Depending on the device, this feature may not always work</string>
@@ -326,8 +331,8 @@
     <string name="title_pref_ui_mode_night">UI mode settings</string>
     <string name="title_pref_dynamic_color">Dynamic colors</string>
     <string name="summary_pref_dynamic_color">Use Material You colors from the system wallpaper (Android 12+)</string>
-    <string name="title_pref_system_font">Use system font</string>
-    <string name="summary_pref_system_font">Use the device default font instead of the bundled brand font</string>
+    <string name="title_pref_google_sans">Use Google Sans</string>
+    <string name="summary_pref_google_sans">Use the bundled Google Sans Flex typeface instead of the device default font</string>
     <string name="title_pref_use_hev_tunnel">Enable Hev TUN Feature</string>
     <string name="summary_pref_use_hev_tunnel">When enabled, TUN will use hev-socks5-tunnel; otherwise, it will use xray-core.</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>

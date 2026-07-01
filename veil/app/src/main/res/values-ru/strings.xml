@@ -273,9 +273,11 @@
     <string name="title_about">О приложении</string>
     <string name="title_source_code">Исходный код</string>
     <string name="title_oss_license">Лицензии открытого исходного кода</string>
-    <string name="title_tg_channel">Telegram-канал</string>
+    <string name="title_tg_channel">Telegram-канал разработчика</string>
+    <string name="title_original_repo">Оригинальный репозиторий v2rayNG</string>
+    <string name="summary_app_fork">Veil — это форк v2rayNG от 2dust</string>
 
-    <string name="title_pref_promotion">Содействие</string>
+    <string name="title_kill_app">Завершить приложение</string>
 
     <string name="title_pref_auto_update_subscription">Автоматически обновлять подписки</string>
     <string name="summary_pref_auto_update_subscription">Автоматическое обновление подписок в фоновом режиме с указанным интервалом. В зависимости от устройства эта функция может работать не всегда.</string>

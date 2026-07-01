@@ -62,6 +62,27 @@
         <!-- Splash screen (Android 12+) -->
         <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_splash</item>
         <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="31">@color/ic_launcher_background</item>
+
+        <!-- Material3 Expressive shape system: rounded corners for popups, dialogs, menus -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.App.LargeComponent</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearanceOverlay.App.MenuCorner</item>
+
+        <!-- Headline / title text appearances with Google Sans Flex ROND=100 -->
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.App.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.App.HeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.App.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.App.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.App.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.App.TitleSmall</item>
+
+        <!-- Window transitions for predictive back (Android 13+) -->
+        <item name="android:windowActivityTransitions">true</item>
+
+        <!-- AlertDialog / ListPreference dialogs (mode selection etc.) -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.App.Dialog</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.App.MaterialDialog</item>
     </style>
 
     <!-- Day/Night theme: inherit common values and set light-mode-specific items -->
@@ -85,6 +106,12 @@
 
     <style name="BrandedSwitch" parent="AppThemeDayNight">
         <item name="colorPrimary">@color/md_theme_primary</item>
+    </style>
+
+    <!-- Runtime overlay used on API 33+ to disable Activity transitions,
+         which conflict with the system predictive back gesture. -->
+    <style name="Override_DisableWindowActivityTransitions">
+        <item name="android:windowActivityTransitions">false</item>
     </style>
 
 </resources>

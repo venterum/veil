@@ -266,8 +266,6 @@
     <string name="title_oss_license">Open Source licenses</string>
     <string name="title_tg_channel">قناة Telegram</string>
 
-    <string name="title_pref_promotion">ترويج</string>
-
     <string name="title_pref_auto_update_subscription">اشتراكات التحديث التلقائي</string>
     <string name="summary_pref_auto_update_subscription">قم بتحديث اشتراكاتك تلقائيًا بفترة زمنية في الخلفية. اعتمادًا على الجهاز، قد لا تعمل هذه الميزة دائمًا</string>
     <string name="title_pref_auto_update_interval">فاصل التحديث التلقائي (بالدقائق، الحد الأدنى للقيمة 15)</string>

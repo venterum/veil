@@ -140,10 +140,7 @@ class MainRecyclerAdapter(
             val guid = data[position].guid
             val profile = data[position].profile
 
-            val (flag, cleanName) = extractFlagFromName(profile.remarks)
-            holder.itemMainNewBinding.tvFlag.text = flag ?: ""
-            holder.itemMainNewBinding.tvFlag.visibility = if (flag != null) View.VISIBLE else View.GONE
-            holder.itemMainNewBinding.tvName.text = cleanName
+            holder.itemMainNewBinding.tvName.text = profile.remarks
             holder.itemMainNewBinding.tvType.text = getProtocolDescription(profile)
 
             val aff = MmkvManager.decodeServerAffiliationInfo(guid)
@@ -479,22 +476,6 @@ class MainRecyclerAdapter(
     override fun onItemDismiss(position: Int) {
     }
 
-    /**
-     * Extracts a country flag emoji (pair of regional indicator symbols)
-     * from the beginning of a server name.
-     * @return Pair(flag: String?, cleanName: String)
-     */
-    private fun extractFlagFromName(name: String): Pair<String?, String> {
-        if (name.length < 4) return Pair(null, name)
-        val flagPattern = Regex("\uD83C[\uDDE6-\uDDFF]\uD83C[\uDDE6-\uDDFF]")
-        val match = flagPattern.find(name)
-        if (match != null) {
-            val flag = match.value
-            val clean = (name.substring(0, match.range.first) + name.substring(match.range.last + 1)).trim()
-            return Pair(flag, clean)
-        }
-        return Pair(null, name)
-    }
 
     /**
      * DiffUtil callback that animates list changes in the main server list.

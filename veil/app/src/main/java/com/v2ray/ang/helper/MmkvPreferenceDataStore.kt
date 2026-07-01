@@ -87,7 +87,7 @@ class MmkvPreferenceDataStore : PreferenceDataStore() {
             com.v2ray.ang.AngApplication.application.recreateAllActivities()
         }
         // Re-apply the font choice immediately by recreating all live activities
-        if (key == AppConfig.PREF_SYSTEM_FONT) {
+        if (key == AppConfig.PREF_GOOGLE_SANS) {
             com.v2ray.ang.AngApplication.application.recreateAllActivities()
         }
         // Notify listeners that require service restart or reinit

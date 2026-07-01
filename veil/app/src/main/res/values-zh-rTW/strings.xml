@@ -266,8 +266,6 @@
     <string name="title_oss_license">Open Source licenses</string>
     <string name="title_tg_channel">Telegram 頻道</string>
 
-    <string name="title_pref_promotion">推廣</string>
-
     <string name="title_pref_auto_update_subscription">自動更新訂閱</string>
     <string name="summary_pref_auto_update_subscription">在後台以一定時間間隔自動更新您的訂閱。受設備影響，此功能不一定總是有效</string>
     <string name="title_pref_auto_update_interval">自動更新間隔（分鐘，最小值 15）</string>

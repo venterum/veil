@@ -17,7 +17,7 @@ Based on [v2rayNG](https://github.com/2dust/v2rayNG) by 2dust.
 - Per-app proxy, routing rules, DNS, fragmentation, mux and more
 - VPN service backed by `hev-socks5-tunnel` or the xray-core tunnel
 - geoip / geosite rule support
-- Material 3 UI with Google Sans Flex typeface and system font toggle
+- Material 3 UI with Google Sans Flex typeface
 
 ## Architecture
 
@@ -59,6 +59,7 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 ├── hev-socks5-tunnel/       # git submodule — native TUN tunnel
 ├── AndroidLibXrayLite/      # git submodule — Go sources for Xray core bindings
 ├── compile-hevtun.sh        # builds the native libhev-socks5-tunnel libraries
+├── compile-libv2ray.sh      # builds the combined libv2ray.aar (Xray + olcRTC)
 └── README.md
 ```
 
@@ -98,13 +99,12 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 3. **Build the combined `libv2ray.aar`** (Xray core + olcRTC in one AAR)
 
    ```bash
-   cd ../olcrtc
-   git clone https://github.com/2dust/AndroidLibXrayLite ../AndroidLibXrayLite  # or symlink
-   mage aar:android ANDROIDLIBXRAYLITE=../AndroidLibXrayLite
-   cp build/olcrtc.aar ../veil/veil/app/libs/libv2ray.aar
+   export ANDROID_HOME=/path/to/android-sdk
+   export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/<ndk-version>
+   bash compile-libv2ray.sh
    ```
 
-   This produces a single `libv2ray.aar` containing:
+   The script builds a single `libv2ray.aar` with 16 KB ELF alignment, containing:
    - `libv2ray.*` — standard Xray core bindings from `AndroidLibXrayLite`
    - `mobile.*` — olcRTC Go transport via gomobile
    - `libgojni.so` — native Go binary for all ABIs
@@ -134,6 +134,8 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 - [Xray-core](https://github.com/XTLS/Xray-core) and [v2fly/v2ray-core](https://github.com/v2fly/v2ray-core)
 - [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) by heiher
 - [olcRTC](https://github.com/openlibrecommunity/olcrtc) by openlibrecommunity
+- [Google Sans Flex](https://fonts.google.com/specimen/Google+Sans+Flex) — by Google,
+  licensed under the [SIL Open Font License, Version 1.1 ](https://fonts.google.com/specimen/Google+Sans+Flex/license)
 
 ## License
 

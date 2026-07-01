@@ -10,7 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.window.OnBackInvokedDispatcher
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.transition.platform.MaterialFadeThrough
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.extension.finishWithMaterialTransition
@@ -47,8 +48,13 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun getTheme(): android.content.res.Resources.Theme {
         val theme = super.getTheme()
+        // Activity-level transitions conflict with the system predictive back gesture
+        // on Android 13+. Disable them at runtime while keeping all other theme attrs.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            theme.applyStyle(R.style.Override_DisableWindowActivityTransitions, true)
+        }
         try {
-            if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SYSTEM_FONT, false)) {
+            if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_GOOGLE_SANS, true)) {
                 theme.applyStyle(R.style.ThemeOverlay_App_SystemFont, true)
             }
         } catch (_: Exception) {
@@ -66,46 +72,85 @@ abstract class BaseActivity : AppCompatActivity() {
             }
         }
 
-        registerPredictiveBackCallback()
+        setupWindowTransitions()
         registerBackDispatcherCallback()
     }
 
-    /**
-     * Registers the system predictive back callback on Android 13+ so that
-     * the back gesture plays nicely with Material 3 Expressive transitions.
-     */
-    private fun registerPredictiveBackCallback() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                OnBackInvokedDispatcher.PRIORITY_DEFAULT
-            ) {
-                onBackPressedDispatcher.onBackPressed()
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        applyRoundedFontToHeadings(window.decorView as ViewGroup)
+    }
+
+    private fun applyRoundedFontToHeadings(parent: ViewGroup) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val minSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP, 18f, resources.displayMetrics
+        )
+        for (i in 0 until parent.childCount) {
+            val child = parent.getChildAt(i)
+            when (child) {
+                is TextView -> {
+                    if (child.textSize >= minSize) {
+                        child.setFontVariationSettings("'ROND' 100")
+                    }
+                }
+                is ViewGroup -> applyRoundedFontToHeadings(child)
             }
         }
     }
 
-    /**
-     * Controls whether the base back dispatcher callback should finish the Activity
-     * with a transition. Subclasses such as [MainActivity] that need special back
-     * handling (e.g. move task to back) can override this and return `false`.
-     */
-    protected open fun shouldFinishOnBackPress(): Boolean = true
+    private fun setupWindowTransitions() {
+        // Activity-level transitions conflict with the system predictive back gesture,
+        // which is available from Android 13 (API 33). Keep them only on older versions
+        // where the default cross-activity animation improves the UX.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return
+        }
+        val fadeThrough = MaterialFadeThrough()
+        window.enterTransition = fadeThrough
+        window.exitTransition = fadeThrough
+        window.returnTransition = fadeThrough
+        window.reenterTransition = fadeThrough
+    }
 
     /**
-     * Registers a low-priority back dispatcher callback that finishes the Activity
-     * with a Material 3 Expressive transition. Subclasses can register their own
-     * callbacks with higher priority to intercept back navigation.
+     * Controls whether the base back dispatcher callback should be registered.
+     *
+     * It is disabled on Android 13+ (API 33+) where the system predictive back
+     * gesture is available. Any enabled `OnBackPressedDispatcher` callback
+     * prevents the system from playing the default predictive back animation,
+     * so we let the system handle back navigation directly on those versions.
+     *
+     * Subclasses that are the root of a task can also override this and return
+     * `false` to rely on the default move-task-to-back behavior.
+     */
+    protected open fun shouldRegisterBackDispatcherCallback(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+
+    /**
+     * Fallback action invoked by the base back dispatcher callback when no
+     * higher-priority callback intercepted the back press.
+     *
+     * The default implementation finishes the Activity with a Material 3
+     * Expressive transition.
+     */
+    protected open fun onBackPressedFallback() {
+        finishWithMaterialTransition()
+    }
+
+    /**
+     * Registers a low-priority back dispatcher callback that invokes
+     * [onBackPressedFallback]. Skipped when [shouldRegisterBackDispatcherCallback]
+     * returns `false`. Subclasses can register their own callbacks with higher
+     * priority to intercept back navigation.
      */
     private fun registerBackDispatcherCallback() {
+        if (!shouldRegisterBackDispatcherCallback()) {
+            return
+        }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (shouldFinishOnBackPress()) {
-                    finishWithMaterialTransition()
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
-                }
+                onBackPressedFallback()
             }
         })
     }

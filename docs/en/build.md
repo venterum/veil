@@ -31,13 +31,15 @@ cp -r libs veil/app/
 
 ## Step 2: libv2ray.aar (Xray + olcRTC combined)
 
-Build the combined AAR from two Go modules:
+Build the combined AAR from two Go modules with ELF segments aligned to 16 KB:
 
 ```bash
-cd ../olcrtc
-mage aar:android ANDROIDLIBXRAYLITE=../AndroidLibXrayLite
-cp build/olcrtc.aar ../veil/veil/app/libs/libv2ray.aar
+export ANDROID_HOME=/path/to/android-sdk
+export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/<ndk-version>
+bash compile-libv2ray.sh
 ```
+
+The script uses `gomobile bind` with `-Wl,-z,max-page-size=16384`, so the resulting `libgojni.so` is compatible with 16 KB page-size devices.
 
 Alternatively, download the standard `libv2ray.aar` from [AndroidLibXrayLite releases](https://github.com/2dust/AndroidLibXrayLite/releases) — olcRTC will **not work** because the standard AAR does not contain the `mobile.*` package.
 
@@ -62,8 +64,7 @@ veil/app/libs/
   └── x86_64/libhev-socks5-tunnel.so
 ```
 
-## Notes
+## Note
 
-- `libv2ray.aar` is not tracked in git (`.gitignore`). It is a local build artifact.
 - The standard upstream AAR from 2dust **does not contain** `mobile.*` — olcRTC will not work without the custom build.
 - `olcrtc/` is a separate project with its own git history.

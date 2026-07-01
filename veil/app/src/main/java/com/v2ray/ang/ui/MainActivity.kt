@@ -6,7 +6,6 @@ import android.graphics.PorterDuff
 import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.Gravity
@@ -22,6 +21,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -86,10 +86,12 @@ class MainActivity : HelperBaseActivity() {
     private var toolbarAtTop = false
 
     /**
-     * The main screen should minimize the task instead of finishing when the user
-     * presses back, so the VPN service keeps running in the background.
+     * MainActivity is the root of the app's task. The system already moves the
+     * task to the back instead of finishing it when the user presses back, so
+     * the base back dispatcher callback is not needed here. This lets the
+     * default predictive back animation run without interference.
      */
-    override fun shouldFinishOnBackPress(): Boolean = false
+    override fun shouldRegisterBackDispatcherCallback(): Boolean = false
 
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
@@ -149,15 +151,20 @@ class MainActivity : HelperBaseActivity() {
 
         applyAppFont()
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+        val drawerBackCallback = object : OnBackPressedCallback(false) {
             override fun handleOnBackPressed() {
-                if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    binding.drawerLayout.closeDrawer(GravityCompat.START)
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
-                }
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, drawerBackCallback)
+
+        binding.drawerLayout.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerOpened(drawerView: View) {
+                drawerBackCallback.isEnabled = true
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                drawerBackCallback.isEnabled = false
             }
         })
     }
@@ -171,11 +178,10 @@ class MainActivity : HelperBaseActivity() {
             DrawerEntry.Item(R.id.user_asset_setting, R.drawable.ic_file_24dp, R.string.title_user_asset_setting),
             DrawerEntry.Item(R.id.settings, R.drawable.ic_settings_24dp, R.string.title_settings),
             DrawerEntry.Header(R.string.title_drawer_section_more),
-            DrawerEntry.Item(R.id.promotion, R.drawable.ic_promotion_24dp, R.string.title_pref_promotion),
             DrawerEntry.Item(R.id.logcat, R.drawable.ic_logcat_24dp, R.string.title_logcat),
-            DrawerEntry.Item(R.id.check_for_update, R.drawable.ic_check_update_24dp, R.string.update_check_for_update),
             DrawerEntry.Item(R.id.backup_restore, R.drawable.ic_restore_24dp, R.string.title_configuration_backup_restore),
             DrawerEntry.Item(R.id.about, R.drawable.ic_about_24dp, R.string.title_about),
+            DrawerEntry.Item(R.id.kill_app, R.drawable.ic_kill_app_24dp, R.string.title_kill_app),
         )
         binding.navRecycler.layoutManager = LinearLayoutManager(this)
         binding.navRecycler.adapter = DrawerAdapter(entries) { itemId, view ->
@@ -368,16 +374,17 @@ class MainActivity : HelperBaseActivity() {
 
     /**
      * Applies the app font to the navigation header title.
-     * When the "use system font" preference is enabled the device default
-     * typeface is used, otherwise the bundled Google Sans font is applied.
+     * When the "use Google Sans" preference is on (default), the bundled
+     * Google Sans Flex typeface is used. Otherwise the device default
+     * typeface is applied.
      */
     private fun applyAppFont() {
-        val useSystemFont = MmkvManager.decodeSettingsBool(AppConfig.PREF_SYSTEM_FONT, false)
+        val useGoogleSans = MmkvManager.decodeSettingsBool(AppConfig.PREF_GOOGLE_SANS, true)
         val headerTitle = findViewById<android.widget.TextView>(R.id.tv_app_name) ?: return
-        headerTitle.typeface = if (useSystemFont) {
-            resolveSystemTypeface()
-        } else {
+        headerTitle.typeface = if (useGoogleSans) {
             androidx.core.content.res.ResourcesCompat.getFont(this, R.font.google_sans_flex)
+        } else {
+            resolveSystemTypeface()
         }
     }
 
@@ -1188,15 +1195,6 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_BUTTON_B) {
-            moveTaskToBack(false)
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
-
-
     private fun handleDrawerNavigation(itemId: Int) {
         val intent = when (itemId) {
             R.id.sub_setting -> Intent(this, SubSettingActivity::class.java)
@@ -1204,15 +1202,16 @@ class MainActivity : HelperBaseActivity() {
             R.id.routing_setting -> Intent(this, RoutingSettingActivity::class.java)
             R.id.user_asset_setting -> Intent(this, UserAssetActivity::class.java)
             R.id.settings -> Intent(this, SettingsActivity::class.java)
-            R.id.promotion -> {
-                Utils.openUri(this, "${Utils.decode(AppConfig.APP_PROMOTION_URL)}?t=${System.currentTimeMillis()}")
-                binding.drawerLayout.closeDrawer(GravityCompat.START)
-                return
-            }
             R.id.logcat -> Intent(this, LogcatActivity::class.java)
-            R.id.check_for_update -> Intent(this, CheckUpdateActivity::class.java)
             R.id.backup_restore -> Intent(this, BackupActivity::class.java)
             R.id.about -> Intent(this, AboutActivity::class.java)
+            R.id.kill_app -> {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                CoreServiceManager.stopVService(this)
+                finishAffinity()
+                android.os.Process.killProcess(android.os.Process.myPid())
+                return
+            }
             else -> null
         }
 

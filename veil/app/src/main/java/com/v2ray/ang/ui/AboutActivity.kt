@@ -14,15 +14,14 @@ class AboutActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_about))
 
         binding.layoutSoureCcode.setOnClickListener {
             Utils.openUri(this, AppConfig.APP_URL)
         }
 
-        binding.layoutFeedback.setOnClickListener {
-            Utils.openUri(this, AppConfig.APP_ISSUES_URL)
+        binding.layoutTgChannel.setOnClickListener {
+            Utils.openUri(this, AppConfig.TG_CHANNEL_URL)
         }
 
         binding.layoutOssLicenses.setOnClickListener {
@@ -35,12 +34,12 @@ class AboutActivity : BaseActivity() {
                 .show()
         }
 
-        binding.layoutTgChannel.setOnClickListener {
-            Utils.openUri(this, AppConfig.TG_CHANNEL_URL)
-        }
-
         binding.layoutPrivacyPolicy.setOnClickListener {
             Utils.openUri(this, AppConfig.APP_PRIVACY_POLICY)
+        }
+
+        binding.layoutOriginalRepo.setOnClickListener {
+            Utils.openUri(this, AppConfig.APP_ORIGINAL_URL)
         }
 
         "v${BuildConfig.VERSION_NAME} (${CoreNativeManager.getLibVersion()})".also {
