@@ -609,7 +609,7 @@ class MainActivity : HelperBaseActivity() {
             eb.ivFabIcon.setImageResource(R.drawable.ic_stop_outline_24dp)
             animateCardColor(
                 eb.btnFab,
-                MaterialColors.getColor(eb.btnFab, com.google.android.material.R.attr.colorSurfaceContainerHighest),
+                MaterialColors.getColor(eb.btnFab, com.google.android.material.R.attr.colorPrimaryContainer),
                 MaterialColors.getColor(eb.btnFab, android.R.attr.colorPrimary)
             )
             eb.ivFabIcon.setColorFilter(
@@ -624,10 +624,10 @@ class MainActivity : HelperBaseActivity() {
             animateCardColor(
                 eb.btnFab,
                 MaterialColors.getColor(eb.btnFab, android.R.attr.colorPrimary),
-                MaterialColors.getColor(eb.btnFab, com.google.android.material.R.attr.colorSurfaceContainerHighest)
+                MaterialColors.getColor(eb.btnFab, com.google.android.material.R.attr.colorPrimaryContainer)
             )
             eb.ivFabIcon.setColorFilter(
-                MaterialColors.getColor(eb.ivFabIcon, com.google.android.material.R.attr.colorOnSurfaceVariant),
+                MaterialColors.getColor(eb.ivFabIcon, com.google.android.material.R.attr.colorOnPrimaryContainer),
                 PorterDuff.Mode.SRC_IN
             )
             eb.btnFab.contentDescription = getString(R.string.tasker_start_service)
