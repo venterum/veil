@@ -29,21 +29,14 @@
             android:layout_centerVertical="true"
             android:layout_toStartOf="@id/switch_start_service"
             android:text="@string/tasker_start_service"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
     </RelativeLayout>
 
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
-
-        <ListView
-            android:id="@+id/listview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:choiceMode="singleChoice" />
-    </LinearLayout>
+        android:layout_weight="1" />
 
 </LinearLayout>

@@ -1,98 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:orientation="vertical"
     tools:context=".ui.PerAppProxyActivity">
 
     <LinearLayout
-        android:id="@+id/header_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_spacing_dp16">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/header_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="@dimen/padding_spacing_dp16">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="vertical">
 
                 <LinearLayout
-                    android:id="@+id/container_per_app_proxy"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal">
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/switch_per_app_proxy"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:maxLines="2"
-                        android:text="@string/per_app_proxy_settings_enable"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                        app:theme="@style/BrandedSwitch" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/container_bypass_apps"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/switch_bypass_apps"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/switch_bypass_apps_mode"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                        app:theme="@style/BrandedSwitch" />
 
                     <LinearLayout
-                        android:id="@+id/layout_switch_bypass_apps_tips"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:clickable="true"
-                        android:contentDescription="@string/switch_bypass_apps_mode"
-                        android:focusable="true"
+                        android:id="@+id/container_per_app_proxy"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
                         android:gravity="center"
-                        android:padding="@dimen/padding_spacing_dp8">
+                        android:orientation="horizontal">
 
-                        <ImageView
-                            android:layout_width="@dimen/image_size_dp24"
-                            android:layout_height="@dimen/image_size_dp24"
-                            android:importantForAccessibility="no"
-                            app:srcCompat="@drawable/ic_about_24dp" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_per_app_proxy"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:maxLines="2"
+                            android:text="@string/per_app_proxy_settings_enable"
+                            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                            app:theme="@style/BrandedSwitch" />
 
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:id="@+id/container_bypass_apps"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_bypass_apps"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/switch_bypass_apps_mode"
+                            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                            app:theme="@style/BrandedSwitch" />
+
+                        <LinearLayout
+                            android:id="@+id/layout_switch_bypass_apps_tips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:contentDescription="@string/switch_bypass_apps_mode"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:padding="@dimen/padding_spacing_dp8">
+
+                            <ImageView
+                                android:layout_width="@dimen/image_size_dp24"
+                                android:layout_height="@dimen/image_size_dp24"
+                                android:importantForAccessibility="no"
+                                app:srcCompat="@drawable/ic_about_24dp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
                 </LinearLayout>
+
             </LinearLayout>
-
-
         </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/search_input_layout"
+            style="@style/Widget.App.SearchBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:endIconMode="clear_text"
+            app:startIconDrawable="@drawable/ic_description_24dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:hint="@string/menu_item_search"
+                android:inputType="text"
+                android:minHeight="0dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
+
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
-
-</LinearLayout>
+</FrameLayout>

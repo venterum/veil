@@ -1,14 +1,20 @@
 package com.v2ray.ang.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.widget.SearchView
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import androidx.transition.TransitionManager
+import com.google.android.material.transition.MaterialFade
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.R
@@ -41,7 +47,6 @@ class PerAppProxyActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.per_app_proxy_settings))
 
         initList()
@@ -58,6 +63,30 @@ class PerAppProxyActivity : BaseActivity() {
 
         binding.layoutSwitchBypassAppsTips.setOnClickListener {
             Toasty.info(this, R.string.summary_pref_per_app_proxy, Toast.LENGTH_LONG, true).show()
+        }
+
+        binding.etSearch.addTextChangedListener { text ->
+            filterProxyApp(text?.toString().orEmpty())
+        }
+        binding.searchInputLayout.setEndIconOnClickListener {
+            binding.etSearch.text?.clear()
+        }
+    }
+
+    private fun toggleSearch() {
+        val parent = binding.searchInputLayout.parent as ViewGroup
+        TransitionManager.beginDelayedTransition(parent, MaterialFade())
+        if (binding.searchInputLayout.visibility == View.VISIBLE) {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
+            binding.searchInputLayout.visibility = View.GONE
+            binding.etSearch.text?.clear()
+            filterProxyApp("")
+        } else {
+            binding.searchInputLayout.visibility = View.VISIBLE
+            binding.etSearch.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.etSearch, InputMethodManager.SHOW_IMPLICIT)
         }
     }
 
@@ -107,26 +136,17 @@ class PerAppProxyActivity : BaseActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_bypass_list, menu)
-
-        val searchItem = menu.findItem(R.id.search_view)
-        if (searchItem != null) {
-            val searchView = searchItem.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean = false
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    filterProxyApp(newText.orEmpty())
-                    return false
-                }
-            })
-        }
-
         return super.onCreateOptionsMenu(menu)
     }
 
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.search_view -> {
+            toggleSearch()
+            true
+        }
+
         R.id.select_all -> {
             selectAllApp()
             allowPerAppProxy()
@@ -209,7 +229,6 @@ class PerAppProxyActivity : BaseActivity() {
                 ) ?: ""
             }
             launch(Dispatchers.Main) {
-                //LogUtil.i(AppConfig.TAG, content)
                 selectProxyApp(content, true)
                 toastSuccess(R.string.toast_success)
                 hideLoading()

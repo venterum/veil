@@ -6,8 +6,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.appcompat.widget.SearchView
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import androidx.transition.TransitionManager
+import com.google.android.material.transition.MaterialFade
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityAppPickerBinding
@@ -53,28 +58,26 @@ class AppPickerActivity : BaseActivity() {
         selectedPackages.addAll(initialSelectedPackages)
         setupRecyclerView()
         loadApps()
+
+        binding.etSearch.addTextChangedListener { text ->
+            filterApps(text?.toString().orEmpty())
+        }
+        binding.searchInputLayout.setEndIconOnClickListener {
+            binding.etSearch.text?.clear()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_app_picker, menu)
-
-        val searchItem = menu.findItem(R.id.search_view)
-        if (searchItem != null) {
-            val searchView = searchItem.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean = false
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    filterApps(newText.orEmpty())
-                    return false
-                }
-            })
-        }
-
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.search_view -> {
+            toggleSearch()
+            true
+        }
+
         R.id.select_all -> {
             selectAllVisible()
             true
@@ -96,6 +99,23 @@ class AppPickerActivity : BaseActivity() {
             }
         )
         super.finish()
+    }
+
+    private fun toggleSearch() {
+        val parent = binding.searchInputLayout.parent as ViewGroup
+        TransitionManager.beginDelayedTransition(parent, MaterialFade())
+        if (binding.searchInputLayout.visibility == View.VISIBLE) {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
+            binding.searchInputLayout.visibility = View.GONE
+            binding.etSearch.text?.clear()
+            filterApps("")
+        } else {
+            binding.searchInputLayout.visibility = View.VISIBLE
+            binding.etSearch.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.etSearch, InputMethodManager.SHOW_IMPLICIT)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -194,4 +214,3 @@ class AppPickerActivity : BaseActivity() {
         return intent.getStringExtra(EXTRA_PICKER_TITLE) ?: getString(R.string.per_app_proxy_settings)
     }
 }
-

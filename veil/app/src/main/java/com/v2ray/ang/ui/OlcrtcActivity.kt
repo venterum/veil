@@ -4,11 +4,9 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.Spinner
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.entities.ProfileItem
@@ -35,8 +33,8 @@ class OlcrtcActivity : BaseActivity() {
     private val et_remarks: EditText by lazy { findViewById(R.id.et_remarks) }
     private val et_address: EditText by lazy { findViewById(R.id.et_address) }
     private val et_port: EditText by lazy { findViewById(R.id.et_port) }
-    private val sp_carrier: Spinner by lazy { findViewById(R.id.sp_carrier) }
-    private val sp_transport: Spinner by lazy { findViewById(R.id.sp_transport) }
+    private val sp_carrier: MaterialAutoCompleteTextView by lazy { findViewById(R.id.sp_carrier) }
+    private val sp_transport: MaterialAutoCompleteTextView by lazy { findViewById(R.id.sp_transport) }
     private val et_room_id: EditText by lazy { findViewById(R.id.et_room_id) }
     private val et_client_id: EditText by lazy { findViewById(R.id.et_client_id) }
     private val et_server_url: EditText by lazy { findViewById(R.id.et_server_url) }
@@ -54,26 +52,16 @@ class OlcrtcActivity : BaseActivity() {
             title = EConfigType.OLCRTC.toString()
         )
 
-        sp_carrier.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, carriers)
-            .apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
-        sp_transport.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, transports)
-            .apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        sp_carrier.setSimpleItems(carriers)
+        sp_transport.setSimpleItems(transports)
 
-        sp_carrier.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val c = carriers[position]
-                layout_server_url.visibility = if (c == "jitsi" || c == "telemost") View.VISIBLE else View.GONE
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        sp_carrier.setOnItemClickListener { _, _, position, _ ->
+            val c = carriers[position]
+            layout_server_url.visibility = if (c == "jitsi" || c == "telemost") View.VISIBLE else View.GONE
         }
 
-        sp_transport.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                layout_engine.visibility = if (transports[position] == "datachannel") View.GONE else View.VISIBLE
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        sp_transport.setOnItemClickListener { _, _, position, _ ->
+            layout_engine.visibility = if (transports[position] == "datachannel") View.GONE else View.VISIBLE
         }
 
         if (editGuid.isNotEmpty()) {
@@ -104,8 +92,8 @@ class OlcrtcActivity : BaseActivity() {
         et_address.setText(config.server)
         et_port.setText(config.serverPort)
 
-        sp_carrier.setSelection(Utils.arrayFind(carriers, config.olcrtcCarrier.orEmpty()))
-        sp_transport.setSelection(Utils.arrayFind(transports, config.olcrtcTransport.orEmpty()))
+        sp_carrier.setText(config.olcrtcCarrier.orEmpty(), false)
+        sp_transport.setText(config.olcrtcTransport.orEmpty(), false)
         et_room_id.setText(config.olcrtcRoomId)
         et_server_url.setText(config.olcrtcServerUrl)
         et_client_id.setText(config.olcrtcClientId)
@@ -122,11 +110,14 @@ class OlcrtcActivity : BaseActivity() {
             ProfileItem.create(EConfigType.OLCRTC)
         }
 
+        val carrierIndex = carriers.indexOf(sp_carrier.text.toString()).coerceAtLeast(0)
+        val transportIndex = transports.indexOf(sp_transport.text.toString()).coerceAtLeast(0)
+
         config.remarks = et_remarks.text.toString().trim()
-        config.server = carriers[sp_carrier.selectedItemPosition]
+        config.server = carriers[carrierIndex]
         config.serverPort = et_port.text.toString().trim().takeIf { it.isNotBlank() } ?: AppConfig.PORT_OLCRTC_SOCKS
-        config.olcrtcCarrier = carriers[sp_carrier.selectedItemPosition]
-        config.olcrtcTransport = transports[sp_transport.selectedItemPosition]
+        config.olcrtcCarrier = carriers[carrierIndex]
+        config.olcrtcTransport = transports[transportIndex]
         config.olcrtcRoomId = et_room_id.text.toString().trim()
         config.olcrtcServerUrl = et_server_url.text.toString().trim().takeIf { it.isNotBlank() }
         config.olcrtcClientId = et_client_id.text.toString().trim().takeIf { it.isNotBlank() }

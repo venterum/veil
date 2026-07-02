@@ -18,14 +18,20 @@
             android:layout_height="wrap_content"
             android:text="@string/server_lab_stream_security" />
 
-        <Spinner
-            android:id="@+id/sp_stream_security"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/streamsecurityxs"
-            android:nextFocusDown="@+id/et_sni" />
+            android:layout_marginBottom="@dimen/padding_spacing_dp8">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/sp_stream_security"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 
@@ -62,14 +68,20 @@
             android:layout_height="wrap_content"
             android:text="@string/server_lab_stream_fingerprint" />
 
-        <Spinner
-            android:id="@+id/sp_stream_fingerprint"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/streamsecurity_utls"
-            android:nextFocusDown="@+id/sp_stream_alpn" />
+            android:layout_marginBottom="@dimen/padding_spacing_dp8">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/sp_stream_fingerprint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 
@@ -85,14 +97,20 @@
             android:layout_height="wrap_content"
             android:text="@string/server_lab_stream_alpn" />
 
-        <Spinner
-            android:id="@+id/sp_stream_alpn"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/streamsecurity_alpn"
-            android:nextFocusDown="@+id/sp_allow_insecure" />
+            android:layout_marginBottom="@dimen/padding_spacing_dp8">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/sp_stream_alpn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 
@@ -107,14 +125,20 @@
             android:layout_height="wrap_content"
             android:text="@string/server_lab_allow_insecure" />
 
-        <Spinner
-            android:id="@+id/sp_allow_insecure"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/allowinsecures"
-            android:nextFocusDown="@+id/et_verify_peer_cert_by_name"/>
+            android:layout_marginBottom="@dimen/padding_spacing_dp8">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/sp_allow_insecure"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
     <LinearLayout

@@ -22,7 +22,7 @@
                 android:paddingEnd="@dimen/padding_spacing_dp16"
                 android:paddingTop="@dimen/padding_spacing_dp16"
                 android:text="@string/summary_app_fork"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                 android:alpha="0.6" />
 
             <LinearLayout
@@ -47,7 +47,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:text="@string/title_source_code"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
 
             <LinearLayout
@@ -72,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:text="@string/title_tg_channel"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
 
             <LinearLayout
@@ -97,7 +97,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:text="@string/title_oss_license"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
 
             <LinearLayout
@@ -122,7 +122,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:text="@string/title_privacy_policy"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
 
             <LinearLayout
@@ -147,7 +147,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:text="@string/title_original_repo"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
 
             <LinearLayout
@@ -162,14 +162,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/title_about"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
 
                 <TextView
                     android:id="@+id/tv_app_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/title_about"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
             </LinearLayout>
 
         </LinearLayout>

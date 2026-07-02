@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.ImageView
 import androidx.dynamicanimation.animation.DynamicAnimation
@@ -22,9 +23,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.drawerlayout.widget.DrawerLayout
+import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +35,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.android.material.transition.MaterialFade
+import androidx.transition.TransitionManager
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
@@ -125,6 +130,14 @@ class MainActivity : HelperBaseActivity() {
 
         // setup navigation drawer
         setupNavigationDrawer()
+
+        // setup search
+        binding.etSearch.addTextChangedListener { text ->
+            mainViewModel.filterConfig(text?.toString().orEmpty())
+        }
+        binding.searchInputLayout.setEndIconOnClickListener {
+            binding.etSearch.text?.clear()
+        }
 
         applyMainUiMode()
 
@@ -777,28 +790,15 @@ class MainActivity : HelperBaseActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-
-        val searchItem = menu.findItem(R.id.search_view)
-        if (searchItem != null) {
-            val searchView = searchItem.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean = false
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    mainViewModel.filterConfig(newText.orEmpty())
-                    return false
-                }
-            })
-
-            searchView.setOnCloseListener {
-                mainViewModel.filterConfig("")
-                false
-            }
-        }
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.search_view -> {
+            toggleSearch()
+            true
+        }
+
         R.id.import_qrcode -> {
             importQRcode()
             true
@@ -916,6 +916,23 @@ class MainActivity : HelperBaseActivity() {
         }
 
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun toggleSearch() {
+        val parent = binding.searchInputLayout.parent as ViewGroup
+        TransitionManager.beginDelayedTransition(parent, MaterialFade())
+        if (binding.searchInputLayout.visibility == View.VISIBLE) {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
+            binding.searchInputLayout.visibility = View.GONE
+            binding.etSearch.text?.clear()
+            mainViewModel.filterConfig("")
+        } else {
+            binding.searchInputLayout.visibility = View.VISIBLE
+            binding.etSearch.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.etSearch, InputMethodManager.SHOW_IMPLICIT)
+        }
     }
 
     private fun importManually(createConfigType: Int) {

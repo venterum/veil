@@ -35,7 +35,7 @@
                     android:id="@+id/remarks"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
                 <ImageView
                     android:id="@+id/img_locked"
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
                 android:lines="1"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
 
             <TextView
                 android:id="@+id/outboundTag"
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
                 android:lines="1"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
 
         </LinearLayout>
 

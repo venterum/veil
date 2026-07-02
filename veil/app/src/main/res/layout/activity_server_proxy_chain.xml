@@ -26,7 +26,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/server_lab_remarks"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
                 <EditText
                     android:id="@+id/et_remarks"
@@ -47,7 +47,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/server_proxy_chain_members"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

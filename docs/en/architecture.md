@@ -8,7 +8,7 @@ veil uses **two independent Go modules** compiled into a single AAR via gomobile
 App (Android)
      │
      ├── VPN service (VpnService) ── TUN ── hev-socks5-tunnel ──┐
-     └── Proxy service              ─────────────────────────────┤
+     └── Proxy service ─────────────────────────────────────────┤
                                                                 │
                                                           Xray core
                                                      (libv2ray.aar)

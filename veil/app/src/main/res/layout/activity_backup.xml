@@ -42,7 +42,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/title_configuration_backup"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
                 </LinearLayout>
 
@@ -70,7 +70,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:text="@string/title_configuration_share"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
 
             <LinearLayout
@@ -95,7 +95,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:text="@string/title_configuration_restore"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
             </LinearLayout>
         </LinearLayout>
 
@@ -133,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/title_webdav_config_setting"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
                 </LinearLayout>
 

@@ -5,14 +5,12 @@ import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.Spinner
 import android.widget.TextView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.DEFAULT_PORT
@@ -95,32 +93,30 @@ class ServerActivity : BaseActivity() {
         resources.getStringArray(R.array.browser_dialer_mode)
     }
 
+    private var currentConfig: ProfileItem? = null
 
-    // Kotlin synthetics was used, but since it is removed in 1.8. We switch to old manual approach.
-    // We don't use AndroidViewBinding because, it is better to share similar logics for different
-    // protocols. Use findViewById manually ensures the xml are de-coupled with the activity logic.
     private val et_remarks: EditText by lazy { findViewById(R.id.et_remarks) }
     private val et_address: EditText by lazy { findViewById(R.id.et_address) }
     private val et_port: EditText by lazy { findViewById(R.id.et_port) }
     private val et_id: EditText by lazy { findViewById(R.id.et_id) }
     private val et_security: EditText? by lazy { findViewById(R.id.et_security) }
-    private val sp_flow: Spinner? by lazy { findViewById(R.id.sp_flow) }
-    private val sp_security: Spinner? by lazy { findViewById(R.id.sp_security) }
-    private val sp_stream_security: Spinner? by lazy { findViewById(R.id.sp_stream_security) }
-    private val sp_allow_insecure: Spinner? by lazy { findViewById(R.id.sp_allow_insecure) }
+    private val sp_flow: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_flow) }
+    private val sp_security: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_security) }
+    private val sp_stream_security: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_stream_security) }
+    private val sp_allow_insecure: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_allow_insecure) }
     private val container_allow_insecure: LinearLayout? by lazy { findViewById(R.id.lay_allow_insecure) }
     private val et_sni: EditText? by lazy { findViewById(R.id.et_sni) }
     private val container_sni: LinearLayout? by lazy { findViewById(R.id.lay_sni) }
-    private val sp_stream_fingerprint: Spinner? by lazy { findViewById(R.id.sp_stream_fingerprint) } //uTLS
+    private val sp_stream_fingerprint: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_stream_fingerprint) }
     private val container_fingerprint: LinearLayout? by lazy { findViewById(R.id.lay_stream_fingerprint) }
-    private val sp_network: Spinner? by lazy { findViewById(R.id.sp_network) }
-    private val sp_header_type: Spinner? by lazy { findViewById(R.id.sp_header_type) }
+    private val sp_network: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_network) }
+    private val sp_header_type: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_header_type) }
     private val sp_header_type_title: TextView? by lazy { findViewById(R.id.sp_header_type_title) }
     private val tv_request_host: TextView? by lazy { findViewById(R.id.tv_request_host) }
     private val et_request_host: EditText? by lazy { findViewById(R.id.et_request_host) }
     private val tv_path: TextView? by lazy { findViewById(R.id.tv_path) }
     private val et_path: EditText? by lazy { findViewById(R.id.et_path) }
-    private val sp_stream_alpn: Spinner? by lazy { findViewById(R.id.sp_stream_alpn) } //uTLS
+    private val sp_stream_alpn: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_stream_alpn) }
     private val container_alpn: LinearLayout? by lazy { findViewById(R.id.lay_stream_alpn) }
     private val et_public_key: EditText? by lazy { findViewById(R.id.et_public_key) }
     private val et_preshared_key: EditText? by lazy { findViewById(R.id.et_preshared_key) }
@@ -153,13 +149,13 @@ class ServerActivity : BaseActivity() {
     private val btn_pinned_ca256_action: Button? by lazy { findViewById(R.id.btn_pinned_ca256_action) }
     private val container_pinned_ca256: LinearLayout? by lazy { findViewById(R.id.lay_pinned_ca256) }
     private val layout_browser_dialer: LinearLayout? by lazy { findViewById(R.id.layout_browser_dialer) }
-    private val sp_browser_dialer_mode: Spinner? by lazy { findViewById(R.id.sp_browser_dialer_mode) }
-
+    private val sp_browser_dialer_mode: MaterialAutoCompleteTextView? by lazy { findViewById(R.id.sp_browser_dialer_mode) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val config = MmkvManager.decodeServerConfig(editGuid)
+        currentConfig = config
 
         val layoutId = when (config?.configType ?: createConfigType) {
             EConfigType.VMESS -> R.layout.activity_server_vmess
@@ -173,189 +169,21 @@ class ServerActivity : BaseActivity() {
         } ?: return
         setContentViewWithToolbar(layoutId, showHomeAsUp = true, title = (config?.configType ?: createConfigType).toString())
 
-        sp_network?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long,
-            ) {
-                val types = transportTypes(networks[position])
-                sp_header_type?.isEnabled = types.size > 1
-                val adapter =
-                    ArrayAdapter(this@ServerActivity, android.R.layout.simple_spinner_item, types)
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                sp_header_type?.adapter = adapter
-                sp_header_type_title?.text =
-                    when (networks[position]) {
-                        NetworkType.GRPC.type -> getString(R.string.server_lab_mode_type)
-                        NetworkType.XHTTP.type -> getString(R.string.server_lab_xhttp_mode)
-                        else -> getString(R.string.server_lab_head_type)
-                    }.orEmpty()
-                sp_header_type?.setSelection(
-                    Utils.arrayFind(
-                        types,
-                        when (networks[position]) {
-                            NetworkType.GRPC.type -> config?.mode
-                            NetworkType.XHTTP.type -> config?.xhttpMode
-                            else -> config?.headerType
-                        }.orEmpty()
-                    )
-                )
+        sp_network?.setSimpleItems(R.array.networks)
+        sp_stream_security?.setSimpleItems(R.array.streamsecurityxs)
+        sp_stream_fingerprint?.setSimpleItems(R.array.streamsecurity_utls)
+        sp_stream_alpn?.setSimpleItems(R.array.streamsecurity_alpn)
+        sp_allow_insecure?.setSimpleItems(R.array.allowinsecures)
+        sp_flow?.setSimpleItems(R.array.flows)
+        sp_browser_dialer_mode?.setSimpleItems(R.array.browser_dialer_mode)
 
-                et_request_host?.text = Utils.getEditable(
-                    when (networks[position]) {
-                        //"quic" -> config?.quicSecurity
-                        NetworkType.GRPC.type -> config?.authority
-                        else -> config?.host
-                    }.orEmpty()
-                )
-                et_path?.text = Utils.getEditable(
-                    when (networks[position]) {
-                        NetworkType.KCP.type -> config?.seed
-                        //"quic" -> config?.quicKey
-                        NetworkType.GRPC.type -> config?.serviceName
-                        else -> config?.path
-                    }.orEmpty()
-                )
-
-                tv_request_host?.text = Utils.getEditable(
-                    getString(
-                        when (networks[position]) {
-                            NetworkType.TCP.type -> R.string.server_lab_request_host_http
-                            NetworkType.WS.type -> R.string.server_lab_request_host_ws
-                            NetworkType.HTTP_UPGRADE.type -> R.string.server_lab_request_host_httpupgrade
-                            NetworkType.XHTTP.type -> R.string.server_lab_request_host_xhttp
-                            NetworkType.H2.type -> R.string.server_lab_request_host_h2
-                            //"quic" -> R.string.server_lab_request_host_quic
-                            NetworkType.GRPC.type -> R.string.server_lab_request_host_grpc
-                            else -> R.string.server_lab_request_host
-                        }
-                    )
-                )
-
-                tv_path?.text = Utils.getEditable(
-                    getString(
-                        when (networks[position]) {
-                            NetworkType.KCP.type -> R.string.server_lab_path_kcp
-                            NetworkType.WS.type -> R.string.server_lab_path_ws
-                            NetworkType.HTTP_UPGRADE.type -> R.string.server_lab_path_httpupgrade
-                            NetworkType.XHTTP.type -> R.string.server_lab_path_xhttp
-                            NetworkType.H2.type -> R.string.server_lab_path_h2
-                            //"quic" -> R.string.server_lab_path_quic
-                            NetworkType.GRPC.type -> R.string.server_lab_path_grpc
-                            else -> R.string.server_lab_path
-                        }
-                    )
-                )
-                et_extra?.text = Utils.getEditable(
-                    when (networks[position]) {
-                        NetworkType.XHTTP.type -> config?.xhttpExtra
-                        else -> null
-                    }.orEmpty()
-                )
-                et_fm?.text = Utils.getEditable(config?.finalMask)
-
-                layout_kcp?.visibility =
-                    when (networks[position]) {
-                        NetworkType.KCP.type -> View.VISIBLE
-                        else -> View.GONE
-                    }
-                et_kcp_mtu?.text = Utils.getEditable(config?.kcpMtu?.toString().orEmpty())
-                et_kcp_tti?.text = Utils.getEditable(config?.kcpTti?.toString().orEmpty())
-
-                layout_extra?.visibility =
-                    when (networks[position]) {
-                        NetworkType.XHTTP.type -> View.VISIBLE
-                        else -> View.GONE
-                    }
-
-                layout_browser_dialer?.visibility =
-                    when (networks[position]) {
-                        NetworkType.WS.type -> View.VISIBLE
-                        NetworkType.XHTTP.type -> View.VISIBLE
-                        else -> View.GONE
-                    }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // do nothing
-            }
+        sp_network?.setOnItemClickListener { _, _, position, _ ->
+            applyNetworkSettings(networks[position], currentConfig)
         }
-        sp_stream_security?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long,
-            ) {
-                val isBlank = streamSecuritys[position].isBlank()
-                val isTLS = streamSecuritys[position] == TLS
-
-                when {
-                    // Case 1: Null or blank
-                    isBlank -> {
-                        listOf(
-                            container_sni,
-                            container_fingerprint,
-                            container_alpn,
-                            container_allow_insecure,
-                            container_public_key,
-                            container_short_id,
-                            container_spider_x,
-                            container_mldsa65_verify,
-                            container_ech_config_list,
-                            container_verify_peer_cert_by_name,
-                            container_pinned_ca256
-                        ).forEach { it?.visibility = View.GONE }
-                    }
-
-                    // Case 2: TLS value
-                    isTLS -> {
-                        listOf(
-                            container_sni,
-                            container_fingerprint,
-                            container_alpn,
-                            container_allow_insecure,
-                            container_ech_config_list,
-                            container_verify_peer_cert_by_name,
-                            container_pinned_ca256
-                        ).forEach { it?.visibility = View.VISIBLE }
-                        listOf(
-                            container_public_key,
-                            container_short_id,
-                            container_spider_x,
-                            container_mldsa65_verify
-                        ).forEach { it?.visibility = View.GONE }
-                    }
-
-                    // Case 3: Other reality values
-                    else -> {
-                        listOf(
-                            container_sni,
-                            container_fingerprint
-                        ).forEach { it?.visibility = View.VISIBLE }
-                        listOf(
-                            container_alpn,
-                            container_allow_insecure,
-                            container_ech_config_list,
-                            container_verify_peer_cert_by_name,
-                            container_pinned_ca256
-                        ).forEach { it?.visibility = View.GONE }
-                        listOf(
-                            container_public_key,
-                            container_short_id,
-                            container_spider_x,
-                            container_mldsa65_verify
-                        ).forEach { it?.visibility = View.VISIBLE }
-                    }
-                }
-            }
-
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                // do nothing
-            }
+        sp_stream_security?.setOnItemClickListener { _, _, position, _ ->
+            applyStreamSecuritySettings(streamSecuritys[position])
         }
+
         btn_pinned_ca256_action?.setOnClickListener {
             fetchPinnedCA256ForCurrentConfig()
         }
@@ -366,11 +194,157 @@ class ServerActivity : BaseActivity() {
         }
     }
 
-    /**
-     * binding selected server config
-     */
-    private fun bindingServer(config: ProfileItem): Boolean {
+    private fun applyNetworkSettings(network: String, config: ProfileItem?) {
+        val types = transportTypes(network)
+        sp_header_type?.setSimpleItems(types)
+        sp_header_type?.isEnabled = types.size > 1
+        sp_header_type_title?.text = when (network) {
+            NetworkType.GRPC.type -> getString(R.string.server_lab_mode_type)
+            NetworkType.XHTTP.type -> getString(R.string.server_lab_xhttp_mode)
+            else -> getString(R.string.server_lab_head_type)
+        }
+        sp_header_type?.setText(
+            types[Utils.arrayFind(
+                types,
+                when (network) {
+                    NetworkType.GRPC.type -> config?.mode
+                    NetworkType.XHTTP.type -> config?.xhttpMode
+                    else -> config?.headerType
+                }.orEmpty()
+            ).coerceIn(0, types.size - 1)],
+            false
+        )
 
+        et_request_host?.text = Utils.getEditable(
+            when (network) {
+                NetworkType.GRPC.type -> config?.authority
+                else -> config?.host
+            }.orEmpty()
+        )
+        et_path?.text = Utils.getEditable(
+            when (network) {
+                NetworkType.KCP.type -> config?.seed
+                NetworkType.GRPC.type -> config?.serviceName
+                else -> config?.path
+            }.orEmpty()
+        )
+
+        tv_request_host?.text = Utils.getEditable(
+            getString(
+                when (network) {
+                    NetworkType.TCP.type -> R.string.server_lab_request_host_http
+                    NetworkType.WS.type -> R.string.server_lab_request_host_ws
+                    NetworkType.HTTP_UPGRADE.type -> R.string.server_lab_request_host_httpupgrade
+                    NetworkType.XHTTP.type -> R.string.server_lab_request_host_xhttp
+                    NetworkType.H2.type -> R.string.server_lab_request_host_h2
+                    NetworkType.GRPC.type -> R.string.server_lab_request_host_grpc
+                    else -> R.string.server_lab_request_host
+                }
+            )
+        )
+
+        tv_path?.text = Utils.getEditable(
+            getString(
+                when (network) {
+                    NetworkType.KCP.type -> R.string.server_lab_path_kcp
+                    NetworkType.WS.type -> R.string.server_lab_path_ws
+                    NetworkType.HTTP_UPGRADE.type -> R.string.server_lab_path_httpupgrade
+                    NetworkType.XHTTP.type -> R.string.server_lab_path_xhttp
+                    NetworkType.H2.type -> R.string.server_lab_path_h2
+                    NetworkType.GRPC.type -> R.string.server_lab_path_grpc
+                    else -> R.string.server_lab_path
+                }
+            )
+        )
+        et_extra?.text = Utils.getEditable(
+            when (network) {
+                NetworkType.XHTTP.type -> config?.xhttpExtra
+                else -> null
+            }.orEmpty()
+        )
+        et_fm?.text = Utils.getEditable(config?.finalMask)
+
+        layout_kcp?.visibility = when (network) {
+            NetworkType.KCP.type -> View.VISIBLE
+            else -> View.GONE
+        }
+        et_kcp_mtu?.text = Utils.getEditable(config?.kcpMtu?.toString().orEmpty())
+        et_kcp_tti?.text = Utils.getEditable(config?.kcpTti?.toString().orEmpty())
+
+        layout_extra?.visibility = when (network) {
+            NetworkType.XHTTP.type -> View.VISIBLE
+            else -> View.GONE
+        }
+
+        layout_browser_dialer?.visibility = when (network) {
+            NetworkType.WS.type -> View.VISIBLE
+            NetworkType.XHTTP.type -> View.VISIBLE
+            else -> View.GONE
+        }
+    }
+
+    private fun applyStreamSecuritySettings(security: String) {
+        val isBlank = security.isBlank()
+        val isTLS = security == TLS
+
+        when {
+            isBlank -> {
+                listOf(
+                    container_sni,
+                    container_fingerprint,
+                    container_alpn,
+                    container_allow_insecure,
+                    container_public_key,
+                    container_short_id,
+                    container_spider_x,
+                    container_mldsa65_verify,
+                    container_ech_config_list,
+                    container_verify_peer_cert_by_name,
+                    container_pinned_ca256
+                ).forEach { it?.visibility = View.GONE }
+            }
+
+            isTLS -> {
+                listOf(
+                    container_sni,
+                    container_fingerprint,
+                    container_alpn,
+                    container_allow_insecure,
+                    container_ech_config_list,
+                    container_verify_peer_cert_by_name,
+                    container_pinned_ca256
+                ).forEach { it?.visibility = View.VISIBLE }
+                listOf(
+                    container_public_key,
+                    container_short_id,
+                    container_spider_x,
+                    container_mldsa65_verify
+                ).forEach { it?.visibility = View.GONE }
+            }
+
+            else -> {
+                listOf(
+                    container_sni,
+                    container_fingerprint
+                ).forEach { it?.visibility = View.VISIBLE }
+                listOf(
+                    container_alpn,
+                    container_allow_insecure,
+                    container_ech_config_list,
+                    container_verify_peer_cert_by_name,
+                    container_pinned_ca256
+                ).forEach { it?.visibility = View.GONE }
+                listOf(
+                    container_public_key,
+                    container_short_id,
+                    container_spider_x,
+                    container_mldsa65_verify
+                ).forEach { it?.visibility = View.VISIBLE }
+            }
+        }
+    }
+
+    private fun bindingServer(config: ProfileItem): Boolean {
         et_remarks.text = Utils.getEditable(config.remarks)
         et_address.text = Utils.getEditable(config.server.orEmpty())
         et_port.text = Utils.getEditable(config.serverPort ?: DEFAULT_PORT.toString())
@@ -382,7 +356,7 @@ class ServerActivity : BaseActivity() {
             et_security?.text = Utils.getEditable(config.method.orEmpty())
             val flow = Utils.arrayFind(flows, config.flow.orEmpty())
             if (flow >= 0) {
-                sp_flow?.setSelection(flow)
+                sp_flow?.setText(flows[flow], false)
             }
         } else if (config.configType == EConfigType.WIREGUARD) {
             et_id.text = Utils.getEditable(config.secretKey.orEmpty())
@@ -405,25 +379,27 @@ class ServerActivity : BaseActivity() {
             if (config.configType == EConfigType.SHADOWSOCKS) shadowsocksSecuritys else securitys
         val security = Utils.arrayFind(securityEncryptions, config.method.orEmpty())
         if (security >= 0) {
-            sp_security?.setSelection(security)
+            sp_security?.setSimpleItems(securityEncryptions)
+            sp_security?.setText(securityEncryptions[security], false)
         }
 
         val streamSecurity = Utils.arrayFind(streamSecuritys, config.security.orEmpty())
         if (streamSecurity >= 0) {
-            sp_stream_security?.setSelection(streamSecurity)
+            sp_stream_security?.setText(streamSecuritys[streamSecurity], false)
+            applyStreamSecuritySettings(streamSecuritys[streamSecurity])
             et_sni?.text = Utils.getEditable(config.sni)
-            config.fingerPrint?.let { it ->
-                val utlsIndex = Utils.arrayFind(uTlsItems, it)
-                utlsIndex.let { sp_stream_fingerprint?.setSelection(if (it >= 0) it else 0) }
+            config.fingerPrint?.let { fp ->
+                val utlsIndex = Utils.arrayFind(uTlsItems, fp)
+                sp_stream_fingerprint?.setText(uTlsItems[if (utlsIndex >= 0) utlsIndex else 0], false)
             }
-            config.alpn?.let { it ->
-                val alpnIndex = Utils.arrayFind(alpns, it)
-                alpnIndex.let { sp_stream_alpn?.setSelection(if (it >= 0) it else 0) }
+            config.alpn?.let { alpn ->
+                val alpnIndex = Utils.arrayFind(alpns, alpn)
+                sp_stream_alpn?.setText(alpns[if (alpnIndex >= 0) alpnIndex else 0], false)
             }
             if (config.security == TLS) {
                 val allowinsecure = Utils.arrayFind(allowinsecures, config.insecure.toString())
                 if (allowinsecure >= 0) {
-                    sp_allow_insecure?.setSelection(allowinsecure)
+                    sp_allow_insecure?.setText(allowinsecures[allowinsecure], false)
                 }
                 et_ech_config_list?.text = Utils.getEditable(config.echConfigList)
                 et_verify_peer_cert_by_name?.text = Utils.getEditable(config.verifyPeerCertByName)
@@ -438,49 +414,50 @@ class ServerActivity : BaseActivity() {
 
         val network = Utils.arrayFind(networks, config.network.orEmpty())
         if (network >= 0) {
-            sp_network?.setSelection(network)
+            sp_network?.setText(networks[network], false)
+            applyNetworkSettings(networks[network], config)
         }
 
         val browserDialerMode = Utils.arrayFind(browserDialerModes, config.browserDialerMode.orEmpty())
         if (browserDialerMode >= 0) {
-            sp_browser_dialer_mode?.setSelection(browserDialerMode)
+            sp_browser_dialer_mode?.setText(browserDialerModes[browserDialerMode], false)
         }
 
         return true
     }
 
-    /**
-     * clear or init server config
-     */
     private fun clearServer(): Boolean {
         et_remarks.text = null
         et_address.text = null
         et_port.text = Utils.getEditable(DEFAULT_PORT.toString())
         et_id.text = null
-        sp_security?.setSelection(0)
-        sp_network?.setSelection(0)
 
-        sp_header_type?.setSelection(0)
+        val securityEncryptions = if (createConfigType == EConfigType.SHADOWSOCKS) shadowsocksSecuritys else securitys
+        sp_security?.setSimpleItems(securityEncryptions)
+        sp_security?.setText(securityEncryptions[0], false)
+
+        sp_network?.setText(networks[0], false)
+        applyNetworkSettings(networks[0], null)
+
+        sp_header_type?.setText(transportTypes(networks[0])[0], false)
         et_request_host?.text = null
         et_path?.text = null
-        sp_stream_security?.setSelection(0)
-        sp_allow_insecure?.setSelection(0)
+
+        sp_stream_security?.setText(streamSecuritys[0], false)
+        applyStreamSecuritySettings(streamSecuritys[0])
+
+        sp_allow_insecure?.setText(allowinsecures[0], false)
         et_sni?.text = null
 
-        //et_security.text = null
-        sp_flow?.setSelection(0)
+        sp_flow?.setText(flows[0], false)
         et_public_key?.text = null
         et_reserved1?.text = Utils.getEditable("0,0,0")
-        et_local_address?.text =
-            Utils.getEditable(WIREGUARD_LOCAL_ADDRESS_V4)
+        et_local_address?.text = Utils.getEditable(WIREGUARD_LOCAL_ADDRESS_V4)
         et_local_mtu?.text = Utils.getEditable(WIREGUARD_LOCAL_MTU)
-        sp_browser_dialer_mode?.setSelection(0)
+        sp_browser_dialer_mode?.setText(browserDialerModes[0], false)
         return true
     }
 
-    /**
-     * save server config
-     */
     private fun saveServer(): Boolean {
         if (TextUtils.isEmpty(et_remarks.text.toString())) {
             toast(R.string.server_lab_remarks)
@@ -512,21 +489,20 @@ class ServerActivity : BaseActivity() {
             }
             return false
         }
-        sp_stream_security?.let {
-            if (config.configType == EConfigType.TROJAN && TextUtils.isEmpty(streamSecuritys[it.selectedItemPosition])) {
-                toast(R.string.server_lab_stream_security)
-                return false
-            }
+        val streamSecurityText = sp_stream_security?.text.toString()
+        if (config.configType == EConfigType.TROJAN && streamSecurityText.isBlank()) {
+            toast(R.string.server_lab_stream_security)
+            return false
         }
         if (et_extra?.text?.toString().isNotNullEmpty()) {
-            if (JsonUtil.parseString(et_extra?.text?.toString()) == null) {
+            if (JsonUtil.parseString(et_extra?.text.toString()) == null) {
                 toast(R.string.server_lab_xhttp_extra)
                 return false
             }
         }
 
         if (et_fm?.text?.toString().isNotNullEmpty()) {
-            if (JsonUtil.parseString(et_fm?.text?.toString()) == null) {
+            if (JsonUtil.parseString(et_fm?.text.toString()) == null) {
                 toast(R.string.server_lab_final_mask)
                 return false
             }
@@ -541,7 +517,6 @@ class ServerActivity : BaseActivity() {
         if (config.subscriptionId.isEmpty() && !subscriptionId.isNullOrEmpty()) {
             config.subscriptionId = subscriptionId.orEmpty()
         }
-        //LogUtil.i(AppConfig.TAG, JsonUtil.toJsonPretty(config) ?: "")
         MmkvManager.encodeServerConfig(editGuid, config)
         if (isRunning) {
             SettingsChangeManager.makeRestartService()
@@ -558,17 +533,16 @@ class ServerActivity : BaseActivity() {
         config.password = et_id.text.toString().trim()
 
         if (config.configType == EConfigType.VMESS) {
-            config.method = securitys[sp_security?.selectedItemPosition ?: 0]
+            config.method = securitys[securitys.indexOf(sp_security?.text.toString()).coerceAtLeast(0)]
         } else if (config.configType == EConfigType.VLESS) {
             config.method = et_security?.text.toString().trim()
-            config.flow = flows[sp_flow?.selectedItemPosition ?: 0]
+            config.flow = flows[flows.indexOf(sp_flow?.text.toString()).coerceAtLeast(0)]
         } else if (config.configType == EConfigType.SHADOWSOCKS) {
-            config.method = shadowsocksSecuritys[sp_security?.selectedItemPosition ?: 0]
+            config.method = shadowsocksSecuritys[shadowsocksSecuritys.indexOf(sp_security?.text.toString()).coerceAtLeast(0)]
         } else if (config.configType == EConfigType.SOCKS || config.configType == EConfigType.HTTP) {
             if (!TextUtils.isEmpty(et_security?.text) || !TextUtils.isEmpty(et_id.text)) {
                 config.username = et_security?.text.toString().trim()
             }
-        } else if (config.configType == EConfigType.TROJAN) {
         } else if (config.configType == EConfigType.WIREGUARD) {
             config.secretKey = et_id.text.toString().trim()
             config.publicKey = et_public_key?.text.toString().trim()
@@ -585,30 +559,34 @@ class ServerActivity : BaseActivity() {
         }
     }
 
-
     private fun saveStreamSettings(profileItem: ProfileItem) {
-        val network = sp_network?.selectedItemPosition ?: return
-        val type = sp_header_type?.selectedItemPosition ?: return
+        val networkText = sp_network?.text.toString()
+        val network = networks.indexOf(networkText)
+        if (network < 0) return
+        val types = transportTypes(networks[network])
+        val typeText = sp_header_type?.text.toString()
+        val type = types.indexOf(typeText)
+        if (type < 0) return
         val requestHost = et_request_host?.text?.toString()?.trim() ?: return
         val path = et_path?.text?.toString()?.trim() ?: return
 
         profileItem.network = networks[network]
-        profileItem.headerType = transportTypes(networks[network])[type]
+        profileItem.headerType = types[type]
         profileItem.host = requestHost
         profileItem.path = path
         profileItem.seed = path
         profileItem.quicSecurity = requestHost
         profileItem.quicKey = path
-        profileItem.mode = transportTypes(networks[network])[type]
+        profileItem.mode = types[type]
         profileItem.serviceName = path
         profileItem.authority = requestHost
-        profileItem.xhttpMode = transportTypes(networks[network])[type]
+        profileItem.xhttpMode = types[type]
         profileItem.xhttpExtra = et_extra?.text?.toString()?.trim().nullIfBlank()
         profileItem.finalMask = et_fm?.text?.toString()?.trim()?.nullIfBlank()
         profileItem.kcpMtu = et_kcp_mtu?.text?.toString()?.toIntOrNull()
         profileItem.kcpTti = et_kcp_tti?.text?.toString()?.toIntOrNull()
         if (networks[network] == NetworkType.WS.type || networks[network] == NetworkType.XHTTP.type) {
-            val browserDialerMode = browserDialerModes[sp_browser_dialer_mode?.selectedItemPosition ?: 0]
+            val browserDialerMode = browserDialerModes[browserDialerModes.indexOf(sp_browser_dialer_mode?.text.toString()).coerceAtLeast(0)]
             if (browserDialerMode != browserDialerModes[0]) {
                 profileItem.browserDialerMode = browserDialerMode
             } else {
@@ -620,11 +598,16 @@ class ServerActivity : BaseActivity() {
     }
 
     private fun saveTls(config: ProfileItem) {
-        val streamSecurity = sp_stream_security?.selectedItemPosition ?: return
+        val streamSecurityText = sp_stream_security?.text.toString()
+        val streamSecurity = streamSecuritys.indexOf(streamSecurityText)
+        if (streamSecurity < 0) return
         val sniField = et_sni?.text?.toString()?.trim()
-        val allowInsecureField = sp_allow_insecure?.selectedItemPosition
-        val utlsIndex = sp_stream_fingerprint?.selectedItemPosition ?: 0
-        val alpnIndex = sp_stream_alpn?.selectedItemPosition ?: 0
+        val allowInsecureText = sp_allow_insecure?.text.toString()
+        val allowInsecureField = allowinsecures.indexOf(allowInsecureText)
+        val utlsText = sp_stream_fingerprint?.text.toString()
+        val utlsIndex = uTlsItems.indexOf(utlsText).coerceAtLeast(0)
+        val alpnText = sp_stream_alpn?.text.toString()
+        val alpnIndex = alpns.indexOf(alpnText).coerceAtLeast(0)
         val publicKey = et_public_key?.text?.toString()
         val shortId = et_short_id?.text?.toString()
         val spiderX = et_spider_x?.text?.toString()
@@ -634,7 +617,7 @@ class ServerActivity : BaseActivity() {
         val pinnedCA256 = et_pinned_ca256?.text?.toString()
 
         val allowInsecure =
-            if (allowInsecureField == null || allowinsecures[allowInsecureField].isBlank()) {
+            if (allowInsecureField < 0 || allowinsecures[allowInsecureField].isBlank()) {
                 false
             } else {
                 allowinsecures[allowInsecureField].toBoolean()
@@ -719,9 +702,6 @@ class ServerActivity : BaseActivity() {
         }
     }
 
-    /**
-     * delete server config
-     */
     private fun deleteServer(): Boolean {
         if (editGuid.isNotEmpty()) {
             if (editGuid != MmkvManager.getSelectServer()) {
@@ -732,7 +712,6 @@ class ServerActivity : BaseActivity() {
                             finishWithMaterialTransition()
                         }
                         .setNegativeButton(android.R.string.cancel) { _, _ ->
-                            // do nothing
                         }
                         .show()
                 } else {

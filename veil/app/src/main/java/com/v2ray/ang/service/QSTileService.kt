@@ -23,15 +23,15 @@ class QSTileService : TileService() {
      * @param state The state to set.
      */
     fun setState(state: Int) {
-        qsTile?.icon = Icon.createWithResource(applicationContext, R.drawable.ic_stat_name)
-        if (state == Tile.STATE_INACTIVE) {
-            qsTile?.state = Tile.STATE_INACTIVE
-            qsTile?.label = getString(R.string.app_name)
-        } else if (state == Tile.STATE_ACTIVE) {
-            qsTile?.state = Tile.STATE_ACTIVE
-            qsTile?.label = CoreServiceManager.getRunningServerName()
-        }
-
+        qsTile?.state = state
+        qsTile?.icon = Icon.createWithResource(
+            applicationContext,
+            if (state == Tile.STATE_ACTIVE) R.drawable.ic_qs_shield else R.drawable.ic_qs_shield_outline
+        )
+        qsTile?.label = if (state == Tile.STATE_ACTIVE)
+            CoreServiceManager.getRunningServerName()
+        else
+            getString(R.string.app_name)
         qsTile?.updateTile()
     }
 

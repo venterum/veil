@@ -2,15 +2,21 @@ package com.v2ray.ang.ui
 
 import android.annotation.SuppressLint
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
-import androidx.appcompat.widget.SearchView
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.transition.TransitionManager
+import com.google.android.material.transition.MaterialFade
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityLogcatBinding
 import com.v2ray.ang.extension.toast
@@ -43,6 +49,14 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
         binding.recyclerView.adapter = adapter
 
         binding.refreshLayout.setOnRefreshListener(this)
+
+        binding.etSearch.addTextChangedListener { text ->
+            viewModel.filter(text?.toString())
+            refreshData()
+        }
+        binding.searchInputLayout.setEndIconOnClickListener {
+            binding.etSearch.text?.clear()
+        }
 
         toast(getString(R.string.pull_down_to_refresh))
     }
@@ -101,32 +115,35 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
         }
     }
 
+    private fun toggleSearch() {
+        val parent = binding.searchInputLayout.parent as ViewGroup
+        TransitionManager.beginDelayedTransition(parent, MaterialFade())
+        if (binding.searchInputLayout.visibility == View.VISIBLE) {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
+            binding.searchInputLayout.visibility = View.GONE
+            binding.etSearch.text?.clear()
+            viewModel.filter("")
+            refreshData()
+        } else {
+            binding.searchInputLayout.visibility = View.VISIBLE
+            binding.etSearch.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.etSearch, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_logcat, menu)
-
-        val searchItem = menu.findItem(R.id.search_view)
-        if (searchItem != null) {
-            val searchView = searchItem.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean = false
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    viewModel.filter(newText)
-                    refreshData()
-                    return false
-                }
-            })
-            searchView.setOnCloseListener {
-                viewModel.filter("")
-                refreshData()
-                false
-            }
-        }
-
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.search_view -> {
+            toggleSearch()
+            true
+        }
+
         R.id.copy_all -> {
             val all = viewModel.getAll().joinToString("\n")
             Utils.setClipboard(this, all)

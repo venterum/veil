@@ -5,7 +5,6 @@
         android:id="@+id/search_view"
         android:icon="@drawable/ic_description_24dp"
         android:title="@string/menu_item_search"
-        app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/select_all"

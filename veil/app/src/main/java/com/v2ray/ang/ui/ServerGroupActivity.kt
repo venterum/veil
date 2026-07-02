@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.ArrayAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityServerGroupBinding
@@ -31,11 +30,13 @@ class ServerGroupActivity : BaseActivity() {
         intent.getStringExtra("subscriptionId")
     }
     private val subIds = mutableListOf<String>()
+    private val subNames = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = EConfigType.POLICYGROUP.toString())
+
+        binding.spPolicyGroupType.setSimpleItems(R.array.policy_group_type)
 
         val config = MmkvManager.decodeServerConfig(editGuid)
         populateSubscriptionSpinner()
@@ -47,39 +48,30 @@ class ServerGroupActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Binding selected server config
-     */
     private fun bindingServer(config: ProfileItem): Boolean {
         binding.etRemarks.text = Utils.getEditable(config.remarks)
         binding.etPolicyGroupFilter.text = Utils.getEditable(config.policyGroupFilter)
 
         val type = config.policyGroupType?.toInt() ?: 0
-        binding.spPolicyGroupType.setSelection(type)
+        binding.spPolicyGroupType.setText(resources.getStringArray(R.array.policy_group_type)[type], false)
 
         val pos = subIds.indexOf(config.policyGroupSubscriptionId ?: "").let { if (it >= 0) it else 0 }
-        binding.spPolicyGroupSubId.setSelection(pos)
+        binding.spPolicyGroupSubId.setText(subNames[pos], false)
 
         return true
     }
 
-    /**
-     * clear or init server config
-     */
     private fun clearServer(): Boolean {
         binding.etRemarks.text = null
         binding.etPolicyGroupFilter.text = null
 
         if (subscriptionId.isNotNullEmpty()) {
             val pos = subIds.indexOf(subscriptionId).let { if (it >= 0) it else 0 }
-            binding.spPolicyGroupSubId.setSelection(pos)
+            binding.spPolicyGroupSubId.setText(subNames[pos], false)
         }
         return true
     }
 
-    /**
-     * save server config
-     */
     private fun saveServer(): Boolean {
         if (TextUtils.isEmpty(binding.etRemarks.text.toString())) {
             toast(R.string.server_lab_remarks)
@@ -90,16 +82,18 @@ class ServerGroupActivity : BaseActivity() {
         config.remarks = binding.etRemarks.text.toString().trim()
         config.policyGroupFilter = binding.etPolicyGroupFilter.text.toString().trim()
 
-        config.policyGroupType = binding.spPolicyGroupType.selectedItemPosition.toString()
+        val policyTypes = resources.getStringArray(R.array.policy_group_type)
+        val typeIndex = policyTypes.indexOf(binding.spPolicyGroupType.text.toString()).coerceAtLeast(0)
+        config.policyGroupType = typeIndex.toString()
 
-        val selPos = binding.spPolicyGroupSubId.selectedItemPosition
+        val selPos = subNames.indexOf(binding.spPolicyGroupSubId.text.toString())
         config.policyGroupSubscriptionId = if (selPos >= 0 && selPos < subIds.size) subIds[selPos] else null
 
         if (config.subscriptionId.isEmpty() && !subscriptionId.isNullOrEmpty()) {
             config.subscriptionId = subscriptionId.orEmpty()
         }
 
-        config.description = "${binding.spPolicyGroupType.selectedItem} - ${binding.spPolicyGroupSubId.selectedItem} - ${config.policyGroupFilter}"
+        config.description = "${binding.spPolicyGroupType.text} - ${binding.spPolicyGroupSubId.text} - ${config.policyGroupFilter}"
 
         MmkvManager.encodeServerConfig(editGuid, config)
         if (isRunning) {
@@ -110,9 +104,6 @@ class ServerGroupActivity : BaseActivity() {
         return true
     }
 
-    /**
-     * save server config
-     */
     private fun deleteServer(): Boolean {
         if (editGuid.isNotEmpty()) {
             MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
@@ -121,7 +112,6 @@ class ServerGroupActivity : BaseActivity() {
                     finishWithMaterialTransition()
                 }
                 .setNegativeButton(android.R.string.cancel) { _, _ ->
-                    // do nothing
                 }
                 .show()
         }
@@ -130,20 +120,19 @@ class ServerGroupActivity : BaseActivity() {
 
     private fun populateSubscriptionSpinner() {
         val subs = MmkvManager.decodeSubscriptions()
-        val displayList = mutableListOf(getString(R.string.filter_config_all)) //none
+        subNames.clear()
         subIds.clear()
-        subIds.add("") // index 0 => All
+        subNames.add(getString(R.string.filter_config_all))
+        subIds.add("")
         subs.forEach { sub ->
             val name = when {
                 sub.subscription.remarks.isNotBlank() -> sub.subscription.remarks
                 else -> sub.guid
             }
-            displayList.add(name)
+            subNames.add(name)
             subIds.add(sub.guid)
         }
-        val subAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, displayList)
-        subAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spPolicyGroupSubId.adapter = subAdapter
+        binding.spPolicyGroupSubId.setSimpleItems(subNames.toTypedArray())
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

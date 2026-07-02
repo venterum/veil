@@ -5,9 +5,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.ListView
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityTaskerBinding
@@ -16,17 +14,15 @@ import com.v2ray.ang.util.LogUtil
 
 class TaskerActivity : BaseActivity() {
     private val binding by lazy { ActivityTaskerBinding.inflate(layoutInflater) }
+    private val taskerAdapter = TaskerAdapter()
 
-    private var listview: ListView? = null
     private var lstData: ArrayList<String> = ArrayList()
     private var lstGuid: ArrayList<String> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = "")
 
-        //add def value
         lstData.add("Default")
         lstGuid.add(AppConfig.TASKER_DEFAULT_GUID)
 
@@ -36,12 +32,10 @@ class TaskerActivity : BaseActivity() {
                 lstGuid.add(key)
             }
         }
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_list_item_single_choice, lstData
-        )
-        listview = findViewById<View>(R.id.listview) as ListView
-        listview?.adapter = adapter
+
+        binding.recyclerview.layoutManager = LinearLayoutManager(this)
+        binding.recyclerview.adapter = taskerAdapter
+        taskerAdapter.submitList(lstData)
 
         init()
     }
@@ -54,22 +48,21 @@ class TaskerActivity : BaseActivity() {
 
             if (switch == null || TextUtils.isEmpty(guid)) {
                 return
-            } else {
-                binding.switchStartService.isChecked = switch
-                val pos = lstGuid.indexOf(guid.toString())
-                if (pos >= 0) {
-                    listview?.setItemChecked(pos, true)
-                }
+            }
+
+            binding.switchStartService.isChecked = switch
+            val pos = lstGuid.indexOf(guid.toString())
+            if (pos >= 0) {
+                taskerAdapter.setSelectedPosition(pos)
             }
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to initialize Tasker settings", e)
-
         }
     }
 
     private fun confirmFinish() {
-        val position = listview?.checkedItemPosition
-        if (position == null || position < 0) {
+        val position = taskerAdapter.getSelectedPosition()
+        if (position < 0) {
             return
         }
 
@@ -99,17 +92,11 @@ class TaskerActivity : BaseActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.del_config -> {
-            true
-        }
-
+        R.id.del_config -> true
         R.id.save_config -> {
             confirmFinish()
             true
         }
-
         else -> super.onOptionsItemSelected(item)
     }
-
 }
-

@@ -15,12 +15,20 @@
             android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:orientation="vertical">
 
-            <Spinner
-                android:id="@+id/sp_subscriptionId"
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:layout_marginBottom="@dimen/padding_spacing_dp8" />
+                android:layout_marginBottom="@dimen/padding_spacing_dp8">
+
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/sp_subscriptionId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
 
