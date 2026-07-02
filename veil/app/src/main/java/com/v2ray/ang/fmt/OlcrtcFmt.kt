@@ -64,16 +64,11 @@ object OlcrtcFmt : FmtBase() {
             config.remarks = config.olcrtcRoomId.orEmpty()
         }
 
-        // Set defaults for display
-        config.server = config.olcrtcCarrier
-        config.serverPort = AppConfig.PORT_OLCRTC_SOCKS
-
         return config
     }
 
     fun toUri(config: ProfileItem): String {
         val sb = StringBuilder()
-        sb.append(AppConfig.OLCRTC)
         sb.append(config.olcrtcCarrier.orEmpty())
         sb.append("?")
         sb.append(config.olcrtcTransport.orEmpty())

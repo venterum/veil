@@ -12,13 +12,6 @@
 
 ```bash
 git clone --recurse-submodules https://github.com/venterum/veil
-git submodule update --init --recursive
-```
-
-The `olcrtc` checkout must be next to the veil project root:
-
-```
-../olcrtc/
 ```
 
 ## Step 1: hev-socks5-tunnel
@@ -67,4 +60,4 @@ veil/app/libs/
 ## Note
 
 - The standard upstream AAR from 2dust **does not contain** `mobile.*` — olcRTC will not work without the custom build.
-- `olcrtc/` is a separate project with its own git history.
+- `olcrtc/` is a git submodule with its own history.

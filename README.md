@@ -1,13 +1,22 @@
-# veil
+# Veil
 
 A V2Ray / Xray client for Android with Material 3 UI and olcRTC tunnel support.
 
-[![API](https://img.shields.io/badge/API-24%2B-yellow.svg?style=flat)](https://developer.android.com/about/versions/nougat)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.x-blue.svg)](https://kotlinlang.org)
-[![Material 3](https://img.shields.io/badge/Material-3-6750A4.svg)](https://m3.material.io)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Android](https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/Android/android1.svg)](https://developer.android.com/about/versions/nougat)
+[![Kotlin](https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/Kotlin/kotlin1.svg)](https://kotlinlang.org)
+[![License: GPL v3](https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/LicenceGPLv3/licencegplv31.svg)](LICENSE)
+
+> **Warning:** This project is in early development. Bugs, crashes, and breaking changes are expected. Use at your own risk.
 
 Based on [v2rayNG](https://github.com/2dust/v2rayNG) by 2dust.
+
+## Downloads
+
+Pre-built APKs are available on the [releases page](https://github.com/venterum/veil/releases).
+
+## Documentation
+
+Full documentation (EN/RU) is in the [docs](docs/index.md) directory.
 
 ## Features
 
@@ -56,14 +65,13 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 │       ├── src/main/java/com/v2ray/ang/fmt/OlcrtcFmt.kt
 │       ├── src/main/java/com/v2ray/ang/ui/OlcrtcActivity.kt
 │       └── ...
+├── olcrtc/                  # git submodule — olcRTC Go transport
 ├── hev-socks5-tunnel/       # git submodule — native TUN tunnel
 ├── AndroidLibXrayLite/      # git submodule — Go sources for Xray core bindings
 ├── compile-hevtun.sh        # builds the native libhev-socks5-tunnel libraries
 ├── compile-libv2ray.sh      # builds the combined libv2ray.aar (Xray + olcRTC)
 └── README.md
 ```
-
-> `olcrtc/` and `olcbox/` are separate projects maintained independently and must be checked out alongside veil.
 
 ## Building from source
 
@@ -79,13 +87,7 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 1. **Clone**
 
    ```bash
-    git clone --recurse-submodules https://github.com/venterum/veil
-   git submodule update --init --recursive
-   ```
-
-   Place `olcrtc/` checkout next to the veil project root:
-   ```
-   ../olcrtc/
+   git clone --recurse-submodules https://github.com/venterum/veil
    ```
 
 2. **Build `hev-socks5-tunnel` native libraries**
@@ -120,13 +122,15 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 
    APK outputs: `veil/app/build/outputs/apk/debug/`, split per ABI (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`).
 
-## Tech stack
+## Backward compatibility with v2rayNG
 
-- Kotlin, Android View system with View Binding
-- Material Components for Android (Material 3 Expressive theme)
-- MMKV, OkHttp, Gson, Coroutines
-- Xray core + olcRTC Go transport bundled in a single `libv2ray.aar` via gomobile
-- Native TUN via `hev-socks5-tunnel`
+Since Veil is a fork of [v2rayNG](https://github.com/2dust/v2rayNG) and shares its config format you can migrate seamlessly:
+
+1. Open v2rayNG, open the side drawer → **Backup & Restore** → **Backup config** → **Local**
+2. Transfer the saved config files to this device
+3. Open veil, go to the side drawer → **Backup & Restore** → **Restore config** → **Local**, select the file
+
+Standard protocol profiles (VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, Hysteria2), subscriptions, and settings are fully compatible. olcRTC-specific profiles only work in veil.
 
 ## Credits
 

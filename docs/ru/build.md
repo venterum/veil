@@ -12,13 +12,6 @@
 
 ```bash
 git clone --recurse-submodules https://github.com/venterum/veil
-git submodule update --init --recursive
-```
-
-Репозиторий `olcrtc` должен быть рядом с проектом:
-
-```
-../olcrtc/
 ```
 
 ## Шаг 1: hev-socks5-tunnel

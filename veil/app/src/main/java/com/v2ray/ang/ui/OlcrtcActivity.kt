@@ -31,8 +31,6 @@ class OlcrtcActivity : BaseActivity() {
     private val transports = arrayOf("datachannel", "vp8channel", "seichannel", "videochannel")
 
     private val et_remarks: EditText by lazy { findViewById(R.id.et_remarks) }
-    private val et_address: EditText by lazy { findViewById(R.id.et_address) }
-    private val et_port: EditText by lazy { findViewById(R.id.et_port) }
     private val sp_carrier: MaterialAutoCompleteTextView by lazy { findViewById(R.id.sp_carrier) }
     private val sp_transport: MaterialAutoCompleteTextView by lazy { findViewById(R.id.sp_transport) }
     private val et_room_id: EditText by lazy { findViewById(R.id.et_room_id) }
@@ -67,10 +65,6 @@ class OlcrtcActivity : BaseActivity() {
         if (editGuid.isNotEmpty()) {
             val config = MmkvManager.decodeServerConfig(editGuid) ?: return
             loadConfig(config)
-        } else {
-            et_address.setText(carriers[0])
-            et_port.setText(AppConfig.PORT_OLCRTC_SOCKS)
-            et_address.isEnabled = false
         }
     }
 
@@ -89,8 +83,6 @@ class OlcrtcActivity : BaseActivity() {
 
     private fun loadConfig(config: ProfileItem) {
         et_remarks.setText(config.remarks)
-        et_address.setText(config.server)
-        et_port.setText(config.serverPort)
 
         sp_carrier.setText(config.olcrtcCarrier.orEmpty(), false)
         sp_transport.setText(config.olcrtcTransport.orEmpty(), false)
@@ -99,8 +91,6 @@ class OlcrtcActivity : BaseActivity() {
         et_client_id.setText(config.olcrtcClientId)
         et_key_hex.setText(config.olcrtcKeyHex)
         et_engine.setText(config.olcrtcEngine)
-
-        et_address.isEnabled = false
     }
 
     private fun saveConfig() {
@@ -114,8 +104,6 @@ class OlcrtcActivity : BaseActivity() {
         val transportIndex = transports.indexOf(sp_transport.text.toString()).coerceAtLeast(0)
 
         config.remarks = et_remarks.text.toString().trim()
-        config.server = carriers[carrierIndex]
-        config.serverPort = et_port.text.toString().trim().takeIf { it.isNotBlank() } ?: AppConfig.PORT_OLCRTC_SOCKS
         config.olcrtcCarrier = carriers[carrierIndex]
         config.olcrtcTransport = transports[transportIndex]
         config.olcrtcRoomId = et_room_id.text.toString().trim()

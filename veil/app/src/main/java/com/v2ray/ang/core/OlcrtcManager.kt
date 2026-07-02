@@ -200,6 +200,25 @@ object OlcrtcManager {
         return "https://$server/$room"
     }
 
+    /**
+     * Returns the provider domain derived from the OLCRTC room identifier.
+     *
+     * @param carrier The transport carrier.
+     * @param roomId The room identifier or full room URL.
+     * @param serverUrl Optional custom server URL.
+     * @return The provider domain, or an empty string if unavailable.
+     */
+    fun providerUrl(carrier: String, roomId: String?, serverUrl: String?): String {
+        val fullUrl = normalizeRoomURL(carrier, roomId, serverUrl)
+        if (fullUrl.isEmpty()) return ""
+        return try {
+            val url = java.net.URL(fullUrl)
+            url.authority
+        } catch (_: Exception) {
+            fullUrl
+        }
+    }
+
     private fun parseEngine(engine: String?): Pair<Int, Int> {
         if (engine.isNullOrBlank()) return 0 to 0
         var fps = 0

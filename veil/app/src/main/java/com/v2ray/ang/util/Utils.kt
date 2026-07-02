@@ -172,6 +172,11 @@ object Utils {
                 }
             }
 
+            // Handle [ip]:port
+            if (addr.startsWith("[") && addr.contains("]:")) {
+                addr = addr.substring(0, addr.indexOf("]:") + 1)
+            }
+
             // Handle IPv4-mapped IPv6 addresses
             if (addr.startsWith("::ffff:") && '.' in addr) {
                 addr = addr.drop(7)
@@ -571,7 +576,9 @@ object Utils {
             if (!isIpAddress(ip)) return false
 
             // Parse CIDR (e.g., "192.168.1.0/24")
-            val (cidrIp, prefixLen) = cidr.split("/")
+            val parts = cidr.split("/")
+            if (parts.size != 2) return false
+            val (cidrIp, prefixLen) = parts
             val prefixLength = prefixLen.toInt()
 
             // Convert IP and CIDR's IP portion to Long

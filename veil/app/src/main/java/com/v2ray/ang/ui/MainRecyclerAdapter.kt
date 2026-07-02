@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
+import com.v2ray.ang.core.OlcrtcManager
 import com.v2ray.ang.databinding.ItemRecyclerFooterBinding
 import com.v2ray.ang.databinding.ItemRecyclerMainBinding
 import com.v2ray.ang.databinding.ItemRecyclerMainNewBinding
@@ -347,6 +348,13 @@ class MainRecyclerAdapter(
      * @return Formatted address string
      */
     private fun getAddress(profile: ProfileItem): String {
+        if (profile.configType == EConfigType.OLCRTC) {
+            return OlcrtcManager.providerUrl(
+                profile.olcrtcCarrier.orEmpty(),
+                profile.olcrtcRoomId,
+                profile.olcrtcServerUrl
+            )
+        }
         return profile.description.nullIfBlank() ?: AngConfigManager.generateDescription(profile)
     }
 
