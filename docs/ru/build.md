@@ -11,7 +11,7 @@
 ## Подготовка
 
 ```bash
-git clone --recurse-submodules <repo-url>
+git clone --recurse-submodules https://github.com/venterum/veil
 git submodule update --init --recursive
 ```
 

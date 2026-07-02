@@ -79,7 +79,7 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 1. **Clone**
 
    ```bash
-   git clone --recurse-submodules <repo-url>
+    git clone --recurse-submodules https://github.com/venterum/veil
    git submodule update --init --recursive
    ```
 
