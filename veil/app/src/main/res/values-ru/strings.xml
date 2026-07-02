@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_header_subtitle">Material-версия</string>
     <string name="title_drawer_section_main">Основное</string>
     <string name="title_drawer_section_more">Ещё</string>
     <string name="app_widget_name">v2rayNG</string>

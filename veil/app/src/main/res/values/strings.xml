@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Veil</string>
-    <string name="nav_header_subtitle">Material edition</string>
     <string name="title_drawer_section_main">General</string>
     <string name="title_drawer_section_more">More</string>
     <string name="app_widget_name">Switch</string>
