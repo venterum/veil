@@ -25,8 +25,15 @@ Full documentation (EN/RU) is in the [docs](docs/index.md) directory.
 - Subscription management and QR-code import/export
 - Per-app proxy, routing rules, DNS, fragmentation, mux and more
 - VPN service backed by `hev-socks5-tunnel` or the xray-core tunnel
+- **Three connection modes:** VPN (all traffic through tunnel), Proxy (SOCKS5 only, no TUN), Proxy + TUN (SOCKS5 proxy with optional in-app TUN toggle)
 - geoip / geosite rule support
 - Material 3 UI with Google Sans Flex typeface
+
+## Screenshots
+
+| | | | |
+|:---:|:---:|:---:|:---:|
+| ![](docs/screenshots/index.png) | ![](docs/screenshots/panel.png) | ![](docs/screenshots/settings.png) | ![](docs/screenshots/olcrtc+details.png) |
 
 ## Architecture
 
