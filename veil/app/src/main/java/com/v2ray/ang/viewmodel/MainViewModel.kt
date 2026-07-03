@@ -46,6 +46,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val connectionPing by lazy { MutableLiveData<String>() }
     val connectionIp by lazy { MutableLiveData<String>() }
     val connectionIpDetail by lazy { MutableLiveData<com.v2ray.ang.dto.IPAPIInfo?>() }
+    val snackbarMessage by lazy { MutableLiveData<String>() }
 
     /**
      * Refer to the official documentation for [registerReceiver](https://developer.android.com/reference/androidx/core/content/ContextCompat#registerReceiver(android.content.Context,android.content.BroadcastReceiver,android.content.IntentFilter,int):
@@ -438,16 +439,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 AppConfig.MSG_STATE_START_SUCCESS -> {
-                    getApplication<AngApplication>().toastSuccess(R.string.toast_services_success)
                     isRunning.value = true
                 }
 
                 AppConfig.MSG_STATE_START_FAILURE -> {
                     val errorMessage = intent.getStringExtra("content")
-                    if (!errorMessage.isNullOrBlank()) {
-                        getApplication<AngApplication>().toastError(errorMessage)
+                    snackbarMessage.value = if (!errorMessage.isNullOrBlank()) {
+                        errorMessage
                     } else {
-                        getApplication<AngApplication>().toastError(R.string.toast_services_failure)
+                        getApplication<AngApplication>().getString(R.string.toast_services_failure)
                     }
                     isRunning.value = false
                 }
@@ -470,11 +470,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 AppConfig.MSG_MEASURE_DELAY_SUCCESS -> {
                     val content = intent.getStringExtra("content") ?: ""
-                    updateTestResultAction.value = content
                     val lines = content.split("\n")
-                    if (lines.isNotEmpty() && lines[0].startsWith("Success")) {
-                        val delayMatch = Regex("""(\d+)ms""").find(lines[0])
-                        connectionPing.value = delayMatch?.value ?: ""
+                    val delayMatch = Regex("""(\d+)\s*(?:ms|мс)""").find(lines[0])
+                    if (delayMatch != null) {
+                        val millis = delayMatch.groupValues[1]
+                        connectionPing.value = "${millis}ms"
                         if (lines.size >= 2) {
                             connectionIp.value = lines[1]
                         } else {

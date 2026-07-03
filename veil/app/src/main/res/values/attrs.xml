@@ -153,7 +153,7 @@
         <item name="fontFamily">sans-serif</item>
     </style>
 
-    <!-- Headline / title text appearances with Google Sans Flex ROND=100 -->
+    <!-- Headline / title text appearances -->
     <style name="TextAppearance.App.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
         <item name="android:fontFamily">@font/google_sans_flex</item>
     </style>

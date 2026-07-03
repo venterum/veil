@@ -89,6 +89,7 @@ class MainActivity : HelperBaseActivity() {
     private var uptimeJob: Job? = null
     private var currentUiMode: MainUiMode = MainUiMode.EXPRESSIVE
     private var toolbarAtTop = false
+    private var currentSnackbar: com.google.android.material.snackbar.Snackbar? = null
 
     /**
      * MainActivity is the root of the app's task. The system already moves the
@@ -189,6 +190,7 @@ class MainActivity : HelperBaseActivity() {
             DrawerEntry.Item(R.id.per_app_proxy_settings, R.drawable.ic_per_apps_24dp, R.string.per_app_proxy_settings),
             DrawerEntry.Item(R.id.routing_setting, R.drawable.ic_routing_24dp, R.string.routing_settings_title),
             DrawerEntry.Item(R.id.user_asset_setting, R.drawable.ic_file_24dp, R.string.title_user_asset_setting),
+            DrawerEntry.Item(R.id.mode_selector, R.drawable.ic_tun_off_24dp, R.string.title_mode),
             DrawerEntry.Item(R.id.settings, R.drawable.ic_settings_24dp, R.string.title_settings),
             DrawerEntry.Header(R.string.title_drawer_section_more),
             DrawerEntry.Item(R.id.logcat, R.drawable.ic_logcat_24dp, R.string.title_logcat),
@@ -444,6 +446,11 @@ class MainActivity : HelperBaseActivity() {
         mainViewModel.connectionIp.observe(this) { ip ->
             setConnectionIpText(ip)
         }
+        mainViewModel.snackbarMessage.observe(this) { message ->
+            if (!message.isNullOrEmpty()) {
+                showOrUpdateSnackbar(message)
+            }
+        }
         mainViewModel.startListenBroadcast()
         mainViewModel.initAssets(assets)
     }
@@ -464,6 +471,16 @@ class MainActivity : HelperBaseActivity() {
         expressiveBinding?.tvConnectionIp?.isVisible = !compressedIp.isNullOrEmpty()
         bigButtonBinding?.tvBigIp?.text = getString(R.string.connection_ip_format, compressedIp.orEmpty())
         bigButtonBinding?.tvBigIp?.isVisible = !compressedIp.isNullOrEmpty()
+    }
+
+    private fun showOrUpdateSnackbar(message: String) {
+        currentSnackbar?.dismiss()
+        val view = binding.root.findViewById<android.view.View>(R.id.main_content)
+        val snackbar = com.google.android.material.snackbar.Snackbar.make(view, message, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
+        snackbar.view.translationY = -(90 * resources.displayMetrics.density).toInt().toFloat()
+        snackbar.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.setTextColor(android.graphics.Color.WHITE)
+        snackbar.show()
+        currentSnackbar = snackbar
     }
 
     private fun setupGroupTab() {
@@ -1213,6 +1230,11 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun handleDrawerNavigation(itemId: Int) {
+        if (itemId == R.id.mode_selector) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            showModeSelector()
+            return
+        }
         val intent = when (itemId) {
             R.id.sub_setting -> Intent(this, SubSettingActivity::class.java)
             R.id.per_app_proxy_settings -> Intent(this, PerAppProxyActivity::class.java)
@@ -1241,6 +1263,23 @@ class MainActivity : HelperBaseActivity() {
                 startActivityWithMaterialTransition(it)
             }
         }
+    }
+
+    private fun showModeSelector() {
+        val entries = resources.getStringArray(R.array.mode_entries)
+        val values = resources.getStringArray(R.array.mode_value)
+        val current = MmkvManager.decodeSettingsString(AppConfig.PREF_MODE, AppConfig.VPN)
+        val checked = values.indexOf(current).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.title_mode)
+            .setSingleChoiceItems(entries, checked) { dialog, which ->
+                val newValue = values[which]
+                MmkvManager.encodeSettings(AppConfig.PREF_MODE, newValue)
+                SettingsChangeManager.makeRestartService()
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun handleTunToggle() {
@@ -1283,20 +1322,20 @@ class MainActivity : HelperBaseActivity() {
         if (tunOn) {
             eb.ivTunIcon.setImageResource(R.drawable.ic_tun_on_24dp)
             eb.btnTunToggle.setCardBackgroundColor(
-                MaterialColors.getColor(eb.btnTunToggle, com.google.android.material.R.attr.colorPrimaryContainer)
+                MaterialColors.getColor(eb.btnTunToggle, android.R.attr.colorPrimary)
             )
             eb.ivTunIcon.setColorFilter(
-                MaterialColors.getColor(eb.ivTunIcon, com.google.android.material.R.attr.colorOnPrimaryContainer),
+                MaterialColors.getColor(eb.ivTunIcon, com.google.android.material.R.attr.colorOnPrimary),
                 PorterDuff.Mode.SRC_IN
             )
             eb.btnTunToggle.contentDescription = getString(R.string.title_tun_enabled)
         } else {
             eb.ivTunIcon.setImageResource(R.drawable.ic_tun_off_24dp)
             eb.btnTunToggle.setCardBackgroundColor(
-                MaterialColors.getColor(eb.btnTunToggle, com.google.android.material.R.attr.colorSurfaceContainerHighest)
+                MaterialColors.getColor(eb.btnTunToggle, com.google.android.material.R.attr.colorPrimaryContainer)
             )
             eb.ivTunIcon.setColorFilter(
-                MaterialColors.getColor(eb.ivTunIcon, com.google.android.material.R.attr.colorOnSurfaceVariant),
+                MaterialColors.getColor(eb.ivTunIcon, com.google.android.material.R.attr.colorOnPrimaryContainer),
                 PorterDuff.Mode.SRC_IN
             )
             eb.btnTunToggle.contentDescription = getString(R.string.title_tun_disabled)
@@ -1307,10 +1346,15 @@ class MainActivity : HelperBaseActivity() {
         val bb = bigButtonBinding ?: return
         bb.switchBigTun.isChecked = tunOn
         bb.tvBigTunStatus.text = getString(if (tunOn) R.string.title_tun_enabled else R.string.title_tun_disabled)
-        bb.tvBigTunStatus.setTextColor(
+        val textColor = MaterialColors.getColor(
+            bb.tvBigTunStatus,
+            if (tunOn) com.google.android.material.R.attr.colorOnPrimaryContainer else com.google.android.material.R.attr.colorOnSurfaceVariant
+        )
+        bb.tvBigTunStatus.setTextColor(textColor)
+        bb.layoutBigTun.setCardBackgroundColor(
             MaterialColors.getColor(
-                bb.tvBigTunStatus,
-                if (tunOn) com.google.android.material.R.attr.colorPrimaryContainer else com.google.android.material.R.attr.colorOnSurfaceVariant
+                bb.layoutBigTun,
+                if (tunOn) com.google.android.material.R.attr.colorPrimaryContainer else com.google.android.material.R.attr.colorSurfaceContainerHighest
             )
         )
     }

@@ -69,13 +69,16 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.App.LargeComponent</item>
         <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearanceOverlay.App.MenuCorner</item>
 
-        <!-- Headline / title text appearances with Google Sans Flex ROND=100 -->
+        <!-- Headline / title text appearances with Google Sans Flex -->
         <item name="textAppearanceHeadlineLarge">@style/TextAppearance.App.HeadlineLarge</item>
         <item name="textAppearanceHeadlineMedium">@style/TextAppearance.App.HeadlineMedium</item>
         <item name="textAppearanceHeadlineSmall">@style/TextAppearance.App.HeadlineSmall</item>
         <item name="textAppearanceTitleLarge">@style/TextAppearance.App.TitleLarge</item>
         <item name="textAppearanceTitleMedium">@style/TextAppearance.App.TitleMedium</item>
         <item name="textAppearanceTitleSmall">@style/TextAppearance.App.TitleSmall</item>
+
+        <!-- Snackbar styling for dark/light mode -->
+        <item name="snackbarStyle">@style/Widget.App.Snackbar</item>
 
         <!-- Window transitions for predictive back (Android 13+) -->
         <item name="android:windowActivityTransitions">true</item>
@@ -112,6 +115,16 @@
          which conflict with the system predictive back gesture. -->
     <style name="Override_DisableWindowActivityTransitions">
         <item name="android:windowActivityTransitions">false</item>
+    </style>
+
+    <style name="Widget.App.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">@color/snackbar_background</item>
+        <item name="android:layout_margin">16dp</item>
+        <item name="snackbarTextViewStyle">@style/Widget.App.Snackbar.TextView</item>
+    </style>
+
+    <style name="Widget.App.Snackbar.TextView" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textColor">@color/snackbar_text</item>
     </style>
 
     <style name="Widget.App.SearchBar" parent="Widget.Material3.TextInputLayout.FilledBox">

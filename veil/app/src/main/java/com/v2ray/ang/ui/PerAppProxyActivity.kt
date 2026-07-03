@@ -9,7 +9,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
@@ -32,7 +31,6 @@ import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.PerAppProxyViewModel
-import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,7 +60,7 @@ class PerAppProxyActivity : BaseActivity() {
         binding.switchBypassApps.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_APPS, false)
 
         binding.layoutSwitchBypassAppsTips.setOnClickListener {
-            Toasty.info(this, R.string.summary_pref_per_app_proxy, Toast.LENGTH_LONG, true).show()
+            toast(R.string.summary_pref_per_app_proxy)
         }
 
         binding.etSearch.addTextChangedListener { text ->

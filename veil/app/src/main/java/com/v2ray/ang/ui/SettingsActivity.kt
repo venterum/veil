@@ -17,6 +17,7 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.MmkvPreferenceDataStore
 import com.v2ray.ang.util.Utils
 
@@ -60,8 +61,10 @@ class SettingsActivity : BaseActivity() {
         private val socksUsername by lazy { findPreference<EditTextPreference>(AppConfig.PREF_SOCKS_USERNAME) }
         private val socksPassword by lazy { findPreference<EditTextPreference>(AppConfig.PREF_SOCKS_PASSWORD) }
         private val socksGenerateCredentials by lazy { findPreference<androidx.preference.Preference>("pref_socks_generate_credentials") }
+        private val addToTelegram by lazy { findPreference<androidx.preference.Preference>("pref_add_to_telegram") }
         private val socksEnableUdp by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_SOCKS_ENABLE_UDP) }
         private val proxySharing by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_PROXY_SHARING) }
+        private val googleSans by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_GOOGLE_SANS) }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
@@ -135,6 +138,11 @@ class SettingsActivity : BaseActivity() {
                 generateRandomCredentials()
                 true
             }
+
+            addToTelegram?.setOnPreferenceClickListener {
+                openTelegramProxy()
+                true
+            }
         }
 
         private fun generateRandomCredentials() {
@@ -148,11 +156,26 @@ class SettingsActivity : BaseActivity() {
             socksPassword?.text = password
             socksUsername?.summary = username
             socksPassword?.summary = password
-            android.widget.Toast.makeText(
-                requireContext(),
-                R.string.toast_socks_credentials_generated,
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
+            view?.let { v ->
+                val snackbar = com.google.android.material.snackbar.Snackbar.make(v, R.string.toast_socks_credentials_generated, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
+                snackbar.view.translationY = -(90 * resources.displayMetrics.density).toInt().toFloat()
+                snackbar.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.setTextColor(android.graphics.Color.WHITE)
+                snackbar.show()
+            }
+        }
+
+        private fun openTelegramProxy() {
+            val port = MmkvManager.decodeSettingsString(AppConfig.PREF_SOCKS_PORT, AppConfig.PORT_SOCKS)
+            val user = MmkvManager.decodeSettingsString(AppConfig.PREF_SOCKS_USERNAME, "")
+            val pass = MmkvManager.decodeSettingsString(AppConfig.PREF_SOCKS_PASSWORD, "")
+            val sb = StringBuilder("tg://socks?server=${AppConfig.LOOPBACK}&port=$port")
+            if (!user.isNullOrEmpty()) {
+                sb.append("&user=$user")
+            }
+            if (!pass.isNullOrEmpty()) {
+                sb.append("&pass=$pass")
+            }
+            Utils.openUri(requireContext(), sb.toString())
         }
 
         private fun initPreferenceSummaries() {
@@ -210,6 +233,7 @@ class SettingsActivity : BaseActivity() {
             updateFragment(MmkvManager.decodeSettingsBool(AppConfig.PREF_FRAGMENT_ENABLED, false))
 
             updateDynamicSocksPort(MmkvManager.decodeSettingsBool(AppConfig.PREF_DYNAMIC_SOCKS_PORT, false))
+            updateGoogleSansForLocale()
         }
 
         private fun updateMode(value: String?) {
@@ -289,6 +313,7 @@ class SettingsActivity : BaseActivity() {
             socksUsername?.isEnabled = enabled
             socksPassword?.isEnabled = enabled
             socksGenerateCredentials?.isEnabled = enabled
+            addToTelegram?.isEnabled = enabled
             socksEnableUdp?.isEnabled = enabled
             proxySharing?.isEnabled = enabled
 
@@ -318,6 +343,11 @@ class SettingsActivity : BaseActivity() {
                 enableLocalProxy?.isEnabled = true
             }
             updateEnableLocalProxy(enableLocalProxy?.isChecked == true)
+        }
+
+        private fun updateGoogleSansForLocale() {
+            val isEnglish = SettingsManager.getLocale().language == "en"
+            googleSans?.isEnabled = isEnglish
         }
 
         private class CardPreferenceGroupAdapter(group: PreferenceScreen) : PreferenceGroupAdapter(group) {

@@ -126,6 +126,8 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 
 Since Veil is a fork of [v2rayNG](https://github.com/2dust/v2rayNG) and shares its config format you can migrate seamlessly:
 
+(available since 2.0.x)
+
 1. Open v2rayNG, open the side drawer → **Backup & Restore** → **Backup config** → **Local**
 2. Transfer the saved config files to this device
 3. Open veil, go to the side drawer → **Backup & Restore** → **Restore config** → **Local**, select the file
@@ -138,8 +140,9 @@ Standard protocol profiles (VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard,
 - [Xray-core](https://github.com/XTLS/Xray-core) and [v2fly/v2ray-core](https://github.com/v2fly/v2ray-core)
 - [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) by heiher
 - [olcRTC](https://github.com/openlibrecommunity/olcrtc) by openlibrecommunity
-- [Google Sans Flex](https://fonts.google.com/specimen/Google+Sans+Flex) — by Google,
-  licensed under the [SIL Open Font License, Version 1.1 ](https://fonts.google.com/specimen/Google+Sans+Flex/license)
+- [Google Sans](https://fonts.google.com/specimen/Google+Sans) and
+  [Google Sans Flex](https://fonts.google.com/specimen/Google+Sans+Flex) — by Google,
+  licensed under the [SIL Open Font License, Version 1.1](https://fonts.google.com/specimen/Google+Sans/license)
 
 ## License
 

@@ -42,6 +42,9 @@
     <color name="md_theme_inverseSurface">#382F28</color>
     <color name="md_theme_inverseOnSurface">#FFEDE2</color>
 
+    <color name="snackbar_background">#1C1B1F</color>
+    <color name="snackbar_text">#FFFFFF</color>
+
     <color name="md_theme_surfaceContainerLowest">#FFFFFF</color>
     <color name="md_theme_surfaceContainerLow">#FFF1E8</color>
     <color name="md_theme_surfaceContainer">#FFEBDF</color>

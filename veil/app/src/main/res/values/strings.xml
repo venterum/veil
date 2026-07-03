@@ -279,6 +279,8 @@
     <string name="title_pref_socks_generate_credentials">Generate random credentials</string>
     <string name="summary_pref_socks_generate_credentials">Create a random username and password</string>
     <string name="toast_socks_credentials_generated">Random credentials generated</string>
+    <string name="title_pref_add_to_telegram">Add to Telegram</string>
+    <string name="summary_pref_add_to_telegram">Add local SOCKS5 proxy to Telegram</string>
 
     <string name="title_pref_local_dns_port">Local DNS port</string>
     <string name="summary_pref_local_dns_port">Local DNS port</string>
@@ -331,7 +333,7 @@
     <string name="title_pref_dynamic_color">Dynamic colors</string>
     <string name="summary_pref_dynamic_color">Use Material You colors from the system wallpaper (Android 12+)</string>
     <string name="title_pref_google_sans">Use Google Sans</string>
-    <string name="summary_pref_google_sans">Use the bundled Google Sans Flex typeface instead of the device default font</string>
+    <string name="summary_pref_google_sans">Use the bundled Google Sans Flex typeface instead of the device default font. Available only when the app language is English.</string>
     <string name="title_pref_use_hev_tunnel">Enable Hev TUN Feature</string>
     <string name="summary_pref_use_hev_tunnel">When enabled, TUN will use hev-socks5-tunnel; otherwise, it will use xray-core.</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>

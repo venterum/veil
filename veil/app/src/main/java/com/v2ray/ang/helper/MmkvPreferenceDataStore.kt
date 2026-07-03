@@ -90,6 +90,13 @@ class MmkvPreferenceDataStore : PreferenceDataStore() {
         if (key == AppConfig.PREF_GOOGLE_SANS) {
             com.v2ray.ang.AngApplication.application.recreateAllActivities()
         }
+        // When language changes, force Google Sans on/off and recreate
+        if (key == AppConfig.PREF_LANGUAGE) {
+            val locale = SettingsManager.getLocale()
+            val isEnglish = locale.language == "en"
+            MmkvManager.encodeSettings(AppConfig.PREF_GOOGLE_SANS, isEnglish)
+            com.v2ray.ang.AngApplication.application.recreateAllActivities()
+        }
         // Notify listeners that require service restart or reinit
         SettingsChangeManager.makeRestartService()
         SettingsChangeManager.makeSetupGroupTab()

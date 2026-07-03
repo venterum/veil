@@ -6,10 +6,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.app.Activity
 import android.widget.Toast
+import com.google.android.material.snackbar.Snackbar
 import com.v2ray.ang.AngApplication
 import com.v2ray.ang.enums.EConfigType
-import es.dmoral.toasty.Toasty
 import java.io.Serializable
 import java.net.URI
 import java.util.Locale
@@ -22,53 +23,40 @@ val Context.v2RayApplication: AngApplication?
  *
  * @param message The resource ID of the message to show.
  */
+private fun Context.snackbar(message: CharSequence, duration: Int = Snackbar.LENGTH_SHORT) {
+    val view = (this as? Activity)?.window?.decorView?.findViewById<android.view.View>(android.R.id.content)
+    if (view != null) {
+        val snackbar = Snackbar.make(view, message, duration)
+        snackbar.view.translationY = -(90 * resources.displayMetrics.density).toInt().toFloat()
+        snackbar.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.setTextColor(android.graphics.Color.WHITE)
+        snackbar.show()
+    } else {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+}
+
 fun Context.toast(message: Int) {
-    Toasty.normal(this, message).show()
+    snackbar(getString(message))
 }
 
-/**
- * Shows a toast message with the given text.
- *
- * @param message The text of the message to show.
- */
 fun Context.toast(message: CharSequence) {
-    Toasty.normal(this, message).show()
+    snackbar(message)
 }
 
-/**
- * Shows a toast message with the given resource ID.
- *
- * @param message The resource ID of the message to show.
- */
 fun Context.toastSuccess(message: Int) {
-    Toasty.success(this, message, Toast.LENGTH_SHORT, true).show()
+    snackbar(getString(message))
 }
 
-/**
- * Shows a toast message with the given text.
- *
- * @param message The text of the message to show.
- */
 fun Context.toastSuccess(message: CharSequence) {
-    Toasty.success(this, message, Toast.LENGTH_SHORT, true).show()
+    snackbar(message)
 }
 
-/**
- * Shows a toast message with the given resource ID.
- *
- * @param message The resource ID of the message to show.
- */
 fun Context.toastError(message: Int) {
-    Toasty.error(this, message, Toast.LENGTH_SHORT, true).show()
+    snackbar(getString(message))
 }
 
-/**
- * Shows a toast message with the given text.
- *
- * @param message The text of the message to show.
- */
 fun Context.toastError(message: CharSequence) {
-    Toasty.error(this, message, Toast.LENGTH_SHORT, true).show()
+    snackbar(message)
 }
 
 const val THRESHOLD = 1000L
