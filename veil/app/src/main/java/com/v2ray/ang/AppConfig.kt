@@ -43,6 +43,9 @@ object AppConfig {
     const val PREF_FRAGMENT_PACKETS = "pref_fragment_packets"
     const val PREF_FRAGMENT_LENGTH = "pref_fragment_length"
     const val PREF_FRAGMENT_INTERVAL = "pref_fragment_interval"
+    const val PREF_FRAGMENT_MAXSPLIT = "pref_fragment_maxsplit"
+    const val PREF_ROOT_MODE_ENABLE = "pref_root_mode_enabled"
+    const val PREF_ROOT_LAN_SHARING = "pref_root_lan_sharing"
     const val SUBSCRIPTION_UPDATE_TASK_NAME = "subscription_updater"
     const val SUBSCRIPTION_MIN_INTERVAL_MINUTES = 15L
     const val PREF_SPEED_ENABLED = "pref_speed_enabled"
@@ -211,6 +214,25 @@ object AppConfig {
 
     /** hev-sock5-tunnel read-write-timeout value */
     const val HEVTUN_RW_TIMEOUT = "300,60"
+
+    // Root mode constants
+    const val ROOT_RUNTIME_DIR = "root"
+    const val ROOT_IPTABLES_CHAIN = "V2RAY_NG"
+    const val ROOT_FWMARK = 255
+    const val ROOT_MARK_ROUTE = 1
+    const val ROOT_ROUTE_TABLE = 2024
+    const val ROOT_RULE_PRIORITY = 1000
+    const val ROOT_TUN_NAME = "v2raytun0"
+    const val ROOT_TUN_ADDR_V4 = "198.18.0.1/15"
+    const val ROOT_TUN_ADDR_V6 = "fdfe:dcba:9876::1/64"
+    const val ROOT_TUN2SOCKS_BIN = "libhevsockstun.so"
+    const val ROOT_FWD_CHAIN = "V2RAY_NG_FWD"
+    const val ROOT_DNS_CHAIN = "V2RAY_NG_DNS"
+    const val ROOT_V6_CHAIN = "V2RAY_NG6"
+    const val ROOT_V6_FWD_CHAIN = "V2RAY_NG6_FWD"
+    const val ROOT_V6_PRE_CHAIN = "V2RAY_NG6_PRE"
+    const val ROOT_LAN_DNS = "1.1.1.1"
+    const val ROOT_OOM_SCORE = "-1000"
 
     // Google API rule constants
     const val GOOGLEAPIS_CN_DOMAIN = "domain:googleapis.cn"

@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.graphics.PorterDuff
 import android.net.Uri
 import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -562,7 +563,15 @@ class MainActivity : HelperBaseActivity() {
             toast(R.string.title_file_chooser)
             return
         }
-        CoreServiceManager.startVService(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN
+            && MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING) == true
+        ) {
+            checkAndRequestPermission(PermissionType.ACCESS_LOCAL_NETWORK) {
+                CoreServiceManager.startVService(this)
+            }
+        } else {
+            CoreServiceManager.startVService(this)
+        }
     }
 
     fun restartV2Ray() {

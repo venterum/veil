@@ -495,6 +495,10 @@ object SettingsManager {
         return MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) == AppConfig.PROXY_TUN
     }
 
+    fun isRootMode(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_ROOT_MODE_ENABLE, false)
+    }
+
     /**
      * Check if TUN is currently enabled (runtime toggle in Proxy + TUN mode).
      * @return True if TUN is enabled, false otherwise.
@@ -592,6 +596,7 @@ object SettingsManager {
         ensureDefaultValue(AppConfig.PREF_MUX_XUDP_CONCURRENCY, "8")
         ensureDefaultValue(AppConfig.PREF_FRAGMENT_LENGTH, "50-100")
         ensureDefaultValue(AppConfig.PREF_FRAGMENT_INTERVAL, "10-20")
+        ensureDefaultValue(AppConfig.PREF_FRAGMENT_MAXSPLIT, "10")
     }
 
     private fun ensureDefaultValue(key: String, default: String) {

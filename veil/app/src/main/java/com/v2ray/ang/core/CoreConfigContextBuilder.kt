@@ -43,11 +43,13 @@ object CoreConfigContextBuilder {
 
         // Step 2: Resolve all non-builtin routing outbound tags.
         val routingResolvedOutbounds = resolveRoutingOutbounds()
+        val routingDomainRules = collectRoutingDomainRulesForDns()
 
         return CoreConfigContext(
             context = context,
             guid = guid,
             resolvedOutbounds = listOf(primaryResolvedOutbound) + routingResolvedOutbounds,
+            routingDomainRules = routingDomainRules,
         )
     }
 
@@ -213,5 +215,30 @@ object CoreConfigContextBuilder {
             LogUtil.e(AppConfig.TAG, "Failed to resolve proxy chain from group for '${config.remarks}'", e)
             return listOf(config)
         }
+    }
+
+    private fun collectRoutingDomainRulesForDns(): List<CoreConfigContext.RoutingDomainRule> {
+        val rulesetItems = MmkvManager.decodeRoutingRulesets() ?: return emptyList()
+        val result = mutableListOf<CoreConfigContext.RoutingDomainRule>()
+
+        rulesetItems
+            .asSequence()
+            .filter { it.enabled }
+            .filter { !it.domain.isNullOrEmpty() }
+            .forEach { rule ->
+                val normalizedOutboundTag = when (rule.outboundTag) {
+                    AppConfig.TAG_DIRECT -> AppConfig.TAG_DIRECT
+                    AppConfig.TAG_BLOCKED -> AppConfig.TAG_BLOCKED
+                    else -> AppConfig.TAG_PROXY
+                }
+                result.add(
+                    CoreConfigContext.RoutingDomainRule(
+                        domain = rule.domain.orEmpty(),
+                        outboundTag = normalizedOutboundTag
+                    )
+                )
+            }
+
+        return result
     }
 }

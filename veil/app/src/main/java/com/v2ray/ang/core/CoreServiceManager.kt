@@ -23,7 +23,9 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.NotificationManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SpeedtestManager
+import com.v2ray.ang.root.RootManager
 import com.v2ray.ang.service.CoreProxyOnlyService
+import com.v2ray.ang.service.CoreRootService
 import com.v2ray.ang.service.CoreVpnService
 import com.v2ray.ang.service.DialerNativeService
 import com.v2ray.ang.service.DialerWebviewService
@@ -176,7 +178,15 @@ object CoreServiceManager {
         }
 
         val isVpnMode = SettingsManager.isVpnMode()
-        val intent = if (isVpnMode) {
+        val isRootMode = SettingsManager.isRootMode()
+        val intent = if (isRootMode) {
+            if (!RootManager.isRootAvailable()) {
+                context.toast(R.string.toast_root_required)
+                return
+            }
+            LogUtil.i(AppConfig.TAG, "StartCore-Manager: Starting Root service")
+            Intent(context.applicationContext, CoreRootService::class.java)
+        } else if (isVpnMode) {
             LogUtil.i(AppConfig.TAG, "StartCore-Manager: Starting VPN service")
             Intent(context.applicationContext, CoreVpnService::class.java)
         } else {
