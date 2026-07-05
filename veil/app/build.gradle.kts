@@ -4,6 +4,19 @@ plugins {
     id("com.jaredsburrows.license")
 }
 
+val signingFile = rootProject.file("signing.properties")
+val signingProps = if (signingFile.exists()) {
+    signingFile.readLines().mapNotNull { line ->
+        val trimmed = line.trim()
+        if (trimmed.startsWith("#") || trimmed.isEmpty()) null
+        else {
+            val idx = trimmed.indexOf('=')
+            if (idx > 0) trimmed.substring(0, idx).trim() to trimmed.substring(idx + 1).trim()
+            else null
+        }
+    }.toMap()
+} else null
+
 android {
     namespace = "com.v2ray.ang"
     compileSdk = 37
@@ -12,8 +25,8 @@ android {
         applicationId = "com.vntrum.veil"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -38,6 +51,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            if (signingProps != null) {
+                storeFile = rootProject.file(signingProps["storeFile"]!!)
+                storePassword = signingProps["storePassword"]!!
+                keyAlias = signingProps["keyAlias"]!!
+                keyPassword = signingProps["keyPassword"]!!
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -45,6 +69,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = if (signingProps != null) signingConfigs.getByName("release") else null
         }
     }
 
