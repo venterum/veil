@@ -56,6 +56,7 @@ object AppConfig {
     const val PREF_GROUP_ALL_DISPLAY = "pref_group_all_display"
     const val PREF_GROUP_ALL_MODE = "pref_group_all_mode"
     const val PREF_GROUP_ALL_ICONS_VISIBLE = "pref_group_all_icons_visible"
+    const val PREF_GROUP_COLLAPSED_IDS = "pref_group_collapsed_ids"
     const val PREF_LANGUAGE = "pref_language"
     const val PREF_UI_MODE_NIGHT = "pref_ui_mode_night"
     const val PREF_DYNAMIC_COLOR = "pref_dynamic_color"

@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.ImageView
+import java.util.WeakHashMap
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.FloatPropertyCompat
 import androidx.dynamicanimation.animation.SpringAnimation
@@ -91,6 +92,7 @@ class MainActivity : HelperBaseActivity() {
     private var currentUiMode: MainUiMode = MainUiMode.EXPRESSIVE
     private var toolbarAtTop = false
     private var currentSnackbar: com.google.android.material.snackbar.Snackbar? = null
+    private val widthAnimations = WeakHashMap<View, SpringAnimation>()
 
     /**
      * MainActivity is the root of the app's task. The system already moves the
@@ -259,13 +261,16 @@ class MainActivity : HelperBaseActivity() {
                 bottomBar.setPadding(bottomBar.paddingLeft, px12, bottomBar.paddingRight, 0)
             }
 
-            applyPressFeedback(btnFab, 0.92f)
-            applyPressFeedback(btnTunToggle, 0.88f)
-            applyPressFeedback(layoutTest, 0.98f)
+            applyExpressivePressGroup(btnFab, btnTunToggle)
 
             btnFab.setOnClickListener {
                 it.performMediumHapticFeedback()
                 handleFabAction()
+            }
+            btnFab.setOnLongClickListener {
+                it.performMediumHapticFeedback()
+                showModeSelector()
+                true
             }
             btnTunToggle.setOnClickListener {
                 it.performMediumHapticFeedback()
@@ -303,6 +308,11 @@ class MainActivity : HelperBaseActivity() {
             btnBigConnect.setOnClickListener {
                 it.performMediumHapticFeedback()
                 handleFabAction()
+            }
+            btnBigConnect.setOnLongClickListener {
+                it.performMediumHapticFeedback()
+                showModeSelector()
+                true
             }
             layoutBigTun.setOnClickListener {
                 it.performMediumHapticFeedback()
@@ -346,6 +356,11 @@ class MainActivity : HelperBaseActivity() {
                 it.performMediumHapticFeedback()
                 handleFabAction()
             }
+            btnFab.setOnLongClickListener {
+                it.performMediumHapticFeedback()
+                showModeSelector()
+                true
+            }
             btnClassicServers.setOnClickListener {
                 it.performLightHapticFeedback()
                 handleDrawerNavigation(R.id.sub_setting)
@@ -385,6 +400,59 @@ class MainActivity : HelperBaseActivity() {
                 }
             }
             false
+        }
+    }
+
+    /**
+     * Coordinated M3 Expressive-style press feedback for the expressive bottom bar.
+     *
+     * The touched button physically changes its layout width, so a circle becomes
+     * a pill and a pill becomes wider. The weighted status pill shrinks/grows
+     * automatically, so neighbours move together with the spring. No height or
+     * elevation change.
+     */
+    private fun applyExpressivePressGroup(fab: View, tun: View) {
+        val density = resources.displayMetrics.density
+
+        // Original widths from XML.
+        val fabWidthDp = 84
+        val tunWidthDp = 52
+
+        // Target widths on press: circle becomes pill, pill becomes wider.
+        val fabPressWidthDp = 104
+        val tunPressWidthDp = 80
+
+        // Expressive spatial springs.
+        val pressStiffness = 600f
+        val releaseStiffness = 400f
+        val releaseDamping = 0.4f
+
+        val fabWidthPx = fabWidthDp * density
+        val tunWidthPx = tunWidthDp * density
+        val fabPressWidthPx = fabPressWidthDp * density
+        val tunPressWidthPx = tunPressWidthDp * density
+
+        fun onPress(view: View) {
+            when (view) {
+                fab -> springAnimateWidth(fab, fabPressWidthPx, pressStiffness)
+                tun -> springAnimateWidth(tun, tunPressWidthPx, pressStiffness)
+            }
+        }
+
+        fun onRelease() {
+            springAnimateWidth(fab, fabWidthPx, releaseStiffness, releaseDamping)
+            springAnimateWidth(tun, tunWidthPx, releaseStiffness, releaseDamping)
+        }
+
+        listOf(fab, tun).forEach { view ->
+            view.setOnTouchListener { v, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> onPress(v)
+                    MotionEvent.ACTION_UP,
+                    MotionEvent.ACTION_CANCEL -> onRelease()
+                }
+                false
+            }
         }
     }
 
@@ -1429,6 +1497,44 @@ class MainActivity : HelperBaseActivity() {
             spring.dampingRatio = dampingRatio
             start()
         }
+    }
+
+    /**
+     * Spring-animates a View's layout width. The layout reflows on every frame,
+     * so siblings with [LinearLayout.LayoutParams.weight] adjust automatically.
+     */
+    private fun springAnimateWidth(
+        view: View,
+        targetWidthPx: Float,
+        stiffness: Float,
+        dampingRatio: Float = SpringForce.DAMPING_RATIO_NO_BOUNCY
+    ) {
+        widthAnimations[view]?.cancel()
+
+        val prop = object : FloatPropertyCompat<View>("layoutWidth") {
+            override fun setValue(obj: View, value: Float) {
+                if (!obj.isAttachedToWindow) return
+                obj.layoutParams?.width = value.toInt().coerceAtLeast(0)
+                if (!obj.isInLayout) {
+                    obj.requestLayout()
+                }
+            }
+
+            override fun getValue(obj: View): Float {
+                return obj.layoutParams?.width?.toFloat() ?: obj.width.toFloat()
+            }
+        }
+        val anim = SpringAnimation(view, prop, targetWidthPx).apply {
+            spring.stiffness = stiffness
+            spring.dampingRatio = dampingRatio
+            addEndListener { animation, _, _, _ ->
+                if (widthAnimations[view] == animation) {
+                    widthAnimations.remove(view)
+                }
+            }
+        }
+        widthAnimations[view] = anim
+        anim.start()
     }
 
     private fun animateCardColor(

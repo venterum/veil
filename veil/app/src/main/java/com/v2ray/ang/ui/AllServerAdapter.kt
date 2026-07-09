@@ -68,6 +68,20 @@ class AllServerAdapter(
     private val collapsedIds = mutableSetOf<String>()
     private var isGrouped = false
 
+    init {
+        loadCollapsedIds()
+    }
+
+    private fun loadCollapsedIds() {
+        val saved = MmkvManager.decodeSettingsString(AppConfig.PREF_GROUP_COLLAPSED_IDS, "")
+        collapsedIds.clear()
+        saved?.split(",")?.filter { it.isNotEmpty() }?.let { collapsedIds.addAll(it) }
+    }
+
+    private fun saveCollapsedIds() {
+        MmkvManager.encodeSettings(AppConfig.PREF_GROUP_COLLAPSED_IDS, collapsedIds.joinToString(","))
+    }
+
     fun updateFlat(newData: MutableList<ServersCache>) {
         isGrouped = false
         flatData = newData.toMutableList()
@@ -240,6 +254,22 @@ class AllServerAdapter(
             binding.layoutTraffic.visibility = View.GONE
         }
 
+        // Apply stacked-card corner radii based on group position
+        val density = binding.root.context.resources.displayMetrics.density
+        val largeRadius = 16f * density
+        val smallRadius = 4f * density
+        val isFirst = position == 0
+        val isLast = position == sections.size - 1
+        val topRadius = if (isFirst) largeRadius else smallRadius
+        val bottomRadius = if (isLast) largeRadius else smallRadius
+        binding.containerBg.shapeAppearanceModel = binding.containerBg.shapeAppearanceModel
+            .toBuilder()
+            .setTopLeftCornerSize(topRadius)
+            .setTopRightCornerSize(topRadius)
+            .setBottomLeftCornerSize(bottomRadius)
+            .setBottomRightCornerSize(bottomRadius)
+            .build()
+
         binding.headerArea.setOnClickListener {
             it.performLightHapticFeedback()
             val wasExpanded = section.subscriptionId !in collapsedIds
@@ -262,7 +292,7 @@ class AllServerAdapter(
             binding.serverList.visibility = View.GONE
             binding.headerDivider.visibility = View.GONE
             binding.serverList.removeAllViews()
-            binding.ivExpandArrow.rotation = -90f
+            binding.ivExpandArrow.rotation = 180f
         }
     }
 
@@ -281,7 +311,11 @@ class AllServerAdapter(
                 return
             }
 
-            binding.ivExpandArrow.animate().rotation(-90f).setDuration(250).start()
+            binding.ivExpandArrow.animate()
+                .rotation(180f)
+                .setDuration(250)
+                .setInterpolator(FastOutSlowInInterpolator())
+                .start()
 
             val animator = ValueAnimator.ofInt(startHeight, 0).apply {
                 duration = 250
@@ -328,7 +362,12 @@ class AllServerAdapter(
             serverList.visibility = View.VISIBLE
             (serverList.layoutParams as LinearLayout.LayoutParams).height = 0
             serverList.requestLayout()
-            binding.ivExpandArrow.rotation = 0f
+            // Animate arrow rotation with a spring feel
+            binding.ivExpandArrow.animate()
+                .rotation(0f)
+                .setDuration(350)
+                .setInterpolator(OvershootInterpolator(1.5f))
+                .start()
 
             val heightAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
                 duration = 400
@@ -359,6 +398,7 @@ class AllServerAdapter(
     private fun toggleGroup(section: Section) {
         val id = section.subscriptionId
         if (id in collapsedIds) collapsedIds.remove(id) else collapsedIds.add(id)
+        saveCollapsedIds()
     }
 
     private fun inflateServerCards(container: LinearLayout, section: Section) {
