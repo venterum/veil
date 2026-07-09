@@ -31,7 +31,7 @@
                 android:id="@+id/btn_classic_servers"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+
                 android:contentDescription="@string/title_sub_setting"
                 android:src="@drawable/ic_subscriptions_24dp"
                 app:tint="?attr/colorOnSurfaceVariant" />
@@ -40,7 +40,7 @@
                 android:id="@+id/btn_classic_logs"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+
                 android:contentDescription="@string/title_logcat"
                 android:src="@drawable/ic_logcat_24dp"
                 app:tint="?attr/colorOnSurfaceVariant" />
@@ -63,7 +63,7 @@
                 android:id="@+id/btn_classic_routing"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+
                 android:contentDescription="@string/routing_settings_title"
                 android:src="@drawable/ic_routing_24dp"
                 app:tint="?attr/colorOnSurfaceVariant" />
@@ -72,7 +72,7 @@
                 android:id="@+id/btn_classic_settings"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+
                 android:contentDescription="@string/title_settings"
                 android:src="@drawable/ic_settings_24dp"
                 app:tint="?attr/colorOnSurfaceVariant" />
@@ -92,7 +92,7 @@
         app:cardBackgroundColor="?attr/colorPrimaryContainer"
         app:cardCornerRadius="32dp"
         app:cardElevation="4dp"
-        app:rippleColor="?attr/colorOnPrimaryContainer"
+
         app:strokeWidth="0dp">
 
         <ImageView

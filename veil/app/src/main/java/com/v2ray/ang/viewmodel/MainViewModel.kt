@@ -102,6 +102,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun swapServer(fromPosition: Int, toPosition: Int) {
         if (subscriptionId.isEmpty()) {
+            swapServerInAllTab(fromPosition, toPosition)
             return
         }
 
@@ -109,6 +110,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         Collections.swap(serversCache, fromPosition, toPosition)
 
         MmkvManager.encodeServerList(serverList, subscriptionId)
+    }
+
+    private fun swapServerInAllTab(fromPosition: Int, toPosition: Int) {
+        if (fromPosition !in serversCache.indices || toPosition !in serversCache.indices) return
+        Collections.swap(serversCache, fromPosition, toPosition)
+
+        val newOrder = serversCache.map { it.guid }
+        val grouped = linkedMapOf<String, MutableList<String>>()
+        for (guid in newOrder) {
+            val profile = MmkvManager.decodeServerConfig(guid) ?: continue
+            val subId = profile.subscriptionId.ifEmpty { AppConfig.DEFAULT_SUBSCRIPTION_ID }
+            grouped.getOrPut(subId) { mutableListOf() }.add(guid)
+        }
+        for ((subId, serverGuids) in grouped) {
+            MmkvManager.encodeServerList(serverGuids, subId)
+        }
     }
 
     /**
@@ -239,7 +256,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             groups.add(
                 GroupMapItem(
                     id = "",
-                    remarks = context.getString(R.string.filter_config_all)
+                    remarks = context.getString(R.string.filter_config_all),
+                    type = "all"
                 )
             )
         }
@@ -406,6 +424,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         val config = MmkvManager.decodeServerConfig(selectedGuid)
         return config?.subscriptionId
+    }
+
+    fun isAllGroupedMode(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_ALL_DISPLAY, false) &&
+                MmkvManager.decodeSettingsString(AppConfig.PREF_GROUP_ALL_MODE, "mode1") == "mode2"
+    }
+
+    fun isAllFreeMode(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_ALL_DISPLAY, false) &&
+                MmkvManager.decodeSettingsString(AppConfig.PREF_GROUP_ALL_MODE, "mode1") == "mode1"
+    }
+
+    fun shouldShowAllTabIcons(): Boolean {
+        return isAllFreeMode() &&
+                MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_ALL_ICONS_VISIBLE, true)
     }
 
     fun onTestsFinished() {

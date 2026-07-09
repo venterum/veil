@@ -12,7 +12,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
+            android:background="@android:color/transparent"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center|start"
@@ -33,14 +33,14 @@
                 android:paddingStart="@dimen/padding_spacing_dp16"
                 android:text="@string/update_check_pre_release"
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                app:theme="@style/BrandedSwitch" />
+                style="@style/BrandedMaterialSwitch" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/layout_check_update"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
+            android:background="@android:color/transparent"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center|start"

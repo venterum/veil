@@ -2,6 +2,7 @@ package com.v2ray.ang.ui
 
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
@@ -18,6 +19,7 @@ import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.MmkvPreferenceDataStore
 import com.v2ray.ang.root.RootManager
@@ -53,6 +55,9 @@ class SettingsActivity : BaseActivity() {
         private val fragmentInterval by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_INTERVAL) }
         private val fragmentMaxSplit by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_MAXSPLIT) }
 
+        private val groupAllDisplay by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_GROUP_ALL_DISPLAY) }
+        private val groupAllMode by lazy { findPreference<ListPreference>(AppConfig.PREF_GROUP_ALL_MODE) }
+        private val groupAllIconsVisible by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_GROUP_ALL_ICONS_VISIBLE) }
         private val mode by lazy { findPreference<ListPreference>(AppConfig.PREF_MODE) }
         private val enableRootMode by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_ROOT_MODE_ENABLE) }
         private val lanSharing by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_ROOT_LAN_SHARING) }
@@ -124,6 +129,12 @@ class SettingsActivity : BaseActivity() {
                 true
             }
             mode?.dialogLayoutResource = R.layout.preference_with_help_link
+
+            groupAllMode?.setOnPreferenceChangeListener { _, newValue ->
+                updateGroupAllMode(newValue as String)
+                SettingsChangeManager.makeSetupGroupTab()
+                true
+            }
 
             useHevTun?.setOnPreferenceChangeListener { _, newValue ->
                 updateHevTunSettings(newValue as Boolean)
@@ -266,6 +277,12 @@ class SettingsActivity : BaseActivity() {
 
             updateDynamicSocksPort(MmkvManager.decodeSettingsBool(AppConfig.PREF_DYNAMIC_SOCKS_PORT, false))
             updateGoogleSansForLocale()
+            updateGroupAllMode(MmkvManager.decodeSettingsString(AppConfig.PREF_GROUP_ALL_MODE, "mode1") ?: "mode1")
+        }
+
+        private fun updateGroupAllMode(mode: String) {
+            val isMode1 = mode == "mode1"
+            groupAllIconsVisible?.isVisible = isMode1
         }
 
         private fun updateMode(value: String?) {

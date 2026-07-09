@@ -254,6 +254,13 @@
 
     <string name="title_pref_group_all_display">Enable show all groups</string>
     <string name="summary_pref_group_all_display">Add an extra "All Tabs" page</string>
+
+    <string name="title_pref_group_all_mode">All servers display mode</string>
+    <string name="summary_pref_group_all_mode">Choose how all servers are displayed in the combined tab</string>
+    <string name="entry_group_all_mode_1">Free mode</string>
+    <string name="entry_group_all_mode_2">Grouped mode</string>
+    <string name="title_pref_group_all_icons_visible">Show action icons in All tab</string>
+    <string name="summary_pref_group_all_icons_visible">Show share, edit and remove buttons on server cards in the All tab</string>
     <!-- AboutActivity -->
     <string name="title_pref_feedback">Phản hồi lỗi</string>
     <string name="summary_pref_feedback">Phản hồi cải tiến hoặc lỗi lên GitHub</string>

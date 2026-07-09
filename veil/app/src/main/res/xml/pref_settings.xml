@@ -48,6 +48,23 @@
             android:title="@string/title_pref_group_all_display" />
 
         <ListPreference
+            android:defaultValue="mode1"
+            android:dependency="pref_group_all_display"
+            android:entries="@array/group_all_mode_entries"
+            android:entryValues="@array/group_all_mode_values"
+            android:key="pref_group_all_mode"
+            android:summary="%s"
+            android:title="@string/title_pref_group_all_mode" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:defaultValue="true"
+            android:dependency="pref_group_all_display"
+            android:key="pref_group_all_icons_visible"
+            android:summary="@string/summary_pref_group_all_icons_visible"
+            android:title="@string/title_pref_group_all_icons_visible" />
+
+        <ListPreference
             android:defaultValue="auto"
             android:entries="@array/language_select"
             android:entryValues="@array/language_select_value"

@@ -1,181 +1,257 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_bg"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical">
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="2dp"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
 
     <LinearLayout
-        android:id="@+id/info_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:nextFocusRight="@+id/layout_share"
-        android:orientation="horizontal"
-        android:padding="@dimen/padding_spacing_dp8">
+        android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/info_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="4dp"
+            android:paddingBottom="4dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="@dimen/padding_spacing_dp8">
-
-                    <TextView
-                        android:id="@+id/tv_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:maxLines="2"
-                        android:minLines="1"
-                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:id="@+id/layout_share"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:clickable="true"
-                        android:contentDescription="@string/title_configuration_share"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:nextFocusLeft="@+id/info_container"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp8">
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="@dimen/image_size_dp24"
-                            android:importantForAccessibility="no"
-                            app:srcCompat="@drawable/ic_share_24dp" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/layout_edit"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:clickable="true"
-                        android:contentDescription="@string/menu_item_edit_config"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp8">
-
-                        <ImageView
-                            android:layout_width="@dimen/image_size_dp24"
-                            android:layout_height="@dimen/image_size_dp24"
-                            android:importantForAccessibility="no"
-                            app:srcCompat="@drawable/ic_edit_24dp" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/layout_remove"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:clickable="true"
-                        android:contentDescription="@string/menu_item_del_config"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp8">
-
-                        <ImageView
-                            android:layout_width="@dimen/image_size_dp24"
-                            android:layout_height="@dimen/image_size_dp24"
-                            android:importantForAccessibility="no"
-                            app:srcCompat="@drawable/ic_delete_24dp" />
-
-                    </LinearLayout>
-
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/layout_url"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingEnd="@dimen/padding_spacing_dp8">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:paddingTop="@dimen/padding_spacing_dp8">
-
-                    <TextView
-                        android:id="@+id/tv_url"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:lines="2"
-                        android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/chk_enable"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:theme="@style/BrandedSwitch" />
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/layout_last_updated"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingEnd="@dimen/padding_spacing_dp8">
+                android:layout_weight="1"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tv_last_updated"
+                    android:id="@+id/tv_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"/>
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Subscription Name" />
+
+                <TextView
+                    android:id="@+id/tv_url"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:lines="1"
+                    android:ellipsize="middle"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone"
+                    tools:text="https://example.com/sub" />
+
+                <LinearLayout
+                    android:id="@+id/layout_traffic"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tv_traffic_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:text="@string/title_traffic"
+                            tools:ignore="RtlSymmetry" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/tv_traffic_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            tools:text="123 MB / 500 GB" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progress_traffic"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        app:indicatorColor="?attr/colorPrimary"
+                        app:trackColor="?attr/colorSurfaceVariant"
+                        app:trackThickness="4dp" />
+
+                    <TextView
+                        android:id="@+id/tv_expire"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:visibility="gone"
+                        tools:text="Expires: 2024-12-31" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_announce"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone"
+                    tools:text="Announcement text here" />
 
             </LinearLayout>
 
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/layout_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="8dp">
+
+            <ImageView
+                android:id="@+id/btn_support"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+
+                android:clickable="true"
+                android:contentDescription="@string/title_support_url"
+                android:focusable="true"
+                android:padding="4dp"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_feedback_24dp"
+                app:tint="?attr/colorOnSurfaceVariant"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/btn_web"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="4dp"
+
+                android:clickable="true"
+                android:contentDescription="@string/title_web_page_url"
+                android:focusable="true"
+                android:padding="4dp"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_source_code_24dp"
+                app:tint="?attr/colorOnSurfaceVariant"
+                tools:visibility="visible" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:id="@+id/layout_share"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:clickable="true"
+                android:contentDescription="@string/title_configuration_share"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp8">
+
+                <ImageView
+                    android:layout_width="@dimen/image_size_dp24"
+                    android:layout_height="@dimen/image_size_dp24"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_share_24dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:clickable="true"
+                android:contentDescription="@string/menu_item_edit_config"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp8">
+
+                <ImageView
+                    android:layout_width="@dimen/image_size_dp24"
+                    android:layout_height="@dimen/image_size_dp24"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_edit_24dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_remove"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:clickable="true"
+                android:contentDescription="@string/menu_item_del_config"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp8">
+
+                <ImageView
+                    android:layout_width="@dimen/image_size_dp24"
+                    android:layout_height="@dimen/image_size_dp24"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_delete_24dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_last_updated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:gravity="end"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                tools:text="2024-12-31 12:00" />
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/chk_enable"
+                style="@style/BrandedMaterialSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

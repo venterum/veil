@@ -484,6 +484,17 @@
         name="summary_pref_group_all_display"
     >Показывать дополнительную вкладку со всеми профилями групп</string>
 
+    <string name="title_pref_group_all_mode">Режим отображения всех серверов</string>
+    <string
+        name="summary_pref_group_all_mode"
+    >Выберите способ отображения серверов в общей вкладке</string>
+    <string name="entry_group_all_mode_1">Свободный режим</string>
+    <string name="entry_group_all_mode_2">Сгруппированный режим</string>
+    <string name="title_pref_group_all_icons_visible">Показывать кнопки действий в общей вкладке</string>
+    <string
+        name="summary_pref_group_all_icons_visible"
+    >Показывать кнопки поделиться, изменить и удалить на карточках серверов в общей вкладке</string>
+
     <!-- AboutActivity -->
     <string name="title_pref_feedback">Обратная связь</string>
     <string
@@ -827,4 +838,9 @@
     <string name="toggle_tun_off">TUN выкл</string>
     <string name="title_tun_enabled">TUN включён</string>
     <string name="title_tun_disabled">TUN выключен</string>
+
+    <string name="title_traffic">Трафик</string>
+    <string name="title_expire">Истекает: %1$s</string>
+    <string name="title_support_url">Поддержка</string>
+    <string name="title_web_page_url">Сайт</string>
 </resources>

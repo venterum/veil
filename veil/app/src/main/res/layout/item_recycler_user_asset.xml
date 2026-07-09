@@ -8,7 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
+        android:background="@android:color/transparent"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="@dimen/padding_spacing_dp8">
@@ -56,7 +56,7 @@
             android:id="@+id/layout_edit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
+
             android:clickable="true"
             android:contentDescription="@string/menu_item_edit_config"
             android:focusable="true"
@@ -73,7 +73,7 @@
             android:id="@+id/layout_remove"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
+
             android:clickable="true"
             android:contentDescription="@string/menu_item_del_config"
             android:focusable="true"

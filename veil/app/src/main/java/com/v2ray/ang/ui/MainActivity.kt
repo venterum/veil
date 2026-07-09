@@ -1229,10 +1229,15 @@ class MainActivity : HelperBaseActivity() {
      */
     private fun scrollToSelectedServer(groupIndex: Int) {
         val itemId = groupPagerAdapter.getItemId(groupIndex)
-        val fragment = supportFragmentManager.findFragmentByTag("f$itemId") as? GroupServerFragment
+        val tag = "f$itemId"
+        val fragment = supportFragmentManager.findFragmentByTag(tag)
 
         if (fragment?.isAdded == true && fragment.view != null) {
-            fragment.scrollToSelectedServer()
+            when (fragment) {
+                is AllServerFragment -> fragment.scrollToSelectedServer()
+                is GroupServerFragment -> fragment.scrollToSelectedServer()
+                else -> toast(R.string.toast_fragment_not_available)
+            }
         } else {
             toast(R.string.toast_fragment_not_available)
         }

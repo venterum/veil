@@ -107,8 +107,15 @@
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
-    <style name="BrandedSwitch" parent="AppThemeDayNight">
+    <style name="BrandedSwitch" parent="ThemeOverlay.Material3Expressive">
         <item name="colorPrimary">@color/md_theme_primary</item>
+        <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
+        <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
+    </style>
+
+    <style name="BrandedMaterialSwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbTint">@color/branded_switch_thumb_tint</item>
+        <item name="trackTint">@color/branded_switch_track_tint</item>
     </style>
 
     <!-- Runtime overlay used on API 33+ to disable Activity transitions,

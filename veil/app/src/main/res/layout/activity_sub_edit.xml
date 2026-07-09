@@ -130,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:paddingEnd="@dimen/padding_spacing_dp16"
-                    app:theme="@style/BrandedSwitch" />
+                    style="@style/BrandedMaterialSwitch" />
 
             </LinearLayout>
 
@@ -152,7 +152,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:paddingEnd="@dimen/padding_spacing_dp16"
-                    app:theme="@style/BrandedSwitch" />
+                    style="@style/BrandedMaterialSwitch" />
 
             </LinearLayout>
 
@@ -194,7 +194,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:paddingEnd="@dimen/padding_spacing_dp16"
-                    app:theme="@style/BrandedSwitch" />
+                    style="@style/BrandedMaterialSwitch" />
 
             </LinearLayout>
 
@@ -231,7 +231,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:background="?attr/selectableItemBackgroundBorderless"
+
                         android:contentDescription="@string/sub_setting_pre_profile"
                         android:src="@drawable/ic_arrow_drop_down" />
 
@@ -272,7 +272,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:background="?attr/selectableItemBackgroundBorderless"
+
                         android:contentDescription="@string/sub_setting_next_profile"
                         android:src="@drawable/ic_arrow_drop_down" />
 

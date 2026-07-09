@@ -3,6 +3,7 @@ package com.v2ray.ang.util
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.LOOPBACK
 import com.v2ray.ang.BuildConfig
+import com.v2ray.ang.dto.HttpResponseWithHeaders
 import com.v2ray.ang.dto.UrlContentRequest
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
@@ -184,6 +185,65 @@ object HttpUtil {
 
                     response.isSuccessful -> {
                         return response.body?.string() ?: ""
+                    }
+
+                    else -> {
+                        throw IOException("Request failed with status code ${response.code}")
+                    }
+                }
+            }
+        }
+        throw IOException("Too many redirects")
+    }
+
+    @Throws(IOException::class)
+    fun getUrlContentWithHeaders(request: UrlContentRequest): HttpResponseWithHeaders {
+        var currentUrl = request.url
+        var redirects = 0
+        val maxRedirects = 3
+
+        while (redirects++ < maxRedirects) {
+            if (currentUrl == null) continue
+            val client = buildOkHttpClient(request.timeout, request.httpPort, request.proxyUsername, request.proxyPassword, followRedirects = false)
+            val finalUserAgent = if (request.userAgent.isNullOrBlank()) {
+                "v2rayNG/${BuildConfig.VERSION_NAME}"
+            } else {
+                request.userAgent
+            }
+            val requestBuilder = Request.Builder()
+                .url(currentUrl)
+                .get()
+                .header("User-agent", finalUserAgent)
+                .header("Connection", "close")
+
+            applyEmbeddedBasicAuthHeader(currentUrl, requestBuilder)
+
+            if (request.httpPort != 0 && !request.proxyUsername.isNullOrBlank() && !request.proxyPassword.isNullOrBlank()) {
+                requestBuilder.header("Proxy-Authorization", Credentials.basic(request.proxyUsername, request.proxyPassword))
+            }
+
+            client.newCall(requestBuilder.build()).execute().use { response ->
+                when {
+                    response.isRedirect -> {
+                        val location = response.header("Location")
+                        if (location.isNullOrEmpty()) {
+                            throw IOException("Redirect location not found")
+                        }
+                        currentUrl = resolveLocation(currentUrl, location)
+                        if (currentUrl.isNullOrEmpty()) {
+                            throw IOException("Failed to resolve redirect location")
+                        }
+                        continue
+                    }
+
+                    response.isSuccessful -> {
+                        val headers = mutableMapOf<String, String>()
+                        response.headers.names().forEach { name ->
+                            val value = response.header(name) ?: return@forEach
+                            headers[name.lowercase()] = value
+                        }
+                        val body = response.body?.string() ?: ""
+                        return HttpResponseWithHeaders(body, headers)
                     }
 
                     else -> {

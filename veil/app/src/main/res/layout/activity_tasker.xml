@@ -20,7 +20,7 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:checked="true"
-            app:theme="@style/BrandedSwitch" />
+            style="@style/BrandedMaterialSwitch" />
 
         <TextView
             android:layout_width="wrap_content"

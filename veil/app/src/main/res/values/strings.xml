@@ -303,6 +303,16 @@
     <string name="title_pref_group_all_display">Enable show all groups</string>
     <string name="summary_pref_group_all_display">Add an extra "All Tabs" page</string>
 
+    <string name="title_pref_group_all_mode">All servers display mode</string>
+    <string name="summary_pref_group_all_mode">Choose how all servers are displayed in the combined tab</string>
+    <string name="entry_group_all_mode_1">Free mode</string>
+    <string name="entry_group_all_mode_2">Grouped mode</string>
+    <string name="title_pref_group_all_icons_visible">Show action icons in All tab</string>
+    <string name="summary_pref_group_all_icons_visible">Show share, edit and remove buttons on server cards in the All tab</string>
+
+    <string name="expand_group">Expand group</string>
+    <string name="collapse_group">Collapse group</string>
+
     <!-- AboutActivity -->
     <string name="title_pref_feedback">Feedback</string>
     <string name="summary_pref_feedback">Feedback enhancements or bugs to GitHub</string>
@@ -535,4 +545,9 @@
     <string name="toggle_tun_off">TUN off</string>
     <string name="title_tun_enabled">TUN enabled</string>
     <string name="title_tun_disabled">TUN disabled</string>
+
+    <string name="title_traffic">Traffic</string>
+    <string name="title_expire">Expires: %1$s</string>
+    <string name="title_support_url">Support</string>
+    <string name="title_web_page_url">Website</string>
 </resources>

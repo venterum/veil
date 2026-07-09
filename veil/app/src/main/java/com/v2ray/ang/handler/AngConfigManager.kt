@@ -6,6 +6,7 @@ import android.text.TextUtils
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreConfigManager
+import com.v2ray.ang.dto.HttpResponseWithHeaders
 import com.v2ray.ang.dto.SubscriptionUpdateResult
 import com.v2ray.ang.dto.UrlContentRequest
 import com.v2ray.ang.dto.entities.ProfileItem
@@ -556,9 +557,9 @@ object AngConfigManager {
             val proxyUsername = SettingsManager.getSocksUsername()
             val proxyPassword = SettingsManager.getSocksPassword()
 
-            var configText = try {
-                val httpPort = SettingsManager.getHttpPort()
-                HttpUtil.getUrlContentWithUserAgent(
+            val httpPort = SettingsManager.getHttpPort()
+            var response = try {
+                HttpUtil.getUrlContentWithHeaders(
                     UrlContentRequest(
                         url = url,
                         userAgent = userAgent,
@@ -570,11 +571,11 @@ object AngConfigManager {
                 )
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.ANG_PACKAGE, "Update subscription: proxy not ready or other error", e)
-                ""
+                HttpResponseWithHeaders()
             }
-            if (configText.isEmpty()) {
-                configText = try {
-                    HttpUtil.getUrlContentWithUserAgent(
+            if (response.body.isEmpty()) {
+                response = try {
+                    HttpUtil.getUrlContentWithHeaders(
                         UrlContentRequest(
                             url = url,
                             userAgent = userAgent
@@ -582,11 +583,21 @@ object AngConfigManager {
                     )
                 } catch (e: Exception) {
                     LogUtil.e(AppConfig.TAG, "Update subscription: Failed to get URL content with user agent", e)
-                    ""
+                    HttpResponseWithHeaders()
                 }
             }
+            val configText = response.body
             if (configText.isEmpty()) {
                 return SubscriptionUpdateResult(failureCount = 1)
+            }
+
+            parseSubscriptionMetadata(configText, it.subscription)
+            parseSubscriptionHeaders(response.headers, it.subscription)
+
+            if (it.subscription.profileTitle.isNotEmpty()
+                && (it.subscription.remarks.isEmpty() || it.subscription.remarks == "import sub")
+            ) {
+                it.subscription.remarks = it.subscription.profileTitle
             }
 
             val count = parseConfigViaSub(configText, it.guid, false)
@@ -646,6 +657,88 @@ object AngConfigManager {
         subItem.url = url
         MmkvManager.encodeSubscription("", subItem)
         return 1
+    }
+
+    private val metadataKeys = setOf(
+        "profile-title", "subscription-userinfo", "support-url",
+        "profile-web-page-url", "announce", "profile-update-interval"
+    )
+
+    private fun parseSubscriptionMetadata(body: String, subItem: SubscriptionItem) {
+        body.lines().forEach { line ->
+            val trimmed = line.trim()
+            if (!trimmed.startsWith("#")) return@forEach
+            val content = trimmed.removePrefix("#").trim()
+            val colonIndex = content.indexOf(':')
+            if (colonIndex < 0) return@forEach
+            val key = content.substring(0, colonIndex).trim().lowercase()
+            val value = content.substring(colonIndex + 1).trim()
+            if (key !in metadataKeys) return@forEach
+            when (key) {
+                "profile-title" -> {
+                    subItem.profileTitle = decodeMetadataValue(value)
+                }
+                "subscription-userinfo" -> {
+                    subItem.subscriptionUserinfo = value
+                }
+                "support-url" -> {
+                    subItem.supportUrl = value
+                }
+                "profile-web-page-url" -> {
+                    subItem.profileWebPageUrl = value
+                }
+                "announce" -> {
+                    subItem.announce = decodeMetadataValue(value)
+                }
+                "profile-update-interval" -> {
+                    val hours = value.toLongOrNull()
+                    if (hours != null && hours > 0) {
+                        subItem.updateInterval = hours * 60
+                    }
+                }
+            }
+        }
+    }
+
+    private fun decodeMetadataValue(value: String): String {
+        val prefix = "base64:"
+        if (value.startsWith(prefix, ignoreCase = true)) {
+            return try {
+                val encoded = value.removePrefix(prefix).removePrefix(prefix.uppercase())
+                String(android.util.Base64.decode(encoded, android.util.Base64.DEFAULT))
+            } catch (_: Exception) {
+                value
+            }
+        }
+        return value
+    }
+
+    private fun parseSubscriptionHeaders(headers: Map<String, String>, subItem: SubscriptionItem) {
+        headers.forEach { (key, value) ->
+            when (key) {
+                "profile-title" -> {
+                    subItem.profileTitle = decodeMetadataValue(value)
+                }
+                "subscription-userinfo" -> {
+                    subItem.subscriptionUserinfo = value
+                }
+                "support-url" -> {
+                    subItem.supportUrl = value
+                }
+                "profile-web-page-url" -> {
+                    subItem.profileWebPageUrl = value
+                }
+                "announce" -> {
+                    subItem.announce = decodeMetadataValue(value)
+                }
+                "profile-update-interval" -> {
+                    val hours = value.toLongOrNull()
+                    if (hours != null && hours > 0) {
+                        subItem.updateInterval = hours * 60
+                    }
+                }
+            }
+        }
     }
 
     /** Generates a description for the profile.

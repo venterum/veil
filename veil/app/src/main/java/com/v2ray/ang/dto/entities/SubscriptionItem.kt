@@ -13,5 +13,10 @@ data class SubscriptionItem(
     var filter: String? = null,
     var allowInsecureUrl: Boolean = false,
     var userAgent: String? = null,
+    var profileTitle: String = "",
+    var subscriptionUserinfo: String = "",
+    var supportUrl: String = "",
+    var profileWebPageUrl: String = "",
+    var announce: String = "",
 )
 

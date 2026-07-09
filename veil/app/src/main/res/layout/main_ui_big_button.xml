@@ -52,7 +52,7 @@
                     app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
                     app:cardCornerRadius="60dp"
                     app:cardElevation="6dp"
-                    app:rippleColor="?attr/colorOnPrimaryContainer"
+
                     app:strokeWidth="0dp">
 
                     <ImageView
@@ -132,6 +132,7 @@
 
                     <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/switch_big_tun"
+                        style="@style/BrandedMaterialSwitch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:clickable="false"

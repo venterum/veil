@@ -47,7 +47,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/routing_settings_locked"
-                    app:theme="@style/BrandedSwitch" />
+                    style="@style/BrandedMaterialSwitch" />
             </LinearLayout>
 
             <LinearLayout
@@ -137,7 +137,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:background="?attr/selectableItemBackgroundBorderless"
+
                         android:contentDescription="@string/routing_settings_process"
                         android:src="@drawable/ic_per_apps_24dp" />
 
@@ -233,7 +233,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:background="?attr/selectableItemBackgroundBorderless"
+
                         android:contentDescription="@string/routing_settings_outbound_tag"
                         android:src="@drawable/ic_arrow_drop_down" />
 

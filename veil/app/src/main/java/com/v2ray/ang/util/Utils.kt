@@ -612,4 +612,44 @@ object Utils {
             ""
         }
     }
+
+    data class SubscriptionUserinfo(
+        val upload: Long = 0L,
+        val download: Long = 0L,
+        val total: Long = 0L,
+        val expire: Long = 0L
+    )
+
+    fun parseSubscriptionUserinfo(raw: String): SubscriptionUserinfo? {
+        if (raw.isBlank()) return null
+        var upload = 0L
+        var download = 0L
+        var total = 0L
+        var expire = 0L
+        raw.split(";").forEach { part ->
+            val eq = part.indexOf('=')
+            if (eq < 0) return@forEach
+            val key = part.substring(0, eq).trim()
+            val value = part.substring(eq + 1).trim().toLongOrNull() ?: return@forEach
+            when (key) {
+                "upload" -> upload = value
+                "download" -> download = value
+                "total" -> total = value
+                "expire" -> expire = value
+            }
+        }
+        return SubscriptionUserinfo(upload, download, total, expire)
+    }
+
+    fun formatBytes(bytes: Long): String {
+        if (bytes <= 0) return "0 B"
+        val units = arrayOf("B", "KB", "MB", "GB", "TB")
+        val unitIndex = (63 - bytes.countLeadingZeroBits()) / 10
+        val divisor = 1L shl (unitIndex * 10)
+        val value = bytes.toDouble() / divisor
+        if (value < 10.0 && unitIndex > 0) {
+            return "%.1f %s".format(Locale.US, value, units[unitIndex])
+        }
+        return "%.0f %s".format(Locale.US, value, units[unitIndex])
+    }
 }

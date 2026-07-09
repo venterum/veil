@@ -45,7 +45,7 @@
                             android:maxLines="2"
                             android:text="@string/per_app_proxy_settings_enable"
                             android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                            app:theme="@style/BrandedSwitch" />
+                            style="@style/BrandedMaterialSwitch" />
 
                     </LinearLayout>
 
@@ -64,13 +64,13 @@
                             android:layout_height="wrap_content"
                             android:text="@string/switch_bypass_apps_mode"
                             android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                            app:theme="@style/BrandedSwitch" />
+                            style="@style/BrandedMaterialSwitch" />
 
                         <LinearLayout
                             android:id="@+id/layout_switch_bypass_apps_tips"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="?attr/selectableItemBackgroundBorderless"
+
                             android:clickable="true"
                             android:contentDescription="@string/switch_bypass_apps_mode"
                             android:focusable="true"

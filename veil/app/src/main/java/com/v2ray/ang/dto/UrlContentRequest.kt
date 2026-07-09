@@ -8,3 +8,8 @@ data class UrlContentRequest(
     val proxyPassword: String? = null,
     val userAgent: String? = null
 )
+
+data class HttpResponseWithHeaders(
+    val body: String = "",
+    val headers: Map<String, String> = emptyMap()
+)

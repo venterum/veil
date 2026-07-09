@@ -45,6 +45,8 @@ require (
 replace github.com/2dust/AndroidLibXrayLite => $__dir/AndroidLibXrayLite
 
 replace github.com/openlibrecommunity/olcrtc => $__dir/olcrtc
+
+$(sed -n '/^replace /p' "$__dir/AndroidLibXrayLite/go.mod")
 EOF
 
 cat > "$TMPDIR/imports.go" <<'EOF'
