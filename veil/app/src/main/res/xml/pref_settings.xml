@@ -17,6 +17,12 @@
 
         <SwitchPreferenceCompat
             android:widgetLayout="@layout/preference_material_switch"
+            android:key="pref_speed_status_bar_live"
+            android:summary="@string/summary_pref_speed_status_bar_live"
+            android:title="@string/title_pref_speed_status_bar_live" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
             android:key="pref_confirm_remove"
             android:summary="@string/summary_pref_confirm_remove"
             android:title="@string/title_pref_confirm_remove" />

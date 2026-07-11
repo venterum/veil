@@ -85,6 +85,22 @@ fun Long.toTrafficString(): String {
     return String.format(Locale.getDefault(), "%.1f %s", size, units[unitIndex])
 }
 
+/**
+ * Converts a Long value (bytes per second) to a metric speed pair (value, unit).
+ *
+ * @return A pair of the numeric value and its unit string (e.g. 1.5 to "KB/s").
+ */
+fun Long.toMetricSpeed(): Pair<Float, String> {
+    val units = arrayOf("B/s", "KB/s", "MB/s", "GB/s", "TB/s", "PB/s")
+    var size = this.toDouble()
+    var unitIndex = 0
+    while (size >= THRESHOLD && unitIndex < units.size - 1) {
+        size /= DIVISOR
+        unitIndex++
+    }
+    return size.toFloat() to units[unitIndex]
+}
+
 val URI.idnHost: String
     get() = host?.replace("[", "")?.replace("]", "").orEmpty()
 

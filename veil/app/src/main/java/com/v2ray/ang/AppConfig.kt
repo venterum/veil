@@ -50,6 +50,7 @@ object AppConfig {
     const val SUBSCRIPTION_MIN_INTERVAL_MINUTES = 15L
     const val PREF_SPEED_ENABLED = "pref_speed_enabled"
     const val PREF_SPEED_TOOLBAR_ENABLED = "pref_speed_toolbar_enabled"
+    const val PREF_SPEED_STATUS_BAR_LIVE = "pref_speed_status_bar_live"
     const val PREF_CONFIRM_REMOVE = "pref_confirm_remove"
     const val PREF_START_SCAN_IMMEDIATE = "pref_start_scan_immediate"
     const val PREF_DOUBLE_COLUMN_DISPLAY = "pref_double_column_display"
@@ -180,6 +181,7 @@ object AppConfig {
     const val MSG_STATE_STOP = 4
     const val MSG_STATE_STOP_SUCCESS = 41
     const val MSG_STATE_RESTART = 5
+    const val MSG_STATE_TUN_TOGGLE = 7
     const val MSG_MEASURE_DELAY = 6
     const val MSG_MEASURE_DELAY_SUCCESS = 61
     const val MSG_MEASURE_CONFIG_START = 7

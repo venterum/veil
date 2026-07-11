@@ -26,6 +26,7 @@ import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.root.RootManager
 import com.v2ray.ang.service.CoreProxyOnlyService
 import com.v2ray.ang.service.CoreRootService
+import com.v2ray.ang.service.CoreTunToggleService
 import com.v2ray.ang.service.CoreVpnService
 import com.v2ray.ang.service.DialerNativeService
 import com.v2ray.ang.service.DialerWebviewService
@@ -507,6 +508,26 @@ object CoreServiceManager {
     }
 
     /**
+     * Toggles the TUN interface in Proxy + TUN mode.
+     * @param context The context used to start/stop the TUN service.
+     */
+    private fun toggleTun(context: Context) {
+        if (!SettingsManager.isProxyTunMode()) return
+        val tunEnabled = SettingsManager.isTunEnabled()
+        if (tunEnabled) {
+            SettingsManager.setTunEnabled(false)
+            val intent = Intent(context, CoreTunToggleService::class.java)
+            intent.action = AppConfig.ACTION_STOP_TUN
+            context.startService(intent)
+            context.sendBroadcast(Intent(AppConfig.ACTION_STOP_TUN))
+        } else {
+            SettingsManager.setTunEnabled(true)
+            val intent = Intent(context, CoreTunToggleService::class.java)
+            ContextCompat.startForegroundService(context, intent)
+        }
+    }
+
+    /**
      * Broadcast receiver for handling messages sent to the service.
      * Handles registration, service control, and screen events.
      */
@@ -546,6 +567,10 @@ object CoreServiceManager {
                     serviceControl.stopService()
                     Thread.sleep(500L)
                     startVService(serviceControl.getService())
+                }
+
+                AppConfig.MSG_STATE_TUN_TOGGLE -> {
+                    toggleTun(serviceControl.getService())
                 }
 
                 AppConfig.MSG_MEASURE_DELAY -> {

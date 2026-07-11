@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.Icon
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
@@ -15,6 +16,7 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.dto.entities.ProfileItem
+import com.v2ray.ang.extension.toMetricSpeed
 import com.v2ray.ang.extension.toSpeedString
 import com.v2ray.ang.ui.MainActivity
 import com.v2ray.ang.util.LogUtil
@@ -32,13 +34,19 @@ object NotificationManager {
     private const val NOTIFICATION_PENDING_INTENT_CONTENT = 0
     private const val NOTIFICATION_PENDING_INTENT_STOP_V2RAY = 1
     private const val NOTIFICATION_PENDING_INTENT_RESTART_V2RAY = 2
+    private const val NOTIFICATION_PENDING_INTENT_TOGGLE_TUN = 3
     private const val NOTIFICATION_ICON_THRESHOLD = 3000
     private const val QUERY_INTERVAL_MS = 3000L
+    private const val RAY_NG_CHANNEL_ID_LIVE = "RAY_NG_M_CH_ID_LIVE"
 
     private var lastQueryTime = 0L
     private var mBuilder: NotificationCompat.Builder? = null
+    private var mBuilderPlatform: Notification.Builder? = null
     private var speedNotificationJob: Job? = null
     private var mNotificationManager: NotificationManager? = null
+    private var currentConfig: ProfileItem? = null
+    private var isMetricStyleActive = false
+    private var lastTunEnabled: Boolean? = null
 
     /**
      * Starts the speed notification.
@@ -47,7 +55,8 @@ object NotificationManager {
     fun startSpeedNotification() {
         val notificationEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true
         val toolbarEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_TOOLBAR_ENABLED) == true
-        if (!notificationEnabled && !toolbarEnabled) return
+        val statusBarLiveEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_STATUS_BAR_LIVE) == true
+        if (!notificationEnabled && !toolbarEnabled && !statusBarLiveEnabled) return
         if (speedNotificationJob != null || CoreServiceManager.isRunning() == false) return
 
         var lastZeroSpeed = false
@@ -66,6 +75,7 @@ object NotificationManager {
      */
     fun showNotification(currentConfig: ProfileItem?) {
         val service = getService() ?: return
+        this.currentConfig = currentConfig
 
         // Reset last query time to avoid querying stats too soon after showing the notification
         lastQueryTime = System.currentTimeMillis()
@@ -85,37 +95,113 @@ object NotificationManager {
         restartV2RayIntent.putExtra("key", AppConfig.MSG_STATE_RESTART)
         val restartV2RayPendingIntent = PendingIntent.getBroadcast(service, NOTIFICATION_PENDING_INTENT_RESTART_V2RAY, restartV2RayIntent, flags)
 
+        val tunEnabled = SettingsManager.isProxyTunMode() && SettingsManager.isTunEnabled()
+        lastTunEnabled = tunEnabled
+        val toggleTunIntent = Intent(AppConfig.BROADCAST_ACTION_SERVICE)
+        toggleTunIntent.`package` = AppConfig.ANG_PACKAGE
+        toggleTunIntent.putExtra("key", AppConfig.MSG_STATE_TUN_TOGGLE)
+        val toggleTunPendingIntent = PendingIntent.getBroadcast(service, NOTIFICATION_PENDING_INTENT_TOGGLE_TUN, toggleTunIntent, flags)
+
+        val statusBarLiveEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_STATUS_BAR_LIVE) == true
+        val canPromote = statusBarLiveEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
+        val useMetricStyle = statusBarLiveEnabled && Build.VERSION.SDK_INT >= 37
+        isMetricStyleActive = useMetricStyle
+
         val channelId =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createNotificationChannel()
+                createNotificationChannel(canPromote)
             } else {
                 // If earlier version channel ID is not used
                 // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
                 ""
             }
 
-        mBuilder = NotificationCompat.Builder(service, channelId)
-            .setSmallIcon(R.drawable.ic_stat_name)
-            .setContentTitle(currentConfig?.remarks)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-            .setOngoing(true)
-            .setShowWhen(false)
-            .setOnlyAlertOnce(true)
-            .setContentIntent(contentPendingIntent)
-            .addAction(
-                R.drawable.ic_delete_24dp,
-                service.getString(R.string.notification_action_stop_v2ray),
-                stopV2RayPendingIntent
-            )
-            .addAction(
-                R.drawable.ic_restore_24dp,
-                service.getString(R.string.title_service_restart),
-                restartV2RayPendingIntent
-            )
+        val showTunToggle = SettingsManager.isProxyTunMode()
+        val tunActionLabel = if (tunEnabled) {
+            service.getString(R.string.toggle_tun_off)
+        } else {
+            service.getString(R.string.toggle_tun_on)
+        }
 
-        //mBuilder?.setDefaults(NotificationCompat.FLAG_ONLY_ALERT_ONCE)
+        if (useMetricStyle) {
+            mBuilder = null
+            val platformBuilder = Notification.Builder(service, channelId)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setContentTitle(currentConfig?.remarks)
+                .setOngoing(true)
+                .setShowWhen(false)
+                .setOnlyAlertOnce(true)
+                .setContentIntent(contentPendingIntent)
+                .addAction(
+                    Notification.Action.Builder(
+                        Icon.createWithResource(service, R.drawable.ic_delete_24dp),
+                        service.getString(R.string.notification_action_stop_v2ray),
+                        stopV2RayPendingIntent
+                    ).build()
+                )
+                .addAction(
+                    Notification.Action.Builder(
+                        Icon.createWithResource(service, R.drawable.ic_restore_24dp),
+                        service.getString(R.string.title_service_restart),
+                        restartV2RayPendingIntent
+                    ).build()
+                )
+                .setStyle(buildMetricStyle(0L, 0L))
 
-        service.startForeground(NOTIFICATION_ID, mBuilder?.build())
+            if (showTunToggle) {
+                platformBuilder.addAction(
+                    Notification.Action.Builder(
+                        Icon.createWithResource(service, R.drawable.ic_tun_on_24dp),
+                        tunActionLabel,
+                        toggleTunPendingIntent
+                    ).build()
+                )
+            }
+
+            mBuilderPlatform = platformBuilder
+
+            if (canPromote) {
+                mBuilderPlatform?.extras?.putBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING, true)
+            }
+
+            service.startForeground(NOTIFICATION_ID, mBuilderPlatform?.build())
+        } else {
+            mBuilderPlatform = null
+            val compatBuilder = NotificationCompat.Builder(service, channelId)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setContentTitle(currentConfig?.remarks)
+                .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setOngoing(true)
+                .setShowWhen(false)
+                .setOnlyAlertOnce(true)
+                .setContentIntent(contentPendingIntent)
+                .addAction(
+                    R.drawable.ic_delete_24dp,
+                    service.getString(R.string.notification_action_stop_v2ray),
+                    stopV2RayPendingIntent
+                )
+                .addAction(
+                    R.drawable.ic_restore_24dp,
+                    service.getString(R.string.title_service_restart),
+                    restartV2RayPendingIntent
+                )
+
+            if (showTunToggle) {
+                compatBuilder.addAction(
+                    R.drawable.ic_tun_on_24dp,
+                    tunActionLabel,
+                    toggleTunPendingIntent
+                )
+            }
+
+            mBuilder = compatBuilder
+
+            if (canPromote) {
+                mBuilder?.extras?.putBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING, true)
+            }
+
+            service.startForeground(NOTIFICATION_ID, mBuilder?.build())
+        }
     }
 
     /**
@@ -126,9 +212,13 @@ object NotificationManager {
         service.stopForeground(Service.STOP_FOREGROUND_REMOVE)
 
         mBuilder = null
+        mBuilderPlatform = null
         speedNotificationJob?.cancel()
         speedNotificationJob = null
         mNotificationManager = null
+        currentConfig = null
+        isMetricStyleActive = false
+        lastTunEnabled = null
     }
 
     /**
@@ -147,15 +237,20 @@ object NotificationManager {
      * @return The channel ID.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(): String {
-        val channelId = AppConfig.RAY_NG_CHANNEL_ID
-        val channelName = AppConfig.RAY_NG_CHANNEL_NAME
+    private fun createNotificationChannel(liveUpdate: Boolean): String {
+        val channelId = if (liveUpdate) RAY_NG_CHANNEL_ID_LIVE else AppConfig.RAY_NG_CHANNEL_ID
+        val channelName = if (liveUpdate) "${AppConfig.RAY_NG_CHANNEL_NAME} Live" else AppConfig.RAY_NG_CHANNEL_NAME
+        val importance = if (liveUpdate) {
+            NotificationManager.IMPORTANCE_LOW
+        } else {
+            NotificationManager.IMPORTANCE_NONE
+        }
         val chan = NotificationChannel(
             channelId,
             channelName, NotificationManager.IMPORTANCE_HIGH
         )
         chan.lightColor = Color.DKGRAY
-        chan.importance = NotificationManager.IMPORTANCE_NONE
+        chan.importance = importance
         chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         getNotificationManager()?.createNotificationChannel(chan)
         return channelId
@@ -167,18 +262,54 @@ object NotificationManager {
      * @param proxyTraffic The proxy traffic.
      * @param directTraffic The direct traffic.
      */
-    private fun updateNotification(contentText: String?, proxyTraffic: Long, directTraffic: Long) {
-        if (mBuilder != null) {
-            if (proxyTraffic < NOTIFICATION_ICON_THRESHOLD && directTraffic < NOTIFICATION_ICON_THRESHOLD) {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_name)
-            } else if (proxyTraffic > directTraffic) {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_proxy)
-            } else {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_direct)
-            }
+    private fun updateNotification(
+        contentText: String?,
+        proxyTraffic: Long,
+        directTraffic: Long,
+        upSpeed: Long = 0L,
+        downSpeed: Long = 0L
+    ) {
+        val smallIconRes = when {
+            proxyTraffic < NOTIFICATION_ICON_THRESHOLD && directTraffic < NOTIFICATION_ICON_THRESHOLD -> R.drawable.ic_stat_name
+            proxyTraffic > directTraffic -> R.drawable.ic_stat_proxy
+            else -> R.drawable.ic_stat_direct
+        }
+
+        if (mBuilderPlatform != null && Build.VERSION.SDK_INT >= 37) {
+            mBuilderPlatform?.setSmallIcon(smallIconRes)
+            mBuilderPlatform?.setStyle(buildMetricStyle(upSpeed, downSpeed))
+            getNotificationManager()?.notify(NOTIFICATION_ID, mBuilderPlatform?.build())
+        } else if (mBuilder != null) {
+            mBuilder?.setSmallIcon(smallIconRes)
             mBuilder?.setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
             mBuilder?.setContentText(contentText)
             getNotificationManager()?.notify(NOTIFICATION_ID, mBuilder?.build())
+        }
+    }
+
+    /**
+     * Builds a MetricStyle notification style for live status-bar updates.
+     * @param upSpeed The uplink speed in bytes per second.
+     * @param downSpeed The downlink speed in bytes per second.
+     * @return The MetricStyle instance.
+     */
+    private fun buildMetricStyle(upSpeed: Long, downSpeed: Long): Notification.MetricStyle {
+        val (downValue, downUnit) = downSpeed.toMetricSpeed()
+        val (upValue, upUnit) = upSpeed.toMetricSpeed()
+        return Notification.MetricStyle().apply {
+            addMetric(
+                Notification.Metric(
+                    Notification.Metric.FixedFloat(downValue, downUnit, 0, 1),
+                    "\u2193 Down"
+                )
+            )
+            addMetric(
+                Notification.Metric(
+                    Notification.Metric.FixedFloat(upValue, upUnit, 0, 1),
+                    "\u2191 Up"
+                )
+            )
+            setCriticalMetric(if (downSpeed >= upSpeed) 0 else 1)
         }
     }
 
@@ -255,14 +386,27 @@ object NotificationManager {
         val proxyTotal = proxyUplink + proxyDownlink
         val directTotal = directUplink + directDownlink
         val zeroSpeed = proxyTotal + directTotal == 0L
+        val upSpeed = ((proxyUplink + directUplink) / sinceLastQueryInSeconds).toLong()
+        val downSpeed = ((proxyDownlink + directDownlink) / sinceLastQueryInSeconds).toLong()
 
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_TOOLBAR_ENABLED) == true) {
-            val up = ((proxyUplink + directUplink) / sinceLastQueryInSeconds).toLong()
-            val down = ((proxyDownlink + directDownlink) / sinceLastQueryInSeconds).toLong()
-            getService()?.let { MessageUtil.sendMsg2UI(it, AppConfig.MSG_NET_SPEED, "$up;$down") }
+            getService()?.let { MessageUtil.sendMsg2UI(it, AppConfig.MSG_NET_SPEED, "$upSpeed;$downSpeed") }
         }
 
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true && (!zeroSpeed || !lastZeroSpeed)) {
+        // Rebuild the notification if the live-update style preference or TUN state changed while running.
+        val statusBarLiveEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_STATUS_BAR_LIVE) == true
+        val desiredMetricStyle = statusBarLiveEnabled && Build.VERSION.SDK_INT >= 37
+        val currentTunEnabled = SettingsManager.isProxyTunMode() && SettingsManager.isTunEnabled()
+        if (desiredMetricStyle != isMetricStyleActive || currentTunEnabled != lastTunEnabled) {
+            showNotification(currentConfig)
+        }
+
+        val showBigTextSpeed = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true
+            || (statusBarLiveEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA)
+
+        if (statusBarLiveEnabled && Build.VERSION.SDK_INT >= 37) {
+            updateNotification(null, proxyTotal, directTotal, upSpeed, downSpeed)
+        } else if (showBigTextSpeed && (!zeroSpeed || !lastZeroSpeed)) {
             val text = StringBuilder()
             appendSpeedString(
                 text, AppConfig.TAG_PROXY,
