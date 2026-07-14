@@ -4,7 +4,7 @@
         android:height="48dp"
         android:gravity="center">
         <inset
-            android:drawable="@drawable/ic_launcher_foreground"
+            android:drawable="@mipmap/ic_launcher_foreground"
             android:inset="12%" />
     </item>
 </layer-list>

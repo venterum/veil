@@ -2,6 +2,9 @@
 *.dat
 *.jks
 
+# Ignore temporary files
+/tmp
+
 # Ignore output JSON file
 veil/app/release/output.json
 
@@ -64,5 +67,8 @@ veil/app/google-services.json
 # Ignore OS-specific files
 Thumbs.db
 .DS_Store
+
+# Ignore agent context file (local AI/agent instructions)
+AGENTS.md
 
 # Separate projects (not part of veil)

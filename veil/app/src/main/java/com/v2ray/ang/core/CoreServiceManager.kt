@@ -559,6 +559,20 @@ object CoreServiceManager {
 
                 AppConfig.MSG_STATE_STOP -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Stop service")
+
+                    // Stop TUN first if running in Hybrid Mode, before proxy shuts down.
+                    val stopContext = serviceControl.getService()
+                    if (stopContext != null
+                        && SettingsManager.isProxyTunMode()
+                        && SettingsManager.isTunEnabled()
+                    ) {
+                        SettingsManager.setTunEnabled(false)
+                        val tunIntent = Intent(stopContext, CoreTunToggleService::class.java)
+                        tunIntent.action = AppConfig.ACTION_STOP_TUN
+                        stopContext.startService(tunIntent)
+                        stopContext.sendBroadcast(Intent(AppConfig.ACTION_STOP_TUN))
+                    }
+
                     serviceControl.stopService()
                 }
 
