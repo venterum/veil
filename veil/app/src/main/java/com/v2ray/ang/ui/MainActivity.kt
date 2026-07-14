@@ -419,8 +419,8 @@ class MainActivity : HelperBaseActivity() {
         val tunWidthDp = 52
 
         // Target widths on press: circle becomes pill, pill becomes wider.
-        val fabPressWidthDp = 104
-        val tunPressWidthDp = 80
+        val fabPressWidthDp = 94
+        val tunPressWidthDp = 66
 
         // Expressive spatial springs.
         val pressStiffness = 600f

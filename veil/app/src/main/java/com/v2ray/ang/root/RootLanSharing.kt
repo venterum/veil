@@ -6,9 +6,7 @@ import com.v2ray.ang.handler.MmkvManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 
 object RootLanSharing {
@@ -31,7 +29,7 @@ object RootLanSharing {
         if (!lanSharingStarted) return
 
         lanSharingStarted = false
-        runBlocking { lanShareJob?.cancelAndJoin() }
+        lanShareJob?.cancel()
         lanShareJob = null
         RootProxyManager.stop(context)
     }

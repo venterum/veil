@@ -488,8 +488,8 @@ object SettingsManager {
     }
 
     /**
-     * Check if Proxy + TUN mode is enabled.
-     * @return True if Proxy + TUN mode is enabled, false otherwise.
+     * Check if Hybrid Mode is enabled.
+     * @return True if Hybrid Mode is enabled, false otherwise.
      */
     fun isProxyTunMode(): Boolean {
         return MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) == AppConfig.PROXY_TUN
@@ -500,7 +500,7 @@ object SettingsManager {
     }
 
     /**
-     * Check if TUN is currently enabled (runtime toggle in Proxy + TUN mode).
+     * Check if TUN is currently enabled (runtime toggle in Hybrid Mode).
      * @return True if TUN is enabled, false otherwise.
      */
     fun isTunEnabled(): Boolean {

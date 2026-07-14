@@ -20,16 +20,23 @@ import com.v2ray.ang.AppConfig.LOOPBACK
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.contracts.Tun2SocksControl
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.NotificationManager as AngNotificationManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class CoreTunToggleService : VpnService() {
 
     private lateinit var mInterface: ParcelFileDescriptor
     private var isRunning = false
     private var tun2SocksService: Tun2SocksControl? = null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @delegate:RequiresApi(Build.VERSION_CODES.P)
     private val defaultNetworkRequest by lazy {
@@ -84,6 +91,7 @@ class CoreTunToggleService : VpnService() {
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         super.onDestroy()
         LogUtil.i(AppConfig.TAG, "StartCore-TunToggle: Service destroyed")
 
@@ -115,6 +123,7 @@ class CoreTunToggleService : VpnService() {
             }
         }
 
+        stopForeground(STOP_FOREGROUND_REMOVE)
         SettingsManager.setTunEnabled(false)
     }
 
@@ -124,7 +133,12 @@ class CoreTunToggleService : VpnService() {
             stopAllService()
             return START_NOT_STICKY
         }
-        setupTunService()
+        // Promote to foreground immediately to satisfy Android's foreground-service
+        // deadline, then perform the blocking TUN setup on a background thread.
+        AngNotificationManager.showTunNotification(this)
+        serviceScope.launch {
+            setupTunService()
+        }
         return START_STICKY
     }
 
@@ -292,14 +306,8 @@ class CoreTunToggleService : VpnService() {
             LogUtil.e(AppConfig.TAG, "StartCore-TunToggle: Failed to close interface", e)
         }
 
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
-
-        try {
-            Thread.sleep(100)
-        } catch (e: InterruptedException) {
-            LogUtil.w(AppConfig.TAG, "StartCore-TunToggle: Sleep interrupted", e)
-        }
-
         SettingsManager.setTunEnabled(false)
     }
 }

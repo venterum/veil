@@ -360,6 +360,9 @@
     <string name="summary_pref_remote_dns">DNS</string>
 
     <string name="title_pref_vpn_dns">VPN DNS (только IPv4/v6)</string>
+    <string name="title_pref_olcrtc_dns">DNS olcRTC (ip:port)</string>
+    <string name="summary_pref_olcrtc_dns">Оставьте пустым для использования DNS провайдера</string>
+    <string name="summary_pref_olcrtc_dns_auto">DNS провайдера (авто)</string>
     <string name="title_pref_vpn_bypass_lan">VPN обходит LAN</string>
 
     <string
@@ -532,9 +535,6 @@
         name="title_outbound_domain_resolve_method"
     >Предопределение исходящего домена</string>
     <string name="title_mode">Режим</string>
-    <string
-        name="title_mode_help"
-    >Нажмите для получения дополнительной информации</string>
     <string name="title_language">Язык</string>
     <string name="title_ui_settings">Настройки интерфейса</string>
     <string name="title_pref_main_ui_mode">Раскладка главного экрана</string>
@@ -787,7 +787,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>Прокси</item>
-        <item>Прокси + TUN</item>
+        <item>Гибридный режим</item>
     </string-array>
 
     <string-array name="browser_dialer_mode">

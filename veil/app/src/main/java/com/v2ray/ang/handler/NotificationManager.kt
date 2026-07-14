@@ -31,11 +31,11 @@ import kotlin.math.min
 
 object NotificationManager {
     private const val NOTIFICATION_ID = 1
+    private const val TUN_NOTIFICATION_ID = 2
     private const val NOTIFICATION_PENDING_INTENT_CONTENT = 0
     private const val NOTIFICATION_PENDING_INTENT_STOP_V2RAY = 1
     private const val NOTIFICATION_PENDING_INTENT_RESTART_V2RAY = 2
     private const val NOTIFICATION_PENDING_INTENT_TOGGLE_TUN = 3
-    private const val NOTIFICATION_ICON_THRESHOLD = 3000
     private const val QUERY_INTERVAL_MS = 3000L
     private const val RAY_NG_CHANNEL_ID_LIVE = "RAY_NG_M_CH_ID_LIVE"
 
@@ -128,20 +128,21 @@ object NotificationManager {
             val platformBuilder = Notification.Builder(service, channelId)
                 .setSmallIcon(R.drawable.ic_stat_name)
                 .setContentTitle(currentConfig?.remarks)
+                .setContentText("\u2193 ${0L.toSpeedString()}   \u2191 ${0L.toSpeedString()}")
                 .setOngoing(true)
                 .setShowWhen(false)
                 .setOnlyAlertOnce(true)
                 .setContentIntent(contentPendingIntent)
                 .addAction(
                     Notification.Action.Builder(
-                        Icon.createWithResource(service, R.drawable.ic_delete_24dp),
+                        Icon.createWithResource(service, R.drawable.ic_stat_name),
                         service.getString(R.string.notification_action_stop_v2ray),
                         stopV2RayPendingIntent
                     ).build()
                 )
                 .addAction(
                     Notification.Action.Builder(
-                        Icon.createWithResource(service, R.drawable.ic_restore_24dp),
+                        Icon.createWithResource(service, R.drawable.ic_stat_name),
                         service.getString(R.string.title_service_restart),
                         restartV2RayPendingIntent
                     ).build()
@@ -151,7 +152,7 @@ object NotificationManager {
             if (showTunToggle) {
                 platformBuilder.addAction(
                     Notification.Action.Builder(
-                        Icon.createWithResource(service, R.drawable.ic_tun_on_24dp),
+                        Icon.createWithResource(service, R.drawable.ic_stat_name),
                         tunActionLabel,
                         toggleTunPendingIntent
                     ).build()
@@ -176,19 +177,19 @@ object NotificationManager {
                 .setOnlyAlertOnce(true)
                 .setContentIntent(contentPendingIntent)
                 .addAction(
-                    R.drawable.ic_delete_24dp,
+                    R.drawable.ic_stat_name,
                     service.getString(R.string.notification_action_stop_v2ray),
                     stopV2RayPendingIntent
                 )
                 .addAction(
-                    R.drawable.ic_restore_24dp,
+                    R.drawable.ic_stat_name,
                     service.getString(R.string.title_service_restart),
                     restartV2RayPendingIntent
                 )
 
             if (showTunToggle) {
                 compatBuilder.addAction(
-                    R.drawable.ic_tun_on_24dp,
+                    R.drawable.ic_stat_name,
                     tunActionLabel,
                     toggleTunPendingIntent
                 )
@@ -202,6 +203,47 @@ object NotificationManager {
 
             service.startForeground(NOTIFICATION_ID, mBuilder?.build())
         }
+    }
+
+    /**
+     * Shows a minimal foreground notification for the standalone TUN service.
+     * This is used by CoreTunToggleService so it satisfies the foreground-service
+     * requirement without colliding with the main CoreProxyOnlyService notification.
+     */
+    fun showTunNotification(service: Service) {
+        val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+
+        val startMainIntent = Intent(service, MainActivity::class.java)
+        val contentPendingIntent = PendingIntent.getActivity(service, NOTIFICATION_PENDING_INTENT_CONTENT, startMainIntent, flags)
+
+        val stopTunIntent = Intent(AppConfig.BROADCAST_ACTION_SERVICE)
+        stopTunIntent.`package` = AppConfig.ANG_PACKAGE
+        stopTunIntent.putExtra("key", AppConfig.MSG_STATE_TUN_TOGGLE)
+        val stopTunPendingIntent = PendingIntent.getBroadcast(service, NOTIFICATION_PENDING_INTENT_TOGGLE_TUN, stopTunIntent, flags)
+
+        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel(false)
+        } else {
+            ""
+        }
+
+        val notification = NotificationCompat.Builder(service, channelId)
+            .setSmallIcon(R.drawable.ic_stat_name)
+            .setContentTitle(service.getString(R.string.app_name))
+            .setContentText(service.getString(R.string.title_tun_enabled))
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setOngoing(true)
+            .setShowWhen(false)
+            .setOnlyAlertOnce(true)
+            .setContentIntent(contentPendingIntent)
+            .addAction(
+                R.drawable.ic_stat_name,
+                service.getString(R.string.toggle_tun_off),
+                stopTunPendingIntent
+            )
+            .build()
+
+        service.startForeground(TUN_NOTIFICATION_ID, notification)
     }
 
     /**
@@ -269,14 +311,12 @@ object NotificationManager {
         upSpeed: Long = 0L,
         downSpeed: Long = 0L
     ) {
-        val smallIconRes = when {
-            proxyTraffic < NOTIFICATION_ICON_THRESHOLD && directTraffic < NOTIFICATION_ICON_THRESHOLD -> R.drawable.ic_stat_name
-            proxyTraffic > directTraffic -> R.drawable.ic_stat_proxy
-            else -> R.drawable.ic_stat_direct
-        }
+        val smallIconRes = R.drawable.ic_stat_name
 
         if (mBuilderPlatform != null && Build.VERSION.SDK_INT >= 37) {
+            val speedText = "\u2193 ${downSpeed.toSpeedString()}   \u2191 ${upSpeed.toSpeedString()}"
             mBuilderPlatform?.setSmallIcon(smallIconRes)
+            mBuilderPlatform?.setContentText(speedText)
             mBuilderPlatform?.setStyle(buildMetricStyle(upSpeed, downSpeed))
             getNotificationManager()?.notify(NOTIFICATION_ID, mBuilderPlatform?.build())
         } else if (mBuilder != null) {
@@ -299,14 +339,14 @@ object NotificationManager {
         return Notification.MetricStyle().apply {
             addMetric(
                 Notification.Metric(
-                    Notification.Metric.FixedFloat(downValue, downUnit, 0, 1),
-                    "\u2193 Down"
+                    Notification.Metric.FixedFloat(downValue, "", 0, 1),
+                    "\u2193 $downUnit"
                 )
             )
             addMetric(
                 Notification.Metric(
-                    Notification.Metric.FixedFloat(upValue, upUnit, 0, 1),
-                    "\u2191 Up"
+                    Notification.Metric.FixedFloat(upValue, "", 0, 1),
+                    "\u2191 $upUnit"
                 )
             )
             setCriticalMetric(if (downSpeed >= upSpeed) 0 else 1)

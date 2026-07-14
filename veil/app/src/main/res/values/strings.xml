@@ -243,6 +243,9 @@
     <string name="summary_pref_remote_dns">DNS</string>
 
     <string name="title_pref_vpn_dns">VPN DNS (only IPv4/v6)</string>
+    <string name="title_pref_olcrtc_dns">olcRTC DNS (ip:port)</string>
+    <string name="summary_pref_olcrtc_dns">Leave empty to use provider DNS</string>
+    <string name="summary_pref_olcrtc_dns_auto">Provider DNS (auto)</string>
     <string name="title_pref_vpn_bypass_lan">Does VPN bypass LAN</string>
 
     <string name="title_pref_vpn_interface_address">VPN Interface Address</string>
@@ -339,7 +342,6 @@
     <string name="title_core_loglevel">Log Level</string>
     <string name="title_outbound_domain_resolve_method">Outbound domain pre-resolve method</string>
     <string name="title_mode">Mode</string>
-    <string name="title_mode_help">Click me for more help</string>
     <string name="title_mode_settings">Mode Settings</string>
     <string name="title_root_mode_enabled">Root mode enabled (Root Users)</string>
     <string name="summary_root_mode_enabled">Enable low-level transparent proxying via root privileges. This mode bypasses the standard Android system VPN to directly take over all underlying network traffic. Once enabled, the original regular mode, per-app routing, and related VPN settings will become completely invalid.</string>
@@ -497,7 +499,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>Proxy only</item>
-        <item>Proxy + TUN</item>
+        <item>Hybrid Mode</item>
     </string-array>
 
     <string-array name="browser_dialer_mode">

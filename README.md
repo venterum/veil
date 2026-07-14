@@ -25,7 +25,7 @@ Full documentation (EN/RU) is in the [docs](docs/index.md) directory.
 - Subscription management and QR-code import/export
 - Per-app proxy, routing rules, DNS, fragmentation, mux and more
 - VPN service backed by `hev-socks5-tunnel` or the xray-core tunnel
-- **Three connection modes:** VPN (all traffic through tunnel), Proxy (SOCKS5 only, no TUN), Proxy + TUN (SOCKS5 proxy with optional in-app TUN toggle)
+- **Three connection modes:** VPN (all traffic through tunnel), Proxy (SOCKS5 only, no TUN), Hybrid Mode (SOCKS5 proxy with optional in-app TUN toggle)
 - geoip / geosite rule support
 - Material 3 UI with Google Sans Flex typeface
 

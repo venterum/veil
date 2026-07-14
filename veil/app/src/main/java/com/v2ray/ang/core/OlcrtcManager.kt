@@ -1,10 +1,13 @@
 package com.v2ray.ang.core
 
+import android.content.Context
 import android.util.Log
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.util.Utils
 import mobile.LogWriter
 import mobile.Mobile
 import mobile.SocketProtector
@@ -45,7 +48,7 @@ object OlcrtcManager {
             false
         }
 
-    fun start(config: ProfileItem): Boolean {
+    fun start(context: Context, config: ProfileItem): Boolean {
         if (isRunning) {
             LogUtil.i(AppConfig.TAG, "OlcrtcManager: already running, returning success")
             return true
@@ -79,7 +82,7 @@ object OlcrtcManager {
         try {
             installCallbacks()
             Mobile.setTransport(transport)
-            Mobile.setDNS("1.1.1.1:53")
+            Mobile.setDNS(resolveOlcrtcDns(context))
             Mobile.setSocksListenHost(socksHost)
             Mobile.setVP8Options(fps.toLong(), batchSize.toLong())
 
@@ -105,6 +108,40 @@ object OlcrtcManager {
             LogUtil.i(AppConfig.TAG, "OlcrtcManager: stopped")
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "OlcrtcManager: stop failed", e)
+        }
+    }
+
+    private fun resolveOlcrtcDns(context: Context): String {
+        // 1. User-defined olcRTC DNS preference
+        MmkvManager.decodeSettingsString(AppConfig.PREF_OLCRTC_DNS)?.trim()?.let { dns ->
+            if (dns.isNotBlank()) {
+                ipWithPort(dns)?.let { return it }
+            }
+        }
+
+        // 2. Provider/system DNS
+        Utils.getProviderDns(context)?.let { return it }
+
+        // 3. Domestic DNS
+        SettingsManager.getDomesticDnsServers().firstNotNullOfOrNull { ipWithPort(it) }?.let { return it }
+
+        // 4. Remote DNS
+        SettingsManager.getRemoteDnsServers().firstNotNullOfOrNull { ipWithPort(it) }?.let { return it }
+
+        // 5. Fallback
+        return AppConfig.DNS_OLCRTC_FALLBACK
+    }
+
+    private fun ipWithPort(dns: String): String? {
+        val trimmed = dns.trim()
+        return when {
+            trimmed.contains(":") -> {
+                val ip = trimmed.substringBefore(":")
+                val port = trimmed.substringAfter(":", "53").toIntOrNull() ?: 53
+                if (Utils.isPureIpAddress(ip)) "$ip:$port" else null
+            }
+            Utils.isPureIpAddress(trimmed) -> "$trimmed:53"
+            else -> null
         }
     }
 

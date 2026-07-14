@@ -6,10 +6,12 @@ import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.google.android.material.card.MaterialCardView
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.view.children
@@ -80,6 +82,92 @@ class AllServerAdapter(
 
     private fun saveCollapsedIds() {
         MmkvManager.encodeSettings(AppConfig.PREF_GROUP_COLLAPSED_IDS, collapsedIds.joinToString(","))
+    }
+
+    class CardShapeState {
+        var appliedTop = -1f
+        var appliedBottom = -1f
+        var appliedColor = 0
+        var appliedElevation = -1f
+        var shapeAnimator: ValueAnimator? = null
+    }
+
+    private fun applyCardShape(
+        card: MaterialCardView,
+        state: CardShapeState,
+        position: Int,
+        itemCount: Int,
+        isSelected: Boolean
+    ) {
+        val density = card.resources.displayMetrics.density
+        val large = 24f * density
+        val small = 5f * density
+        val lastIndex = itemCount - 1
+        val (targetTop, targetBottom) = when {
+            isSelected -> large to large
+            itemCount <= 1 -> large to large
+            position == 0 -> large to small
+            position == lastIndex -> small to large
+            else -> small to small
+        }
+        val targetColor = com.google.android.material.color.MaterialColors.getColor(
+            card,
+            if (isSelected) com.google.android.material.R.attr.colorSurfaceBright
+            else com.google.android.material.R.attr.colorSurfaceContainerHigh
+        )
+        val targetElevation = if (isSelected) 4f * density else 0f
+
+        state.shapeAnimator?.cancel()
+        state.shapeAnimator = null
+
+        val canAnimate = state.appliedTop >= 0f &&
+            (state.appliedTop != targetTop || state.appliedBottom != targetBottom ||
+             state.appliedColor != targetColor || state.appliedElevation != targetElevation)
+
+        if (!canAnimate) {
+            setCardCorners(card, targetTop, targetBottom)
+            card.setCardBackgroundColor(targetColor)
+            card.cardElevation = targetElevation
+            state.appliedTop = targetTop
+            state.appliedBottom = targetBottom
+            state.appliedColor = targetColor
+            state.appliedElevation = targetElevation
+            return
+        }
+
+        val startTop = state.appliedTop
+        val startBottom = state.appliedBottom
+        val startColor = state.appliedColor
+        val startElevation = state.appliedElevation
+        val argb = android.animation.ArgbEvaluator()
+        state.shapeAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 280L
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { va ->
+                val f = va.animatedValue as Float
+                setCardCorners(card, startTop + (targetTop - startTop) * f, startBottom + (targetBottom - startBottom) * f)
+                card.setCardBackgroundColor(argb.evaluate(f, startColor, targetColor) as Int)
+                card.cardElevation = startElevation + (targetElevation - startElevation) * f
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    state.appliedTop = targetTop
+                    state.appliedBottom = targetBottom
+                    state.appliedColor = targetColor
+                    state.appliedElevation = targetElevation
+                }
+            })
+            start()
+        }
+    }
+
+    private fun setCardCorners(card: MaterialCardView, top: Float, bottom: Float) {
+        card.shapeAppearanceModel = card.shapeAppearanceModel.toBuilder()
+            .setTopLeftCornerSize(top)
+            .setTopRightCornerSize(top)
+            .setBottomLeftCornerSize(bottom)
+            .setBottomRightCornerSize(bottom)
+            .build()
     }
 
     fun updateFlat(newData: MutableList<ServersCache>) {
@@ -283,6 +371,9 @@ class AllServerAdapter(
             }
         }
 
+        holder.currentAnimator?.cancel()
+        holder.currentAnimator = null
+
         if (isExpanded) {
             binding.serverList.visibility = View.VISIBLE
             binding.headerDivider.visibility = View.GONE
@@ -406,7 +497,7 @@ class AllServerAdapter(
         val density = container.context.resources.displayMetrics.density
 
         for ((index, sc) in section.servers.withIndex()) {
-            val cardView = if (serverCardStyle == "new") {
+            val cardView: MaterialCardView = if (serverCardStyle == "new") {
                 val cardBinding = ItemRecyclerMainNewBinding.inflate(LayoutInflater.from(container.context), container, false)
                 bindNewCardForGroup(cardBinding, sc)
                 cardBinding.root
@@ -416,11 +507,21 @@ class AllServerAdapter(
                 cardBinding.root
             }
 
-            val materialCard = cardView as com.google.android.material.card.MaterialCardView
+            val materialCard = cardView
+            val isSelected = sc.guid == MmkvManager.getSelectServer()
+            val largeRadius = 24f * density
             val containerRadius = 16f * density
             val innerRadius = 4f * density
-            val topRadius = if (index == 0) containerRadius else innerRadius
-            val bottomRadius = if (index == section.servers.lastIndex) containerRadius else innerRadius
+            val topRadius = when {
+                isSelected -> largeRadius
+                index == 0 -> containerRadius
+                else -> innerRadius
+            }
+            val bottomRadius = when {
+                isSelected -> largeRadius
+                index == section.servers.lastIndex -> containerRadius
+                else -> innerRadius
+            }
             materialCard.shapeAppearanceModel = materialCard.shapeAppearanceModel
                 .toBuilder()
                 .setTopLeftCornerSize(topRadius)
@@ -570,21 +671,7 @@ class AllServerAdapter(
         )
 
         val isSelected = guid == MmkvManager.getSelectServer()
-        if (isSelected) {
-            binding.root.setCardBackgroundColor(
-                com.google.android.material.color.MaterialColors.getColor(
-                    binding.root, com.google.android.material.R.attr.colorSurfaceBright
-                )
-            )
-            binding.root.cardElevation = 4f * context.resources.displayMetrics.density
-        } else {
-            binding.root.setCardBackgroundColor(
-                com.google.android.material.color.MaterialColors.getColor(
-                    binding.root, com.google.android.material.R.attr.colorSurfaceContainerHigh
-                )
-            )
-            binding.root.cardElevation = 0f
-        }
+        applyCardShape(binding.root, holder.shapeState, position, flatData.size, isSelected)
 
         val subRemarks = getSubscriptionRemarks(profile)
         binding.tvSubscription.text = subRemarks
@@ -632,21 +719,7 @@ class AllServerAdapter(
         )
 
         val isSelected = guid == MmkvManager.getSelectServer()
-        if (isSelected) {
-            binding.root.setCardBackgroundColor(
-                com.google.android.material.color.MaterialColors.getColor(
-                    binding.root, com.google.android.material.R.attr.colorSurfaceBright
-                )
-            )
-            binding.root.cardElevation = 4f * context.resources.displayMetrics.density
-        } else {
-            binding.root.setCardBackgroundColor(
-                com.google.android.material.color.MaterialColors.getColor(
-                    binding.root, com.google.android.material.R.attr.colorSurfaceContainerHigh
-                )
-            )
-            binding.root.cardElevation = 0f
-        }
+        applyCardShape(binding.root, holder.shapeState, position, flatData.size, isSelected)
 
         val subRemarks = getSubscriptionRemarks(profile)
         binding.tvSubscription.text = subRemarks
@@ -745,7 +818,17 @@ class AllServerAdapter(
 
     fun setSelectServer(fromGuid: String, toGuid: String) {
         if (isGrouped) {
-            notifyDataSetChanged()
+            val changedPositions = mutableSetOf<Int>()
+            for (i in sections.indices) {
+                if (sections[i].servers.any { it.guid == fromGuid || it.guid == toGuid }) {
+                    changedPositions.add(i)
+                }
+            }
+            if (changedPositions.isEmpty()) {
+                notifyDataSetChanged()
+            } else {
+                changedPositions.forEach { notifyItemChanged(it) }
+            }
             return
         }
         val fromPosition = mainViewModel.getPosition(fromGuid)
@@ -770,6 +853,35 @@ class AllServerAdapter(
     class GroupContainerViewHolder(val binding: ItemGroupContainerBinding) : RecyclerView.ViewHolder(binding.root) {
         var currentAnimator: Animator? = null
     }
-    class CardViewHolder(val binding: ItemRecyclerMainBinding) : RecyclerView.ViewHolder(binding.root)
-    class NewCardViewHolder(val binding: ItemRecyclerMainNewBinding) : RecyclerView.ViewHolder(binding.root)
+    class CardViewHolder(val binding: ItemRecyclerMainBinding) : RecyclerView.ViewHolder(binding.root) {
+        val shapeState = CardShapeState()
+    }
+    class NewCardViewHolder(val binding: ItemRecyclerMainNewBinding) : RecyclerView.ViewHolder(binding.root) {
+        val shapeState = CardShapeState()
+    }
+
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        super.onViewRecycled(holder)
+        if (holder is GroupContainerViewHolder) {
+            holder.currentAnimator?.cancel()
+            holder.currentAnimator = null
+            holder.binding.serverList.removeAllViews()
+        }
+        if (holder is CardViewHolder) {
+            holder.shapeState.shapeAnimator?.cancel()
+            holder.shapeState.shapeAnimator = null
+            holder.shapeState.appliedTop = -1f
+            holder.shapeState.appliedBottom = -1f
+            holder.shapeState.appliedColor = 0
+            holder.shapeState.appliedElevation = -1f
+        }
+        if (holder is NewCardViewHolder) {
+            holder.shapeState.shapeAnimator?.cancel()
+            holder.shapeState.shapeAnimator = null
+            holder.shapeState.appliedTop = -1f
+            holder.shapeState.appliedBottom = -1f
+            holder.shapeState.appliedColor = 0
+            holder.shapeState.appliedElevation = -1f
+        }
+    }
 }

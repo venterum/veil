@@ -280,7 +280,6 @@
     <string name="title_core_loglevel">سئت گوزارشا</string>
     <string name="title_outbound_domain_resolve_method">بارت پؽش هل دامنه دری</string>
     <string name="title_mode">هالت</string>
-    <string name="title_mode_help">سی دووسمندیا وو هیاری قلوه، ری ای هؽل بزݩ</string>
     <string name="title_language">زووݩ</string>
     <string name="title_ui_settings">سامووا رابت منتوری</string>
     <string name="title_pref_ui_mode_night">سامووا هالت رابت منتوری</string>
@@ -424,7 +423,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>تینا پروکسی</item>
-        <item>Proxy + TUN</item>
+        <item>حالت ترکیبی</item>
     </string-array>
 
     <string-array name="ui_mode_night">

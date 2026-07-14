@@ -280,7 +280,6 @@
     <string name="title_core_loglevel">লগ স্তর</string>
     <string name="title_outbound_domain_resolve_method">Outbound domain pre-resolve method</string>
     <string name="title_mode">মোড</string>
-    <string name="title_mode_help">আরো সাহায্যের জন্য ক্লিক করুন</string>
     <string name="title_language">ভাষা</string>
     <string name="title_ui_settings">ইউআই সেটিংস</string>
     <string name="title_pref_ui_mode_night">ইউআই মোড সেটিংস</string>
@@ -424,7 +423,7 @@
     <string-array name="mode_entries">
         <item>VPN</item>
         <item>শুধুমাত্র প্রোক্সি</item>
-        <item>Proxy + TUN</item>
+        <item>হাইব্রিড মোড</item>
     </string-array>
 
     <string-array name="ui_mode_night">

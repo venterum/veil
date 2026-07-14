@@ -7,6 +7,7 @@ import android.os.IBinder
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.contracts.ServiceControl
 import com.v2ray.ang.core.CoreServiceManager
+import com.v2ray.ang.handler.NotificationManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.root.RootProxyManager
 import com.v2ray.ang.util.LogUtil
@@ -14,13 +15,14 @@ import com.v2ray.ang.util.MyContextWrapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.lang.ref.SoftReference
 
 class CoreRootService : Service(), ServiceControl {
 
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var setupJob: Job? = null
 
     override fun onCreate() {
@@ -31,14 +33,15 @@ class CoreRootService : Service(), ServiceControl {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         LogUtil.i(AppConfig.TAG, "StartCore-Root: command received")
+        NotificationManager.showNotification(null)
 
-        if (!CoreServiceManager.startCoreLoop(null)) {
-            LogUtil.e(AppConfig.TAG, "StartCore-Root: core failed to start")
-            stopService()
-            return START_NOT_STICKY
-        }
+        setupJob = serviceScope.launch {
+            if (!CoreServiceManager.startCoreLoop(null)) {
+                LogUtil.e(AppConfig.TAG, "StartCore-Root: core failed to start")
+                stopService()
+                return@launch
+            }
 
-        setupJob = CoroutineScope(Dispatchers.IO).launch {
             if (!RootProxyManager.start(this@CoreRootService)) {
                 LogUtil.e(AppConfig.TAG, "StartCore-Root: failed to start root mode, stopping")
                 stopService()
@@ -49,8 +52,9 @@ class CoreRootService : Service(), ServiceControl {
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         super.onDestroy()
-        runBlocking { setupJob?.cancelAndJoin() }
+        setupJob?.cancel()
         RootProxyManager.stop(this)
         CoreServiceManager.stopCoreLoop()
     }

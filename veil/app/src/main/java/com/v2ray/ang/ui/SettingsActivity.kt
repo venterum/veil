@@ -128,8 +128,6 @@ class SettingsActivity : BaseActivity() {
                 updateMode(valueStr)
                 true
             }
-            mode?.dialogLayoutResource = R.layout.preference_with_help_link
-
             groupAllMode?.setOnPreferenceChangeListener { _, newValue ->
                 updateGroupAllMode(newValue as String)
                 SettingsChangeManager.makeSetupGroupTab()
@@ -257,6 +255,19 @@ class SettingsActivity : BaseActivity() {
             }
 
             preferenceScreen?.let { traverse(it) }
+
+            findPreference<EditTextPreference>(AppConfig.PREF_OLCRTC_DNS)?.let { pref ->
+                fun refreshSummary() {
+                    val text = pref.text.orEmpty()
+                    pref.summary = if (text.isBlank()) getString(R.string.summary_pref_olcrtc_dns_auto) else text
+                }
+                refreshSummary()
+                pref.setOnPreferenceChangeListener { p, newValue ->
+                    val value = (newValue as? String).orEmpty()
+                    p.summary = if (value.isBlank()) getString(R.string.summary_pref_olcrtc_dns_auto) else value
+                    true
+                }
+            }
         }
 
         override fun onStart() {
@@ -430,7 +441,4 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
-    fun onModeHelpClicked(view: View) {
-        Utils.openUri(this, AppConfig.APP_WIKI_MODE)
-    }
 }

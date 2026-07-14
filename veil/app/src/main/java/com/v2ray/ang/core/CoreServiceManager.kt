@@ -252,7 +252,7 @@ object CoreServiceManager {
             OlcrtcManager.socketProtector = serviceControl?.get()?.let { sc ->
                 { fd -> sc.vpnProtect(fd) }
             }
-            if (!OlcrtcManager.start(config)) {
+            if (!OlcrtcManager.start(service, config)) {
                 error("Failed to start olcRTC")
             }
             MmkvManager.encodeServerConfig(guid, config)
@@ -508,7 +508,7 @@ object CoreServiceManager {
     }
 
     /**
-     * Toggles the TUN interface in Proxy + TUN mode.
+     * Toggles the TUN interface in Hybrid Mode.
      * @param context The context used to start/stop the TUN service.
      */
     private fun toggleTun(context: Context) {

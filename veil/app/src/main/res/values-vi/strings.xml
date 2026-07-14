@@ -281,7 +281,6 @@
     <string name="title_core_loglevel">Cấp độ nhật ký</string>
     <string name="title_outbound_domain_resolve_method">Outbound domain pre-resolve method</string>
     <string name="title_mode">Chế độ kết nối</string>
-    <string name="title_mode_help">Nhấn vào đây nếu bạn cần trợ giúp!</string>
     <string name="title_language">Ngôn ngữ</string>
     <string name="title_ui_settings">Cài đặt UI</string>
     <string name="title_pref_ui_mode_night">Cài đặt chế độ UI</string>
@@ -427,7 +426,7 @@
     <string-array name="mode_entries">
         <item>Chế độ VPN</item>
         <item>Chế độ Proxy</item>
-        <item>Proxy + TUN</item>
+        <item>Hybrid Mode</item>
     </string-array>
     <string name="menu_item_add_asset">Thêm vào</string>
     <string name="menu_item_add_url">Thêm liên kết</string>

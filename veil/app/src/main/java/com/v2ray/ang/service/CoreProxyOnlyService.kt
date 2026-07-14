@@ -7,12 +7,20 @@ import android.os.IBinder
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.contracts.ServiceControl
 import com.v2ray.ang.core.CoreServiceManager
+import com.v2ray.ang.handler.NotificationManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.MyContextWrapper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.lang.ref.SoftReference
 
 class CoreProxyOnlyService : Service(), ServiceControl {
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     /**
      * Initializes the service.
      */
@@ -31,7 +39,15 @@ class CoreProxyOnlyService : Service(), ServiceControl {
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         LogUtil.i(AppConfig.TAG, "StartCore-Proxy: Service command received")
-        CoreServiceManager.startCoreLoop(null)
+        // Promote to foreground immediately, then start the core loop on a background
+        // thread because it can block on config generation, DNS resolution, and JNI.
+        NotificationManager.showNotification(null)
+        serviceScope.launch {
+            if (!CoreServiceManager.startCoreLoop(null)) {
+                LogUtil.e(AppConfig.TAG, "StartCore-Proxy: Core failed to start, stopping service")
+                stopService()
+            }
+        }
         return START_STICKY
     }
 
@@ -39,6 +55,7 @@ class CoreProxyOnlyService : Service(), ServiceControl {
      * Destroys the service.
      */
     override fun onDestroy() {
+        serviceScope.cancel()
         super.onDestroy()
         CoreServiceManager.stopCoreLoop()
     }

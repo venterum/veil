@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_MASK
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
+import android.net.ConnectivityManager
 import android.os.Build
 import android.os.LocaleList
 import android.provider.Settings
@@ -207,6 +208,22 @@ object Utils {
      */
     fun isPureIpAddress(value: String): Boolean {
         return isIpv4Address(value) || isIpv6Address(value)
+    }
+
+    /**
+     * Get the first IPv4 DNS server provided by the current network.
+     *
+     * @param context The context to use.
+     * @return The DNS server as "ip:port", or null if unavailable.
+     */
+    fun getProviderDns(context: Context): String? {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return null
+        val network = cm.activeNetwork ?: return null
+        val linkProperties = cm.getLinkProperties(network) ?: return null
+        return linkProperties.dnsServers
+            .mapNotNull { it.hostAddress }
+            .firstOrNull { it.contains(".") }
+            ?.let { "$it:53" }
     }
 
     /**

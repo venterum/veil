@@ -28,6 +28,11 @@ import com.v2ray.ang.root.RootLanSharing
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.lang.ref.SoftReference
 
 @SuppressLint("VpnServicePolicy")
@@ -35,6 +40,7 @@ class CoreVpnService : VpnService(), ServiceControl {
     private lateinit var mInterface: ParcelFileDescriptor
     private var isRunning = false
     private var tun2SocksService: Tun2SocksControl? = null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**destroy
      * Unfortunately registerDefaultNetworkCallback is going to return our VPN interface: https://android.googlesource.com/platform/frameworks/base/+/dda156ab0c5d66ad82bdcf76cda07cbc0a9c8a2e
@@ -92,6 +98,7 @@ class CoreVpnService : VpnService(), ServiceControl {
 //    }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         super.onDestroy()
         LogUtil.i(AppConfig.TAG, "StartCore-VPN: Service destroyed")
 
@@ -115,8 +122,11 @@ class CoreVpnService : VpnService(), ServiceControl {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         LogUtil.i(AppConfig.TAG, "StartCore-VPN: Service command received")
         NotificationManager.showNotification(null)
-        setupVpnService()
-        startService()
+        // VPN interface creation and core startup can block; run them off the main thread.
+        serviceScope.launch {
+            setupVpnService()
+            startService()
+        }
         return START_STICKY
         //return super.onStartCommand(intent, flags, startId)
     }
@@ -374,15 +384,6 @@ class CoreVpnService : VpnService(), ServiceControl {
             //in a row for several times. You will find that later created v2ray core report port in use
             //which means the first v2ray core somehow failed to stop and release the port.
             stopSelf()
-
-            // Add a small delay to allow the async core stop operation to complete
-            // before closing the VPN interface, preventing a race condition that can
-            // leave the VPN icon in the status bar after stopping the service.
-            try {
-                Thread.sleep(100)
-            } catch (e: InterruptedException) {
-                LogUtil.w(AppConfig.TAG, "StartCore-VPN: Sleep interrupted", e)
-            }
 
             try {
                 if (::mInterface.isInitialized) {
