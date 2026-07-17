@@ -37,7 +37,11 @@ object NotificationManager {
     private const val NOTIFICATION_PENDING_INTENT_RESTART_V2RAY = 2
     private const val NOTIFICATION_PENDING_INTENT_TOGGLE_TUN = 3
     private const val QUERY_INTERVAL_MS = 3000L
-    private const val RAY_NG_CHANNEL_ID_LIVE = "RAY_NG_M_CH_ID_LIVE"
+    // Two live channels differing only by importance: LOCKSCREEN (IMPORTANCE_DEFAULT) surfaces the
+    // live update on the lock screen; SHADE (IMPORTANCE_LOW) keeps it in the shade / status-bar chip
+    // only. A channel's importance can't change after creation, so the toggle switches between them.
+    private const val RAY_NG_CHANNEL_ID_LIVE_LOCKSCREEN = "RAY_NG_M_CH_ID_LIVE_LOCK_V3"
+    private const val RAY_NG_CHANNEL_ID_LIVE_SHADE = "RAY_NG_M_CH_ID_LIVE_SHADE_V3"
 
     private var lastQueryTime = 0L
     private var mBuilder: NotificationCompat.Builder? = null
@@ -46,7 +50,9 @@ object NotificationManager {
     private var mNotificationManager: NotificationManager? = null
     private var currentConfig: ProfileItem? = null
     private var isMetricStyleActive = false
+    private var lastLockScreenEnabled: Boolean? = null
     private var lastTunEnabled: Boolean? = null
+    private var lastChannelId: String? = null
 
     /**
      * Starts the speed notification.
@@ -103,18 +109,37 @@ object NotificationManager {
         val toggleTunPendingIntent = PendingIntent.getBroadcast(service, NOTIFICATION_PENDING_INTENT_TOGGLE_TUN, toggleTunIntent, flags)
 
         val statusBarLiveEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_STATUS_BAR_LIVE) == true
-        val canPromote = statusBarLiveEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
+        val useLiveChannel = statusBarLiveEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
         val useMetricStyle = statusBarLiveEnabled && Build.VERSION.SDK_INT >= 37
         isMetricStyleActive = useMetricStyle
 
+        val showOnLockScreen = statusBarLiveEnabled &&
+            MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_LOCK_SCREEN) == true
+        lastLockScreenEnabled = showOnLockScreen
+        // Promotion drives the status-bar chip and rich buttons, so keep it on whenever the live
+        // channel is used, regardless of the lock-screen toggle. Lock-screen display is controlled
+        // separately by the channel's importance (DEFAULT surfaces on the lock screen, LOW doesn't).
+        val canPromote = useLiveChannel
+        val lockScreenVisibility =
+            if (showOnLockScreen) Notification.VISIBILITY_PUBLIC else Notification.VISIBILITY_PRIVATE
+
         val channelId =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createNotificationChannel(canPromote)
+                createNotificationChannel(useLiveChannel, showOnLockScreen)
             } else {
                 // If earlier version channel ID is not used
                 // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
                 ""
             }
+
+        // Android won't move an already-posted foreground notification to a different channel, so
+        // when the lock-screen toggle flips the channel while running, detach the old notification
+        // first and let the startForeground() below re-post it under the new channel. cancel() alone
+        // is ignored while the notification backs the foreground service, hence stopForeground().
+        if (lastChannelId != null && lastChannelId != channelId) {
+            service.stopForeground(Service.STOP_FOREGROUND_REMOVE)
+        }
+        lastChannelId = channelId
 
         val showTunToggle = SettingsManager.isProxyTunMode()
         val tunActionLabel = if (tunEnabled) {
@@ -132,6 +157,8 @@ object NotificationManager {
                 .setOngoing(true)
                 .setShowWhen(false)
                 .setOnlyAlertOnce(true)
+                .setVisibility(lockScreenVisibility)
+                .setCategory(Notification.CATEGORY_SERVICE)
                 .setContentIntent(contentPendingIntent)
                 .addAction(
                     Notification.Action.Builder(
@@ -171,10 +198,11 @@ object NotificationManager {
             val compatBuilder = NotificationCompat.Builder(service, channelId)
                 .setSmallIcon(R.drawable.ic_stat_name)
                 .setContentTitle(currentConfig?.remarks)
-                .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setOngoing(true)
                 .setShowWhen(false)
                 .setOnlyAlertOnce(true)
+                .setVisibility(lockScreenVisibility)
+                .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setContentIntent(contentPendingIntent)
                 .addAction(
                     R.drawable.ic_stat_name,
@@ -231,10 +259,11 @@ object NotificationManager {
             .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle(service.getString(R.string.app_name))
             .setContentText(service.getString(R.string.title_tun_enabled))
-            .setPriority(NotificationCompat.PRIORITY_MIN)
             .setOngoing(true)
             .setShowWhen(false)
             .setOnlyAlertOnce(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setContentIntent(contentPendingIntent)
             .addAction(
                 R.drawable.ic_stat_name,
@@ -261,6 +290,8 @@ object NotificationManager {
         currentConfig = null
         isMetricStyleActive = false
         lastTunEnabled = null
+        lastLockScreenEnabled = null
+        lastChannelId = null
     }
 
     /**
@@ -279,13 +310,22 @@ object NotificationManager {
      * @return The channel ID.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(liveUpdate: Boolean): String {
-        val channelId = if (liveUpdate) RAY_NG_CHANNEL_ID_LIVE else AppConfig.RAY_NG_CHANNEL_ID
+    private fun createNotificationChannel(liveUpdate: Boolean, showOnLockScreen: Boolean = false): String {
+        val channelId = when {
+            liveUpdate && showOnLockScreen -> RAY_NG_CHANNEL_ID_LIVE_LOCKSCREEN
+            liveUpdate -> RAY_NG_CHANNEL_ID_LIVE_SHADE
+            else -> AppConfig.RAY_NG_CHANNEL_ID
+        }
         val channelName = if (liveUpdate) "${AppConfig.RAY_NG_CHANNEL_NAME} Live" else AppConfig.RAY_NG_CHANNEL_NAME
-        val importance = if (liveUpdate) {
-            NotificationManager.IMPORTANCE_LOW
-        } else {
-            NotificationManager.IMPORTANCE_NONE
+        // The status-bar chip and rich buttons come from promotion (kept on for both live channels).
+        // Lock-screen display is driven by importance: DEFAULT surfaces the live update on the lock
+        // screen, LOW keeps it in the shade / status bar chip only. A channel's importance can't be
+        // changed after creation, so the toggle picks between two channels. Sound is muted so neither
+        // channel makes noise despite IMPORTANCE_DEFAULT.
+        val importance = when {
+            liveUpdate && showOnLockScreen -> NotificationManager.IMPORTANCE_DEFAULT
+            liveUpdate -> NotificationManager.IMPORTANCE_LOW
+            else -> NotificationManager.IMPORTANCE_NONE
         }
         val chan = NotificationChannel(
             channelId,
@@ -293,7 +333,11 @@ object NotificationManager {
         )
         chan.lightColor = Color.DKGRAY
         chan.importance = importance
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        if (liveUpdate) {
+            chan.setSound(null, null)
+            chan.enableVibration(false)
+        }
         getNotificationManager()?.createNotificationChannel(chan)
         return channelId
     }
@@ -437,7 +481,12 @@ object NotificationManager {
         val statusBarLiveEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_STATUS_BAR_LIVE) == true
         val desiredMetricStyle = statusBarLiveEnabled && Build.VERSION.SDK_INT >= 37
         val currentTunEnabled = SettingsManager.isProxyTunMode() && SettingsManager.isTunEnabled()
-        if (desiredMetricStyle != isMetricStyleActive || currentTunEnabled != lastTunEnabled) {
+        val desiredLockScreen = statusBarLiveEnabled &&
+            MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_LOCK_SCREEN) == true
+        if (desiredMetricStyle != isMetricStyleActive ||
+            currentTunEnabled != lastTunEnabled ||
+            desiredLockScreen != lastLockScreenEnabled
+        ) {
             showNotification(currentConfig)
         }
 

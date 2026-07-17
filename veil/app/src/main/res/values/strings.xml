@@ -207,6 +207,9 @@
     <string name="title_pref_speed_status_bar_live">Use live updates</string>
     <string name="summary_pref_speed_status_bar_live">Show current speed as a live update in the status bar and notification shade (Android 16+).</string>
 
+    <string name="title_pref_speed_lock_screen">Show on lock screen</string>
+    <string name="summary_pref_speed_lock_screen">Keep the live update visible on the lock screen instead of hiding its content.</string>
+
     <string name="title_pref_main_ui_mode">Main screen layout</string>
     <string name="summary_pref_main_ui_mode">Choose the style of the main screen control panel.</string>
     <string name="title_main_ui_mode_expressive">Expressive toolbar</string>

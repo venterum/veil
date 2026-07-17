@@ -51,6 +51,8 @@ object AppConfig {
     const val PREF_SPEED_ENABLED = "pref_speed_enabled"
     const val PREF_SPEED_TOOLBAR_ENABLED = "pref_speed_toolbar_enabled"
     const val PREF_SPEED_STATUS_BAR_LIVE = "pref_speed_status_bar_live"
+    const val PREF_SPEED_LOCK_SCREEN = "pref_speed_lock_screen"
+    const val PREF_SPEED_STATUS_BAR_LOCKSCREEN = "pref_speed_status_bar_lockscreen"
     const val PREF_CONFIRM_REMOVE = "pref_confirm_remove"
     const val PREF_START_SCAN_IMMEDIATE = "pref_start_scan_immediate"
     const val PREF_DOUBLE_COLUMN_DISPLAY = "pref_double_column_display"
