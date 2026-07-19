@@ -88,6 +88,11 @@ class AllServerFragment : BaseFragment<FragmentAllServerBinding>() {
 
             setupDrag()
         }
+
+        adapter.setRunning(mainViewModel.isRunning.value == true)
+        mainViewModel.isRunning.observe(viewLifecycleOwner) { running ->
+            adapter.setRunning(running == true)
+        }
     }
 
     private fun setupDrag() {
@@ -192,6 +197,7 @@ class AllServerFragment : BaseFragment<FragmentAllServerBinding>() {
         if (guid != selected) {
             MmkvManager.setSelectServer(guid)
             adapter.setSelectServer(selected.orEmpty(), guid)
+            ownerActivity.onSelectedServerChanged()
 
             if (mainViewModel.isRunning.value == true) {
                 ownerActivity.restartV2Ray()

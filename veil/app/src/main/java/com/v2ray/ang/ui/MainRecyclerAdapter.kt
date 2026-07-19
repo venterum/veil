@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.AppConfig
@@ -42,6 +43,21 @@ class MainRecyclerAdapter(
     private val doubleColumnDisplay = MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)
     private val serverCardStyle = SettingsManager.getServerCardStyle()
     private var data: MutableList<ServersCache> = mutableListOf()
+
+    /** Whether the tunnel is currently running; drives the connected dot on the selected card. */
+    private var isRunning = false
+
+    /**
+     * Updates the running state and refreshes the selected row so its connected dot
+     * appears/disappears. Only the selected row can show the dot, so no full rebind is needed.
+     */
+    fun setRunning(running: Boolean) {
+        if (isRunning == running) return
+        isRunning = running
+        val selectedGuid = MmkvManager.getSelectServer()
+        val index = data.indexOfFirst { it.guid == selectedGuid }
+        if (index >= 0) notifyItemChanged(index)
+    }
 
     @SuppressLint("NotifyDataSetChanged")
     fun setData(newData: MutableList<ServersCache>?, position: Int = -1) {
@@ -164,6 +180,7 @@ class MainRecyclerAdapter(
 
             val isSelected = guid == MmkvManager.getSelectServer()
             applyCardShape(holder.itemMainNewBinding.root, holder.shapeState, position, isSelected)
+            holder.itemMainNewBinding.dotConnected.isVisible = isSelected && isRunning
 
             val subRemarks = getSubscriptionRemarks(profile)
             holder.itemMainNewBinding.tvSubscription.text = subRemarks

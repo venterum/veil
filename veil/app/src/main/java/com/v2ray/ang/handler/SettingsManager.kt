@@ -517,9 +517,8 @@ object SettingsManager {
 
     /**
      * Returns the selected main screen UI mode.
-     * Only the expressive toolbar is exposed to users; other modes are kept
-     * in the codebase but hidden from selection.
-     * @return Always [MainUiMode.EXPRESSIVE].
+     * The Panel mode selector is hidden for now, so this always returns the bottom bar
+     * ([MainUiMode.EXPRESSIVE]). The Panel code path is kept intact for future re-enabling.
      */
     fun getMainUiMode(): MainUiMode {
         return MainUiMode.EXPRESSIVE
@@ -548,7 +547,6 @@ object SettingsManager {
      */
     enum class MainUiMode(val value: String) {
         EXPRESSIVE("expressive"),
-        CLASSIC("classic"),
         BIG_BUTTON("big_button");
 
         companion object {

@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -69,6 +70,21 @@ class AllServerAdapter(
     private var sections: MutableList<Section> = mutableListOf()
     private val collapsedIds = mutableSetOf<String>()
     private var isGrouped = false
+
+    /** Whether the tunnel is currently running; drives the connected dot on the selected card. */
+    private var isRunning = false
+
+    /**
+     * Updates the running state and refreshes the list so the selected card's connected dot
+     * appears/disappears. Only the selected card shows the dot; a light rebind keeps it simple
+     * across both flat and grouped layouts.
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    fun setRunning(running: Boolean) {
+        if (isRunning == running) return
+        isRunning = running
+        notifyDataSetChanged()
+    }
 
     init {
         loadCollapsedIds()
@@ -638,6 +654,8 @@ class AllServerAdapter(
             binding.root.cardElevation = 0f
         }
 
+        binding.dotConnected.visibility = if (isSelected && isRunning) View.VISIBLE else View.GONE
+
         binding.layoutSubscription.visibility = View.GONE
         binding.btnMore.visibility = View.GONE
 
@@ -720,6 +738,7 @@ class AllServerAdapter(
 
         val isSelected = guid == MmkvManager.getSelectServer()
         applyCardShape(binding.root, holder.shapeState, position, flatData.size, isSelected)
+        binding.dotConnected.visibility = if (isSelected && isRunning) View.VISIBLE else View.GONE
 
         val subRemarks = getSubscriptionRemarks(profile)
         binding.tvSubscription.text = subRemarks

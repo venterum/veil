@@ -541,13 +541,14 @@
     <string
         name="summary_pref_main_ui_mode"
     >Выберите стиль панели управления на главном экране.</string>
-    <string name="title_main_ui_mode_expressive">Выразительная панель</string>
-    <string name="title_main_ui_mode_classic">Классическая панель</string>
-    <string name="title_main_ui_mode_big_button">Большая кнопка</string>
+    <string name="title_main_ui_mode_expressive">Нижняя панель</string>
+    <string name="title_main_ui_mode_big_button">Панель</string>
     <string name="title_pref_toolbar_position_top">Тулбар сверху</string>
     <string
         name="summary_pref_toolbar_position_top"
     >Разместить выразительную панель над списком серверов вместо нижнего края.</string>
+    <string name="title_pref_bottom_bar_border">Акцентная рамка панели</string>
+    <string name="summary_pref_bottom_bar_border">Обводить нижнюю панель сплошной рамкой акцентного цвета.</string>
     <string name="title_pref_dynamic_color">Динамические цвета</string>
     <string
         name="summary_pref_dynamic_color"
@@ -570,6 +571,10 @@
     <string name="connection_info_location">Локация</string>
     <string name="connection_info_isp">Провайдер</string>
     <string name="connection_info_speed">Скорость</string>
+    <string name="connection_info_action_copy_ip">Копировать IP</string>
+    <string name="connection_info_action_ping">Пинг</string>
+    <string name="connection_info_action_share">Поделиться</string>
+    <string name="connection_info_ip_copied">IP скопирован в буфер обмена</string>
     <string name="title_pref_ui_mode_night">Настройки темы</string>
     <string name="title_pref_use_hev_tunnel">Использовать Hev TUN</string>
     <string

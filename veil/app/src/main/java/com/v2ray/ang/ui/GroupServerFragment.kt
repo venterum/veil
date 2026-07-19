@@ -99,6 +99,10 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
             adapter.setData(mainViewModel.serversCache, index)
         }
 
+        mainViewModel.isRunning.observe(viewLifecycleOwner) { running ->
+            adapter.setRunning(running == true)
+        }
+
         // LogUtil.d(TAG, "GroupServerFragment onViewCreated: subId=$subId")
     }
 
@@ -251,6 +255,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
             val fromPosition = mainViewModel.getPosition(selected.orEmpty())
             val toPosition = mainViewModel.getPosition(guid)
             adapter.setSelectServer(fromPosition, toPosition)
+            ownerActivity.onSelectedServerChanged()
 
             if (mainViewModel.isRunning.value == true) {
                 ownerActivity.restartV2Ray()

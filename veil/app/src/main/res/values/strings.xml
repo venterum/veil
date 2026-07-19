@@ -212,18 +212,23 @@
 
     <string name="title_pref_main_ui_mode">Main screen layout</string>
     <string name="summary_pref_main_ui_mode">Choose the style of the main screen control panel.</string>
-    <string name="title_main_ui_mode_expressive">Expressive toolbar</string>
-    <string name="title_main_ui_mode_classic">Classic bottom bar</string>
-    <string name="title_main_ui_mode_big_button">Big button</string>
+    <string name="title_main_ui_mode_expressive">Bottom bar</string>
+    <string name="title_main_ui_mode_big_button">Panel</string>
 
     <string name="title_pref_toolbar_position_top">Toolbar at top</string>
     <string name="summary_pref_toolbar_position_top">Place the expressive toolbar above the server list instead of at the bottom.</string>
+    <string name="title_pref_bottom_bar_border">Accent border</string>
+    <string name="summary_pref_bottom_bar_border">Outline the bottom bar with a solid accent-color border.</string>
 
     <string name="connection_info_title">Connection info</string>
     <string name="connection_info_ip">External IP</string>
     <string name="connection_info_location">Location</string>
     <string name="connection_info_isp">ISP</string>
     <string name="connection_info_speed">Speed</string>
+    <string name="connection_info_action_copy_ip">Copy IP</string>
+    <string name="connection_info_action_ping">Ping</string>
+    <string name="connection_info_action_share">Share</string>
+    <string name="connection_info_ip_copied">IP copied to clipboard</string>
 
     <string name="title_pref_sniffing_enabled">Enable Sniffing</string>
     <string name="summary_pref_sniffing_enabled">Try sniff domain from the packet (default on)</string>

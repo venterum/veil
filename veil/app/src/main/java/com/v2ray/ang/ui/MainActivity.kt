@@ -44,7 +44,6 @@ import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.databinding.ActivityMainBinding
 import com.v2ray.ang.databinding.MainUiBigButtonBinding
-import com.v2ray.ang.databinding.MainUiClassicBinding
 import com.v2ray.ang.databinding.MainUiExpressiveBinding
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.enums.PermissionType
@@ -82,7 +81,6 @@ class MainActivity : HelperBaseActivity() {
 
     private var expressiveBinding: MainUiExpressiveBinding? = null
     private var bigButtonBinding: MainUiBigButtonBinding? = null
-    private var classicBinding: MainUiClassicBinding? = null
 
     val mainViewModel: MainViewModel by viewModels()
     private lateinit var groupPagerAdapter: GroupPagerAdapter
@@ -216,7 +214,7 @@ class MainActivity : HelperBaseActivity() {
         val newMode = SettingsManager.getMainUiMode()
         val newToolbarAtTop = SettingsManager.isToolbarAtTop()
         if (newMode == currentUiMode && toolbarAtTop == newToolbarAtTop &&
-            (expressiveBinding != null || bigButtonBinding != null || classicBinding != null)
+            (expressiveBinding != null || bigButtonBinding != null)
         ) {
             return
         }
@@ -226,13 +224,11 @@ class MainActivity : HelperBaseActivity() {
         // Clean up previous bindings if the mode is being reapplied
         expressiveBinding = null
         bigButtonBinding = null
-        classicBinding = null
         binding.topControlContainer.removeAllViews()
         binding.bottomControlContainer.removeAllViews()
 
         when (newMode) {
             MainUiMode.EXPRESSIVE -> bindExpressiveUi()
-            MainUiMode.CLASSIC -> bindClassicUi()
             MainUiMode.BIG_BUTTON -> bindBigButtonUi()
         }
 
@@ -285,7 +281,34 @@ class MainActivity : HelperBaseActivity() {
                 showConnectionInfoSheet()
                 true
             }
+
+            setSelectedServerName()
+            applyBottomBarBorder()
         }
+    }
+
+    /**
+     * Applies an optional accent-colored outline to the bottom bar status pill,
+     * gated by [AppConfig.PREF_BOTTOM_BAR_BORDER] (default on). When disabled the
+     * pill keeps its plain filled look.
+     */
+    private fun applyBottomBarBorder() {
+        val eb = expressiveBinding ?: return
+        val enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_BOTTOM_BAR_BORDER, false)
+        if (enabled) {
+            eb.layoutTest.strokeWidth = (2 * resources.displayMetrics.density).toInt()
+            eb.layoutTest.strokeColor = MaterialColors.getColor(eb.layoutTest, android.R.attr.colorPrimary)
+        } else {
+            eb.layoutTest.strokeWidth = 0
+        }
+    }
+
+    /**
+     * Public hook for the server-list fragments to refresh the pill's server name
+     * immediately after the user picks a different server.
+     */
+    fun onSelectedServerChanged() {
+        setSelectedServerName()
     }
 
     private fun bindBigButtonUi() {
@@ -318,65 +341,8 @@ class MainActivity : HelperBaseActivity() {
                 it.performMediumHapticFeedback()
                 handleTunToggle()
             }
-        }
-    }
 
-    private fun bindClassicUi() {
-        classicBinding = MainUiClassicBinding.inflate(layoutInflater, binding.bottomControlContainer, true)
-        classicBinding?.apply {
-            bottomBar.alpha = 0f
-            bottomBar.translationY = 80f
-            btnFab.alpha = 0f
-            btnFab.scaleX = 0.5f
-            btnFab.scaleY = 0.5f
-
-            bottomBar.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setDuration(350)
-                .setInterpolator(android.view.animation.DecelerateInterpolator())
-                .start()
-
-            btnFab.animate()
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(400)
-                .setStartDelay(100)
-                .setInterpolator(android.view.animation.OvershootInterpolator())
-                .start()
-
-            applyPressFeedback(btnFab, 0.9f)
-            applyPressFeedback(btnClassicServers, 0.85f)
-            applyPressFeedback(btnClassicLogs, 0.85f)
-            applyPressFeedback(btnClassicRouting, 0.85f)
-            applyPressFeedback(btnClassicSettings, 0.85f)
-
-            btnFab.setOnClickListener {
-                it.performMediumHapticFeedback()
-                handleFabAction()
-            }
-            btnFab.setOnLongClickListener {
-                it.performMediumHapticFeedback()
-                showModeSelector()
-                true
-            }
-            btnClassicServers.setOnClickListener {
-                it.performLightHapticFeedback()
-                handleDrawerNavigation(R.id.sub_setting)
-            }
-            btnClassicLogs.setOnClickListener {
-                it.performLightHapticFeedback()
-                startActivityWithMaterialTransition(Intent(this@MainActivity, LogcatActivity::class.java))
-            }
-            btnClassicRouting.setOnClickListener {
-                it.performLightHapticFeedback()
-                startActivityWithMaterialTransition(Intent(this@MainActivity, RoutingSettingActivity::class.java))
-            }
-            btnClassicSettings.setOnClickListener {
-                it.performLightHapticFeedback()
-                requestActivityLauncher.launchWithMaterialTransition(this@MainActivity, Intent(this@MainActivity, SettingsActivity::class.java))
-            }
+            setSelectedServerName()
         }
     }
 
@@ -551,6 +517,24 @@ class MainActivity : HelperBaseActivity() {
         expressiveBinding?.tvSpeedDown?.text = "↓ $down"
     }
 
+    /**
+     * Shows the remarks of the currently selected server in whichever main UI mode is
+     * bound (bottom bar pill or panel), so the active server is visible without opening
+     * the list. Hidden when nothing is selected; no-op for a mode that isn't bound.
+     */
+    fun setSelectedServerName() {
+        val guid = MmkvManager.getSelectServer()
+        val remarks = if (guid.isNullOrEmpty()) null else MmkvManager.decodeServerConfig(guid)?.remarks
+        expressiveBinding?.tvServerName?.let { tv ->
+            tv.text = remarks
+            tv.isVisible = !remarks.isNullOrEmpty()
+        }
+        bigButtonBinding?.tvBigServerName?.let { tv ->
+            tv.text = remarks
+            tv.isVisible = !remarks.isNullOrEmpty()
+        }
+    }
+
     private fun setConnectionIpText(ip: String?) {
         val compressedIp = com.v2ray.ang.util.IPv6Util.compressIPv6(ip, maxDisplayLength = 26)
         expressiveBinding?.tvConnectionIp?.text = compressedIp
@@ -700,7 +684,6 @@ class MainActivity : HelperBaseActivity() {
     private fun applyRunningState(isLoading: Boolean, isRunning: Boolean) {
         applyRunningStateToExpressive(isLoading, isRunning)
         applyRunningStateToBigButton(isLoading, isRunning)
-        applyRunningStateToClassic(isLoading, isRunning)
 
         if (isRunning) {
             setTestState(getString(R.string.connection_connected))
@@ -771,10 +754,41 @@ class MainActivity : HelperBaseActivity() {
         val tvIsp = sheetView.findViewById<TextView>(R.id.tv_sheet_isp)
         val tvDown = sheetView.findViewById<TextView>(R.id.tv_sheet_down)
         val tvUp = sheetView.findViewById<TextView>(R.id.tv_sheet_up)
+        val btnCopyIp = sheetView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_sheet_copy_ip)
+        val btnPing = sheetView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_sheet_ping)
+        val btnShare = sheetView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_sheet_share)
 
         val speed = mainViewModel.netSpeed.value
         tvDown.text = speed?.let { "↓ ${it.second.toSpeedString()}" } ?: "↓ 0 B/s"
         tvUp.text = speed?.let { "↑ ${it.first.toSpeedString()}" } ?: "↑ 0 B/s"
+
+        // Copy the resolved external IP; disabled until the lookup below fills it in.
+        var resolvedIp: String? = null
+        btnCopyIp.isEnabled = false
+        btnCopyIp.setOnClickListener {
+            val ip = resolvedIp
+            if (!ip.isNullOrBlank() && ip != "-") {
+                Utils.setClipboard(this, ip)
+                toast(R.string.connection_info_ip_copied)
+            }
+        }
+
+        btnPing.setOnClickListener {
+            setTestState(getString(R.string.connection_test_testing))
+            mainViewModel.testCurrentServerRealPing()
+            dialog.dismiss()
+        }
+
+        btnShare.setOnClickListener {
+            val guid = MmkvManager.getSelectServer()
+            if (guid.isNullOrEmpty()) {
+                toastError(R.string.title_file_chooser)
+            } else if (AngConfigManager.share2Clipboard(this, guid) == 0) {
+                toast(R.string.toast_success)
+            } else {
+                toastError(R.string.toast_failure)
+            }
+        }
 
         lifecycleScope.launch {
             val detail = withContext(Dispatchers.IO) {
@@ -792,6 +806,8 @@ class MainActivity : HelperBaseActivity() {
                 tvIp.text = ip
                 tvLocation.text = location
                 tvIsp.text = isp
+                resolvedIp = ip
+                btnCopyIp.isEnabled = ip != "-"
             } ?: run {
                 tvIp.text = "-"
                 tvLocation.text = "-"
@@ -849,50 +865,11 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    private fun applyRunningStateToClassic(isLoading: Boolean, isRunning: Boolean) {
-        val cb = classicBinding ?: return
-        if (isLoading) {
-            cb.ivFabIcon.setImageDrawable(null)
-            animateCardColor(
-                cb.btnFab,
-                MaterialColors.getColor(cb.btnFab, com.google.android.material.R.attr.colorSurfaceContainerHighest),
-                MaterialColors.getColor(cb.btnFab, com.google.android.material.R.attr.colorPrimaryContainer)
-            )
-            return
-        }
-
-        if (isRunning) {
-            cb.ivFabIcon.setImageResource(R.drawable.ic_stop_outline_24dp)
-            animateIconColor(
-                cb.ivFabIcon,
-                MaterialColors.getColor(cb.ivFabIcon, com.google.android.material.R.attr.colorOnSurfaceVariant),
-                MaterialColors.getColor(cb.ivFabIcon, com.google.android.material.R.attr.colorOnPrimaryContainer)
-            )
-            animateCardColor(
-                cb.btnFab,
-                MaterialColors.getColor(cb.btnFab, com.google.android.material.R.attr.colorSurfaceContainerHighest),
-                MaterialColors.getColor(cb.btnFab, com.google.android.material.R.attr.colorPrimaryContainer)
-            )
-            cb.btnFab.contentDescription = getString(R.string.action_stop_service)
-        } else {
-            cb.ivFabIcon.setImageResource(R.drawable.ic_play_outline_24dp)
-            animateIconColor(
-                cb.ivFabIcon,
-                MaterialColors.getColor(cb.ivFabIcon, com.google.android.material.R.attr.colorOnPrimaryContainer),
-                MaterialColors.getColor(cb.ivFabIcon, com.google.android.material.R.attr.colorOnSurfaceVariant)
-            )
-            animateCardColor(
-                cb.btnFab,
-                MaterialColors.getColor(cb.btnFab, com.google.android.material.R.attr.colorPrimaryContainer),
-                MaterialColors.getColor(cb.btnFab, com.google.android.material.R.attr.colorSurfaceContainerHighest)
-            )
-            cb.btnFab.contentDescription = getString(R.string.tasker_start_service)
-        }
-    }
-
     override fun onResume() {
         super.onResume()
         applyMainUiMode()
+        setSelectedServerName()
+        applyBottomBarBorder()
     }
 
     override fun onPause() {
