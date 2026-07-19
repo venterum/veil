@@ -27,7 +27,7 @@
     <string name="toast_services_failure">Сбой при запуске служб</string>
 
     <!--ServerActivity-->
-    <string name="title_server">Профиль</string>
+    <string name="title_server">Серверы</string>
     <string name="menu_item_add_config">Добавить профиль</string>
     <string name="menu_item_save_config">Сохранить профиль</string>
     <string name="menu_item_edit_config">Изменить профиль</string>
@@ -556,6 +556,14 @@
     <string
         name="summary_pref_google_sans"
     >Встроенный шрифт Google Sans Flex вместо системного. Доступно только для английского языка.</string>
+    <string name="title_app_icon">Иконка приложения</string>
+    <string name="summary_app_icon">Выберите, как Veil выглядит на рабочем столе</string>
+    <string name="app_icon_default">Классическая</string>
+    <string name="app_icon_wink">Подмигивающая</string>
+    <string name="app_icon_summer">Летняя</string>
+    <string name="app_icon_default_desc">Оригинальный логотип Veil</string>
+    <string name="app_icon_wink_desc">Игривый вариант с подмигиванием</string>
+    <string name="app_icon_summer_desc">Тёплые летние оттенки</string>
 
     <string name="connection_info_title">Информация о подключении</string>
     <string name="connection_info_ip">Внешний IP</string>

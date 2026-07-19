@@ -457,19 +457,36 @@ class MainActivity : HelperBaseActivity() {
     }
 
     /**
-     * Applies the app font to the navigation header title.
+     * Applies the app font to the navigation header title and the toolbar title.
      * When the "use Google Sans" preference is on (default), the bundled
      * Google Sans Flex typeface is used. Otherwise the device default
      * typeface is applied.
      */
     private fun applyAppFont() {
         val useGoogleSans = MmkvManager.decodeSettingsBool(AppConfig.PREF_GOOGLE_SANS, true)
-        val headerTitle = findViewById<android.widget.TextView>(R.id.tv_app_name) ?: return
-        headerTitle.typeface = if (useGoogleSans) {
+        val typeface = if (useGoogleSans) {
             androidx.core.content.res.ResourcesCompat.getFont(this, R.font.google_sans_flex)
         } else {
             resolveSystemTypeface()
         }
+        findViewById<android.widget.TextView>(R.id.tv_app_name)?.typeface = typeface
+        findToolbarTitleView(binding.toolbar)?.typeface = typeface
+    }
+
+    /**
+     * Locates the internal title [android.widget.TextView] that a [androidx.appcompat.widget.Toolbar]
+     * lazily creates when a title is set. The view has no public id, so it is resolved by
+     * matching its text against the toolbar's current title.
+     */
+    private fun findToolbarTitleView(toolbar: android.view.ViewGroup): android.widget.TextView? {
+        val title = (toolbar as? androidx.appcompat.widget.Toolbar)?.title?.toString() ?: return null
+        for (i in 0 until toolbar.childCount) {
+            val child = toolbar.getChildAt(i)
+            if (child is android.widget.TextView && child.text?.toString() == title) {
+                return child
+            }
+        }
+        return null
     }
 
     /**

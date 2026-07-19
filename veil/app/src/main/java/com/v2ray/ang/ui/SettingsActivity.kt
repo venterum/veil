@@ -76,6 +76,7 @@ class SettingsActivity : BaseActivity() {
         private val socksEnableUdp by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_SOCKS_ENABLE_UDP) }
         private val proxySharing by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_PROXY_SHARING) }
         private val googleSans by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_GOOGLE_SANS) }
+        private val appIcon by lazy { findPreference<androidx.preference.Preference>(AppConfig.PREF_APP_ICON) }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
@@ -156,6 +157,11 @@ class SettingsActivity : BaseActivity() {
 
             addToTelegram?.setOnPreferenceClickListener {
                 openTelegramProxy()
+                true
+            }
+
+            appIcon?.setOnPreferenceClickListener {
+                startActivity(android.content.Intent(activity, AppIconActivity::class.java))
                 true
             }
 

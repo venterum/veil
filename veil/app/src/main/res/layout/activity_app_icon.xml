@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".ui.AppIconActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_spacing_dp16">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/padding_spacing_dp8"
+            android:layout_marginEnd="@dimen/padding_spacing_dp8"
+            android:layout_marginBottom="@dimen/padding_spacing_dp16"
+            android:alpha="0.6"
+            android:text="@string/summary_app_icon"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_default"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_spacing_dp12"
+            android:checkable="true"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="20dp"
+            app:checkedIcon="@null"
+            app:strokeColor="?attr/colorPrimary"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/padding_spacing_dp16">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:layout_width="@dimen/app_icon_preview_size"
+                    android:layout_height="@dimen/app_icon_preview_size"
+                    android:importantForAccessibility="no"
+                    android:src="@mipmap/ic_launcher"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedSquare" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/padding_spacing_dp16"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_icon_default"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.6"
+                        android:text="@string/app_icon_default_desc"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/check_default"
+                    android:layout_width="@dimen/image_size_dp24"
+                    android:layout_height="@dimen/image_size_dp24"
+                    android:importantForAccessibility="no"
+                    android:visibility="invisible"
+                    app:srcCompat="@drawable/ic_action_done"
+                    app:tint="?attr/colorPrimary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_wink"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_spacing_dp12"
+            android:checkable="true"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="20dp"
+            app:checkedIcon="@null"
+            app:strokeColor="?attr/colorPrimary"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/padding_spacing_dp16">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:layout_width="@dimen/app_icon_preview_size"
+                    android:layout_height="@dimen/app_icon_preview_size"
+                    android:importantForAccessibility="no"
+                    android:src="@mipmap/ic_launcher_wink"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedSquare" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/padding_spacing_dp16"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_icon_wink"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.6"
+                        android:text="@string/app_icon_wink_desc"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/check_wink"
+                    android:layout_width="@dimen/image_size_dp24"
+                    android:layout_height="@dimen/image_size_dp24"
+                    android:importantForAccessibility="no"
+                    android:visibility="invisible"
+                    app:srcCompat="@drawable/ic_action_done"
+                    app:tint="?attr/colorPrimary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_summer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="20dp"
+            app:checkedIcon="@null"
+            app:strokeColor="?attr/colorPrimary"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/padding_spacing_dp16">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:layout_width="@dimen/app_icon_preview_size"
+                    android:layout_height="@dimen/app_icon_preview_size"
+                    android:importantForAccessibility="no"
+                    android:src="@mipmap/ic_launcher_summer"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedSquare" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/padding_spacing_dp16"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_icon_summer"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.6"
+                        android:text="@string/app_icon_summer_desc"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/check_summer"
+                    android:layout_width="@dimen/image_size_dp24"
+                    android:layout_height="@dimen/image_size_dp24"
+                    android:importantForAccessibility="no"
+                    android:visibility="invisible"
+                    app:srcCompat="@drawable/ic_action_done"
+                    app:tint="?attr/colorPrimary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</ScrollView>

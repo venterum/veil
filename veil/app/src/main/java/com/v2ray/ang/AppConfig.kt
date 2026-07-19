@@ -64,6 +64,7 @@ object AppConfig {
     const val PREF_UI_MODE_NIGHT = "pref_ui_mode_night"
     const val PREF_DYNAMIC_COLOR = "pref_dynamic_color"
     const val PREF_GOOGLE_SANS = "pref_google_sans"
+    const val PREF_APP_ICON = "pref_app_icon"
     const val PREF_MAIN_UI_MODE = "pref_main_ui_mode"
     const val PREF_TOOLBAR_POSITION_TOP = "pref_toolbar_position_top"
     const val PREF_SERVER_CARD_STYLE = "pref_server_card_style"

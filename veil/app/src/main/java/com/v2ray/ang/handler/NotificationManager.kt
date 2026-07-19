@@ -301,7 +301,27 @@ object NotificationManager {
         speedNotificationJob?.let {
             it.cancel()
             speedNotificationJob = null
-            updateNotification("", 0, 0)
+            // The screen went off (including always-on display), so collapse the notification to
+            // just the server name and drop the speed. startSpeedNotification() restores the speed
+            // on its first tick once the screen turns back on.
+            hideSpeedInNotification()
+        }
+    }
+
+    /**
+     * Collapses the running notification to show only the server name, dropping the live speed.
+     * Used when the screen turns off so the lock screen / AOD shows just the server name; the
+     * speed is repainted by the update loop once the screen turns on again.
+     */
+    private fun hideSpeedInNotification() {
+        if (mBuilderPlatform != null && Build.VERSION.SDK_INT >= 37) {
+            mBuilderPlatform?.setContentText(null)
+            mBuilderPlatform?.setStyle(null)
+            getNotificationManager()?.notify(NOTIFICATION_ID, mBuilderPlatform?.build())
+        } else if (mBuilder != null) {
+            mBuilder?.setContentText(null)
+            mBuilder?.setStyle(null)
+            getNotificationManager()?.notify(NOTIFICATION_ID, mBuilder?.build())
         }
     }
 

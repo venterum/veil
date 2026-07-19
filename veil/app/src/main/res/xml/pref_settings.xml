@@ -114,6 +114,11 @@
             android:summary="@string/summary_pref_toolbar_position_top"
             android:title="@string/title_pref_toolbar_position_top" />
 
+        <Preference
+            android:key="pref_app_icon"
+            android:summary="@string/summary_app_icon"
+            android:title="@string/title_app_icon" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/title_vpn_settings">

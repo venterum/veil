@@ -24,7 +24,7 @@
     <string name="toast_services_failure">Start Services Failure</string>
 
     <!--ServerActivity-->
-    <string name="title_server">Config</string>
+    <string name="title_server">Servers</string>
     <string name="menu_item_add_config">Add config</string>
     <string name="menu_item_save_config">Save config</string>
     <string name="menu_item_edit_config">Edit config</string>
@@ -358,6 +358,14 @@
     <string name="summary_pref_dynamic_color">Use Material You colors from the system wallpaper (Android 12+)</string>
     <string name="title_pref_google_sans">Use Google Sans</string>
     <string name="summary_pref_google_sans">Use the bundled Google Sans Flex typeface instead of the device default font. Available only when the app language is English.</string>
+    <string name="title_app_icon">App icon</string>
+    <string name="summary_app_icon">Choose how Veil looks on your home screen</string>
+    <string name="app_icon_default">Classic</string>
+    <string name="app_icon_default_desc">The original Veil look</string>
+    <string name="app_icon_wink">Wink</string>
+    <string name="app_icon_wink_desc">Playful and cheeky</string>
+    <string name="app_icon_summer">Summer</string>
+    <string name="app_icon_summer_desc">Bright and warm</string>
     <string name="title_pref_use_hev_tunnel">Enable Hev TUN Feature</string>
     <string name="summary_pref_use_hev_tunnel">When enabled, TUN will use hev-socks5-tunnel; otherwise, it will use xray-core.</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>
