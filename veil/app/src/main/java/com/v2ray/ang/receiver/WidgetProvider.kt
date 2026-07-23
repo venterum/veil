@@ -1,5 +1,6 @@
 package com.v2ray.ang.receiver
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
@@ -61,11 +62,20 @@ private object WidgetState {
 class WidgetProvider : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = VeilWidget
 
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+        // MMKV may be stale after process death / reboot; ask the daemon for the
+        // true state.  If the daemon is alive it replies via BROADCAST_ACTION_ACTIVITY
+        // and triggers a re-render through onReceive → refresh → updateAll.
+        MessageUtil.sendMsg2Service(context, AppConfig.MSG_REGISTER_CLIENT, "")
+    }
+
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        // Ask the daemon for the current state as a bonus; the ground truth is
-        // written by CoreServiceManager directly, so the MMKV flag is already
-        // correct even if no reply comes.
         MessageUtil.sendMsg2Service(context, AppConfig.MSG_REGISTER_CLIENT, "")
     }
 

@@ -3,11 +3,16 @@ package com.v2ray.ang.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.glance.appwidget.updateAll
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SubscriptionUpdater
+import com.v2ray.ang.receiver.VeilWidget
 import com.v2ray.ang.util.LogUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
     /**
@@ -24,6 +29,14 @@ class BootReceiver : BroadcastReceiver() {
         if (context == null || intent?.action != Intent.ACTION_BOOT_COMPLETED) {
             LogUtil.w(AppConfig.TAG, "BootReceiver: Invalid context or action")
             return
+        }
+
+        // After a clean reboot all user-space processes are gone, so the VPN
+        // service is definitely not running.  The MMKV flag may still carry a
+        // stale true from before shutdown — reset it.
+        MmkvManager.encodeSettings("pref_widget_service_running", false)
+        CoroutineScope(Dispatchers.Default).launch {
+            VeilWidget.updateAll(context)
         }
 
         if (!MmkvManager.decodeStartOnBoot()) {
