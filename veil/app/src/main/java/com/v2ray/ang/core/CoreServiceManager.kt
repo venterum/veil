@@ -301,6 +301,8 @@ object CoreServiceManager {
             browserDialer!!.start(service, dialerAddr)
         }
 
+        // Persist for the widget (multi-process MMKV, visible across processes).
+        MmkvManager.encodeSettings("pref_widget_service_running", true)
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
         NotificationManager.startSpeedNotification()
         LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core started successfully")
@@ -337,6 +339,7 @@ object CoreServiceManager {
         }
 
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
+        MmkvManager.encodeSettings("pref_widget_service_running", false)
         NotificationManager.cancelNotification()
 
         try {

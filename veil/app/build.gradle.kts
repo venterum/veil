@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     id("com.jaredsburrows.license")
 }
 
@@ -113,6 +114,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        compose = true
     }
 
     packaging {
@@ -140,6 +142,7 @@ dependencies {
 
     // UI Libraries
     implementation(libs.material)
+    implementation(libs.androidx.glance.appwidget)
 
     implementation(libs.editorkit)
     implementation(libs.flexbox)

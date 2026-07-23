@@ -4,6 +4,12 @@
     <string name="title_drawer_section_main">General</string>
     <string name="title_drawer_section_more">More</string>
     <string name="app_widget_name">Switch</string>
+    <string name="app_widget_description">Toggle Veil from the home screen</string>
+    <string name="app_widget_status_connected">Protected</string>
+    <string name="app_widget_status_disconnected">Ready</string>
+    <string name="app_widget_action_connect">Connect</string>
+    <string name="app_widget_action_disconnect">Disconnect</string>
+    <string name="app_widget_action_reload">Reconnect</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">First use of this feature, please use the app to add server</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>

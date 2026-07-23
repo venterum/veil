@@ -313,16 +313,23 @@
                 android:value="test" />
         </service>
 
+        <!--
+          The widget must stay in the main process: Glance 1.1 composes via a
+          SessionWorker executed by WorkManager (which runs in the main process),
+          while the AppWidgetSession is registered in the receiver's process. If
+          the two differ ("No session available for key ..."), composition never
+          runs and the widget is stuck on the loading layout. The widget never
+          touches CoreServiceManager directly; it mirrors the core state from the
+          activity-state broadcasts sent by the daemon process.
+        -->
         <receiver
             android:name=".receiver.WidgetProvider"
-            android:exported="true"
-            android:process=":RunSoLibV2RayDaemon">
+            android:exported="true">
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/app_widget_provider" />
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="${applicationId}.action.widget.click" />
                 <action android:name="${applicationId}.action.activity" />
             </intent-filter>
         </receiver>

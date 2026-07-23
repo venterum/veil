@@ -3,6 +3,7 @@
     <string name="title_drawer_section_main">Основное</string>
     <string name="title_drawer_section_more">Ещё</string>
     <string name="app_widget_name">Veil</string>
+    <string name="app_widget_action_reload">Переподключить</string>
     <string name="app_tile_name">Veil</string>
     <string
         name="app_tile_first_use"
