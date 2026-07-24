@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/iko.svg" width="52" height="52" alt="Veil icon" valign="middle"/>&nbsp;&nbsp;<strong style="font-size:2em">Veil</strong>
+  <strong style="font-size:2em">Veil</strong>
 </p>
 
 <p align="center">
@@ -20,18 +20,16 @@ Based on [v2rayNG](https://github.com/2dust/v2rayNG) by 2dust.
 
 ---
 
-## ⚖️ Legal Warning
-
 > [!CAUTION]
 > **Read before using this software.**
 
 This software is provided for **lawful use only**. By downloading, installing, or using Veil you agree to the following:
 
-1. **Jurisdiction compliance.** Laws governing the use of VPN clients, proxy tools, and privacy software vary significantly by country and region. **It is solely your responsibility** to ensure your use of this software complies with all applicable local, national, and international laws and regulations.
+1. Laws governing the use of VPN clients, proxy tools, and privacy software vary significantly by country and region. **It is solely your responsibility** to ensure your use of this software complies with all applicable local, national, and international laws and regulations.
 
-2. **Third-party services.** Using Veil to connect to third-party VPN/proxy servers does not make the authors responsible for the policies, practices, or legal status of those services. You remain solely responsible for your choice of servers and the traffic you route through them.
+2. Using Veil to connect to third-party VPN/proxy servers does not make the author responsible for the policies, practices, or legal status of those services. You remain solely responsible for your choice of servers and the traffic you route through them.
 
-> The author of Veil does not endorse or encourage any illegal activity. **Use responsibly.**
+> I do not endorse or encourage any illegal activity. **Use responsibly.**
 
 ---
 
