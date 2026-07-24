@@ -3,6 +3,11 @@
     <string name="title_drawer_section_main">Основное</string>
     <string name="title_drawer_section_more">Ещё</string>
     <string name="app_widget_name">Veil</string>
+    <string name="app_widget_description">Управление Veil с главного экрана</string>
+    <string name="app_widget_status_connected">Защищено</string>
+    <string name="app_widget_status_disconnected">Готово</string>
+    <string name="app_widget_action_connect">Подключить</string>
+    <string name="app_widget_action_disconnect">Отключить</string>
     <string name="app_widget_action_reload">Переподключить</string>
     <string name="app_tile_name">Veil</string>
     <string
@@ -320,6 +325,15 @@
         name="summary_pref_speed_toolbar_enabled"
     >Отображать текущую скорость приёма/передачи в нижней панели</string>
 
+    <string name="title_pref_speed_status_bar_live">Live Updates</string>
+    <string
+        name="summary_pref_speed_status_bar_live"
+    >Показывать текущую скорость живым обновлением в строке состояния и панели уведомлений (Android 16+).</string>
+    <string name="title_pref_speed_lock_screen">Показывать на экране блокировки</string>
+    <string
+        name="summary_pref_speed_lock_screen"
+    >Оставлять живое обновление видимым на экране блокировки вместо скрытия содержимого.</string>
+
     <string name="title_pref_sniffing_enabled">Анализ пакетов</string>
     <string
         name="summary_pref_sniffing_enabled"
@@ -499,6 +513,9 @@
         name="summary_pref_group_all_icons_visible"
     >Показывать кнопки поделиться, изменить и удалить на карточках серверов в общей вкладке</string>
 
+    <string name="expand_group">Развернуть группу</string>
+    <string name="collapse_group">Свернуть группу</string>
+
     <!-- AboutActivity -->
     <string name="title_pref_feedback">Обратная связь</string>
     <string
@@ -536,6 +553,16 @@
         name="title_outbound_domain_resolve_method"
     >Предопределение исходящего домена</string>
     <string name="title_mode">Режим</string>
+    <string name="title_mode_settings">Настройки режима</string>
+    <string name="title_root_mode_enabled">Root-режим (для Root-пользователей)</string>
+    <string
+        name="summary_root_mode_enabled"
+    >Включить низкоуровневое прозрачное проксирование через root-права. Этот режим обходит стандартный VPN Android и напрямую перехватывает весь сетевой трафик. При включении обычный режим, маршрутизация приложений и связанные настройки VPN станут полностью недействительны.</string>
+    <string name="toast_root_required">Для этой функции требуется root-доступ</string>
+    <string name="title_root_lan_sharing">Общий доступ LAN/модем (для Root-пользователей)</string>
+    <string
+        name="summary_root_lan_sharing"
+    >Маршрутизировать устройства Wi-Fi-точки и USB-модема через VPN</string>
     <string name="title_language">Язык</string>
     <string name="title_ui_settings">Настройки интерфейса</string>
     <string name="title_pref_main_ui_mode">Раскладка главного экрана</string>
@@ -722,6 +749,7 @@
     <string
         name="title_pref_fragment_enabled"
     >Использовать фрагментирование</string>
+    <string name="title_pref_fragment_maxsplit">Максимум фрагментов</string>
 
     <string name="update_check_for_update">Проверить обновление</string>
     <string
