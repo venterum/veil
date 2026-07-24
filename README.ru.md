@@ -1,9 +1,7 @@
-<p align="center">
-  <strong style="font-size:2em">Veil</strong>
-</p>
+<h1 align="center">Veil</h1>
 
 <p align="center">
-  <strong>Клиент V2Ray / Xray для Android — Material 3 · туннель olcRTC · три режима подключения</strong>
+  <strong>Клиент V2Ray / Xray для Android · Material 3 · поддержка olcRTC</strong>
 </p>
 
 <p align="center">

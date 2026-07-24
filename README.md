@@ -1,9 +1,7 @@
-<p align="center">
-  <strong style="font-size:2em">Veil</strong>
-</p>
+<h1 align="center">Veil</h1>
 
 <p align="center">
-  <strong>A V2Ray / Xray client for Android — Material 3 UI · olcRTC tunnel · Three connection modes</strong>
+  <strong>A V2Ray / Xray client for Android · Material 3 · olcRTC tunnel</strong>
 </p>
 
 <p align="center">
