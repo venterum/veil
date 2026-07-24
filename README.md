@@ -1,39 +1,68 @@
-# Veil
+<p align="center">
+  <img src="docs/iko.svg" width="52" height="52" alt="Veil icon" valign="middle"/>&nbsp;&nbsp;<strong style="font-size:2em">Veil</strong>
+</p>
 
-A V2Ray / Xray client for Android with Material 3 UI and olcRTC tunnel support.
+<p align="center">
+  <strong>A V2Ray / Xray client for Android — Material 3 UI · olcRTC tunnel · Three connection modes</strong>
+</p>
 
-[![Android](https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/Android/android1.svg)](https://developer.android.com/about/versions/nougat)
-[![Kotlin](https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/Kotlin/kotlin1.svg)](https://kotlinlang.org)
-[![License: GPL v3](https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/LicenceGPLv3/licencegplv31.svg)](LICENSE)
+<p align="center">
+  <a href="https://developer.android.com/about/versions/nougat"><img src="https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/Android/android1.svg" alt="Android"/></a>
+  <a href="https://kotlinlang.org"><img src="https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/Kotlin/kotlin1.svg" alt="Kotlin"/></a>
+  <a href="LICENSE"><img src="https://raw.githubusercontent.com/ziadOUA/m3-Markdown-Badges/master/badges/LicenceGPLv3/licencegplv31.svg" alt="License: GPL v3"/></a>
+</p>
 
-> **Warning:** This project is in early development. Bugs, crashes, and breaking changes are expected. Use at your own risk.
+> [!WARNING]
+> **Early development.** Bugs, crashes, and breaking changes are expected. Use at your own risk.
 
-Based on [v2rayNG](https://github.com/2dust/v2rayNG) by 2dust.
+Based on [v2rayNG](https://github.com/2dust/v2rayNG) by 2dust.  
+📖 [Документация на русском / Русский README](README.ru.md)
+
+---
+
+## ⚖️ Legal Warning
+
+> [!CAUTION]
+> **Read before using this software.**
+
+This software is provided for **lawful use only**. By downloading, installing, or using Veil you agree to the following:
+
+1. **Jurisdiction compliance.** Laws governing the use of VPN clients, proxy tools, and privacy software vary significantly by country and region. **It is solely your responsibility** to ensure your use of this software complies with all applicable local, national, and international laws and regulations.
+
+2. **Third-party services.** Using Veil to connect to third-party VPN/proxy servers does not make the authors responsible for the policies, practices, or legal status of those services. You remain solely responsible for your choice of servers and the traffic you route through them.
+
+> The author of Veil does not endorse or encourage any illegal activity. **Use responsibly.**
+
+---
 
 ## Downloads
 
 Pre-built APKs are available on the [releases page](https://github.com/venterum/veil/releases).
 
-## Documentation
-
-Full documentation (EN/RU) is in the [docs](docs/index.md) directory.
+---
 
 ## Features
 
-- Standard protocols: VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, Hysteria2
-- **olcRTC** — encrypted TCP-over-WebRTC tunnel (carriers: Jitsi, Telemost, WbStream; transports: DataChannel, VP8, SEI)
-- Subscription management and QR-code import/export
-- Per-app proxy, routing rules, DNS, fragmentation, mux and more
-- VPN service backed by `hev-socks5-tunnel` or the xray-core tunnel
-- **Three connection modes:** VPN (all traffic through tunnel), Proxy (SOCKS5 only, no TUN), Hybrid Mode (SOCKS5 proxy with optional in-app TUN toggle)
-- geoip / geosite rule support
-- Material 3 UI with Google Sans Flex typeface
+| Category | Details |
+|---|---|
+| **Protocols** | VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, Hysteria2 |
+| **olcRTC tunnel** | Encrypted TCP-over-WebRTC; carriers: Jitsi, Telemost, WbStream; transports: DataChannel, VP8, SEI |
+| **Connection modes** | VPN (full TUN), Proxy (SOCKS5 only, no TUN), Hybrid (SOCKS5 + optional in-app TUN toggle) |
+| **Subscriptions** | Management, QR-code import/export |
+| **Routing** | Per-app proxy, routing rules, DNS, geoip/geosite |
+| **Advanced** | Fragmentation, mux, split-tunneling |
+| **VPN back-end** | `hev-socks5-tunnel` or xray-core tunnel |
+| **UI** | Material 3 with Google Sans Flex typeface, home-screen widget |
+
+---
 
 ## Screenshots
 
-| | | | |
+| Home | Panel | Settings | olcRTC + Details |
 |:---:|:---:|:---:|:---:|
-| ![](docs/screenshots/index.png) | ![](docs/screenshots/panel.png) | ![](docs/screenshots/settings.png) | ![](docs/screenshots/olcrtc+details.png) |
+| ![Home screen](docs/screenshots/index.png) | ![Server panel](docs/screenshots/panel.png) | ![Settings](docs/screenshots/settings.png) | ![olcRTC details](docs/screenshots/olcrtc+details.png) |
+
+---
 
 ## Architecture
 
@@ -42,27 +71,28 @@ App traffic
      ↓
 VPN / Proxy Android service
      ↓
-Xray core (routing, DNS, mux, fragmentation)
+Xray core  (routing · DNS · mux · fragmentation)
      ↓
-SOCKS5 → 127.0.0.1:{port}      ← olcRTC profile only; standard protocols go direct
+SOCKS5 → 127.0.0.1:{port}      ← olcRTC profiles only; standard protocols go direct
      ↓
-olcRTC Go transport (WebRTC → SFU server → remote olcRTC → internet)
+olcRTC Go transport  (WebRTC → SFU server → remote olcRTC → internet)
 ```
 
 ### Core integration
 
-The Xray core and olcRTC transport are compiled together into a **single `libv2ray.aar`** via gomobile:
+The Xray core and olcRTC transport are compiled into a **single `libv2ray.aar`** via gomobile:
 
 | Go module | Package | Role |
 |---|---|---|
 | `github.com/2dust/AndroidLibXrayLite` | `libv2ray.*` | Xray core (routing, protocols, DNS) |
 | `olcrtc/mobile` | `mobile.*` | olcRTC WebRTC transport (SOCKS5 server) |
 
-Both modules are unmodified. They share one process (`:RunSoLibV2RayDaemon`) and communicate via loopback SOCKS5 — Xray's outbound points to `127.0.0.1:{olcrtc_port}` using a standard SOCKS outbound config. No custom patching of either core.
-
+Both modules are unmodified. They share one process (`:RunSoLibV2RayDaemon`) and communicate via loopback SOCKS5.  
 For standard protocols Xray connects directly to the remote server. For olcRTC profiles, Xray routes traffic through the local olcRTC SOCKS5 proxy which tunnels it via WebRTC.
 
-## Project layout
+---
+
+## Project Layout
 
 ```
 .
@@ -80,18 +110,22 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
 └── README.md
 ```
 
-## Building from source
+---
+
+## Building from Source
 
 ### Requirements
 
-- JDK 17+
-- Android SDK: `platforms;android-37`, `build-tools;37.0.0`, `platform-tools`
-- Android NDK for the native tunnel
-- Go 1.26+ with gomobile (`go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init`)
+| Tool | Version |
+|---|---|
+| JDK | 17+ |
+| Android SDK | `platforms;android-37`, `build-tools;37.0.0`, `platform-tools` |
+| Android NDK | Required for the native TUN tunnel |
+| Go + gomobile | Go 1.26+; `go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init` |
 
 ### Steps
 
-1. **Clone**
+1. **Clone** (with all submodules)
 
    ```bash
    git clone --recurse-submodules https://github.com/venterum/veil
@@ -113,11 +147,11 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
    bash compile-libv2ray.sh
    ```
 
-   The script builds a single `libv2ray.aar` with 16 KB ELF alignment, containing:
-   - `libv2ray.*` — standard Xray core bindings from `AndroidLibXrayLite`
+   The resulting AAR contains:
+   - `libv2ray.*` — Xray core bindings from `AndroidLibXrayLite`
    - `mobile.*` — olcRTC Go transport via gomobile
-   - `libgojni.so` — native Go binary for all ABIs
-   - `geoip.dat`, `geosite.dat` — rule assets
+   - `libgojni.so` — native Go binary for all ABIs (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`)
+   - `geoip.dat`, `geosite.dat` — routing rule assets
 
 4. **Build the APK**
 
@@ -127,30 +161,41 @@ For standard protocols Xray connects directly to the remote server. For olcRTC p
    ./gradlew assembleDebug
    ```
 
-   APK outputs: `veil/app/build/outputs/apk/debug/`, split per ABI (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`).
+   APK outputs: `veil/app/build/outputs/apk/debug/`, split per ABI.
 
-## Backward compatibility with v2rayNG
+---
 
-Since Veil is a fork of [v2rayNG](https://github.com/2dust/v2rayNG) and shares its config format you can migrate seamlessly:
+## Migrating from v2rayNG
 
-(available since 2.0.x)
+Veil is a fork of [v2rayNG](https://github.com/2dust/v2rayNG) and shares its config format — migration is seamless *(available since 2.0.x)*:
 
-1. Open v2rayNG, open the side drawer → **Backup & Restore** → **Backup config** → **Local**
+1. Open v2rayNG → side drawer → **Backup & Restore** → **Backup config** → **Local**
 2. Transfer the saved config files to this device
-3. Open veil, go to the side drawer → **Backup & Restore** → **Restore config** → **Local**, select the file
+3. Open Veil → side drawer → **Backup & Restore** → **Restore config** → **Local**, select the file
 
-Standard protocol profiles (VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, Hysteria2), subscriptions, and settings are fully compatible. olcRTC-specific profiles only work in veil.
+Standard protocol profiles (VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, Hysteria2), subscriptions, and settings are fully compatible. olcRTC-specific profiles only work in Veil.
+
+---
+
+## Documentation
+
+Full documentation (EN / RU) is in the [docs](docs/index.md) directory.
+
+---
 
 ## Credits
 
-- [v2rayNG](https://github.com/2dust/v2rayNG) by 2dust — upstream project
-- [Xray-core](https://github.com/XTLS/Xray-core) and [v2fly/v2ray-core](https://github.com/v2fly/v2ray-core)
-- [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) by heiher
-- [olcRTC](https://github.com/openlibrecommunity/olcrtc) by openlibrecommunity
-- [Google Sans](https://fonts.google.com/specimen/Google+Sans) and
-  [Google Sans Flex](https://fonts.google.com/specimen/Google+Sans+Flex) — by Google,
-  licensed under the [SIL Open Font License, Version 1.1](https://fonts.google.com/specimen/Google+Sans/license)
+| Project | Author | Role |
+|---|---|---|
+| [v2rayNG](https://github.com/2dust/v2rayNG) | 2dust | Upstream project this fork is based on |
+| [Xray-core](https://github.com/XTLS/Xray-core) / [v2ray-core](https://github.com/v2fly/v2ray-core) | XTLS / v2fly | Core proxy engine |
+| [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) | heiher | Native TUN→SOCKS5 tunnel |
+| [olcRTC](https://github.com/openlibrecommunity/olcrtc) | openlibrecommunity | WebRTC-based encrypted transport |
+| [Google Sans / Google Sans Flex](https://fonts.google.com/specimen/Google+Sans) | Google | Typeface (SIL OFL 1.1) |
+
+---
 
 ## License
 
-GNU General Public License v3.0. See [LICENSE](LICENSE).
+This project is licensed under the **GNU General Public License v3.0**.  
+See [LICENSE](LICENSE) for the full text.
