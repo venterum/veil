@@ -25,6 +25,12 @@
         app:showAsAction="withText" />
 
     <item
+        android:id="@+id/select_russian_apps"
+        android:icon="@drawable/ic_select_all_24dp"
+        android:title="@string/menu_item_select_russian_apps"
+        app:showAsAction="withText" />
+
+    <item
         android:id="@+id/import_proxy_app"
         android:icon="@drawable/ic_description_24dp"
         android:title="@string/menu_item_import_proxy_app"

@@ -174,6 +174,12 @@ class PerAppProxyActivity : BaseActivity() {
             true
         }
 
+        R.id.select_russian_apps -> {
+            selectRussianApps()
+            allowPerAppProxy()
+            true
+        }
+
         else -> super.onOptionsItemSelected(item)
     }
 
@@ -231,6 +237,16 @@ class PerAppProxyActivity : BaseActivity() {
                 toastSuccess(R.string.toast_success)
                 hideLoading()
             }
+        }
+    }
+
+    private fun selectRussianApps() {
+        adapter?.let { adapter ->
+            val russianPkgs = adapter.apps
+                .filter { it.packageName.startsWith("ru.") }
+                .map { it.packageName }
+            viewModel.addAll(russianPkgs)
+            refreshData()
         }
     }
 
