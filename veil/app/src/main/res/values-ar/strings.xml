@@ -598,10 +598,9 @@
         <item>WebView</item>
     </string-array>
     <string-array name="preset_rulesets">
-        <item>القائمة البيضاء للصين</item>
-        <item>القائمة السوداء للصين</item>
-        <item>عالمي</item>
-        <item>القائمة البيضاء لإيران</item>
-        <item>القائمة البيضاء لروسيا</item>
+        <item>Everything through VPN</item>
+        <item>Block ads</item>
+        <item>Russia without VPN</item>
+        <item>Russia without VPN + block ads</item>
     </string-array>
 </resources>

@@ -665,6 +665,13 @@
     >Delete %d duplicate configs</string>
     <string name="title_del_config_count">Delete %d configs</string>
     <string name="title_import_config_count">Import %d configs</string>
+    <string name="import_clipboard_title">Import?</string>
+    <string name="action_import">Import</string>
+    <string name="import_clipboard_configs">Server configs: %1$d</string>
+    <string name="import_clipboard_subscription">Subscription: %1$s</string>
+    <string
+        name="import_clipboard_unrecognized"
+    >The clipboard does not contain a recognized config.</string>
     <string name="title_export_config_count">Export %d configs</string>
     <string name="title_update_config_count">Update %d configs</string>
     <string
@@ -690,6 +697,15 @@
     <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">Domain strategy</string>
     <string name="routing_settings_title">Routing Settings</string>
+    <string name="routing_settings_presets_title">Ready modes</string>
+    <string name="routing_settings_advanced_title">Advanced</string>
+    <string name="routing_settings_active_mode">Active mode</string>
+    <string name="routing_settings_empty_rules">No routing rules yet. Tap “Add rule” to create your first one.</string>
+    <string name="routing_settings_custom_rules">Custom rules</string>
+    <string name="routing_settings_apply_preset_confirm">Apply this mode? Current rules will be replaced.</string>
+    <string name="routing_settings_block_ads">Block ads</string>
+    <string name="routing_settings_block_ads_desc">Blocks ads and trackers in any mode</string>
+    <string name="action_apply">Apply</string>
     <string
         name="routing_settings_tips"
     >Separated by commas(,), \nchoose domain or ip or process</string>
@@ -858,11 +874,17 @@
     </string-array>
 
     <string-array name="preset_rulesets">
-        <item>China Whitelist</item>
-        <item>China Blacklist</item>
-        <item>Global</item>
-        <item>Iran Whitelist</item>
-        <item>Russia Whitelist</item>
+        <item>Everything through VPN</item>
+        <item>Bypass Russia</item>
+        <item>Bypass China</item>
+        <item>Bypass Iran</item>
+    </string-array>
+
+    <string-array name="preset_rulesets_descriptions">
+        <item>All traffic goes through the VPN (local network is bypassed)</item>
+        <item>Russian apps and sites bypass the VPN</item>
+        <item>Chinese apps and sites bypass the VPN</item>
+        <item>Iranian apps and sites bypass the VPN</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

@@ -55,8 +55,10 @@ object SettingsManager {
     private fun initRoutingRulesets(context: Context) {
         val exist = MmkvManager.decodeRoutingRulesets()
         if (exist.isNullOrEmpty()) {
-            val rulesetList = getPresetRoutingRulesets(context)
+            val rulesetList = getPresetRoutingRulesets(context, RoutingType.GLOBAL.ordinal)
             MmkvManager.encodeRoutingRulesets(rulesetList)
+            MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_PRESET, RoutingType.GLOBAL.ordinal.toString())
+            MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_BLOCK_ADS, false)
         }
     }
 
@@ -77,13 +79,52 @@ object SettingsManager {
     }
 
     /**
+     * Insert the ad-block rules module into a base preset, right before the
+     * trailing catch-all rule so blocked domains take precedence.
+     */
+    private fun withBlockAdsModule(context: Context, base: MutableList<RulesetItem>): MutableList<RulesetItem> {
+        val adsText = Utils.readTextFromAssets(context, RoutingType.BLOCK_ADS_MODULE_FILE)
+        val adsRules = JsonUtil.fromJsonSafe(adsText, Array<RulesetItem>::class.java)?.toList()
+        if (adsRules.isNullOrEmpty()) {
+            return base
+        }
+
+        val combined = base.toMutableList()
+        val catchAllIndex = combined.indexOfLast { it.outboundTag == AppConfig.TAG_PROXY && it.port != null }
+        combined.addAll(if (catchAllIndex >= 0) catchAllIndex else combined.size, adsRules)
+        return combined
+    }
+
+    /**
      * Reset routing rulesets from presets.
      * @param context The application context.
      * @param index The index of the routing type.
+     * @param blockAds Whether to include the ad-block rules module.
      */
-    fun resetRoutingRulesetsFromPresets(context: Context, index: Int) {
-        val rulesetList = getPresetRoutingRulesets(context, index) ?: return
+    fun resetRoutingRulesetsFromPresets(context: Context, index: Int, blockAds: Boolean) {
+        val base = getPresetRoutingRulesets(context, index) ?: return
+        val rulesetList = if (blockAds) withBlockAdsModule(context, base) else base
         resetRoutingRulesetsCommon(rulesetList)
+        MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_PRESET, index.toString())
+        MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_BLOCK_ADS, blockAds)
+    }
+
+    /**
+     * Get the index of the currently applied routing preset.
+     * @return The preset index, or null if the rules were customized manually.
+     */
+    fun getRoutingPreset(): Int? = getStoredPresetIndex()
+
+    /**
+     * Get whether the ad-block module is enabled for the applied preset.
+     */
+    fun getRoutingBlockAds(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_ROUTING_BLOCK_ADS)
+    }
+
+    private fun getStoredPresetIndex(): Int? {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_PRESET)?.toIntOrNull()
+            ?.takeIf { it in RoutingType.entries.indices }
     }
 
     /**
@@ -103,6 +144,7 @@ object SettingsManager {
             }
 
             resetRoutingRulesetsCommon(rulesetList)
+            MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_PRESET, null)
             return true
         } catch (e: Exception) {
             LogUtil.e(ANG_PACKAGE, "Failed to reset routing rulesets", e)
@@ -159,6 +201,7 @@ object SettingsManager {
             rulesetList[index] = ruleset
         }
         MmkvManager.encodeRoutingRulesets(rulesetList)
+        MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_PRESET, null)
     }
 
     /**
@@ -173,6 +216,7 @@ object SettingsManager {
 
         rulesetList.removeAt(index)
         MmkvManager.encodeRoutingRulesets(rulesetList)
+        MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_PRESET, null)
     }
 
     /**
@@ -216,6 +260,7 @@ object SettingsManager {
 
         Collections.swap(rulesetList, fromPosition, toPosition)
         MmkvManager.encodeRoutingRulesets(rulesetList)
+        MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_PRESET, null)
     }
 
     /**

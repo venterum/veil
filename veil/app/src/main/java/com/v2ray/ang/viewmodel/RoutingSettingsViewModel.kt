@@ -20,11 +20,15 @@ class RoutingSettingsViewModel(application: Application) : BaseViewModel(applica
 
     fun reload() {
         val loaded = MmkvManager.decodeRoutingRulesets()?.toMutableList() ?: mutableListOf()
-        loaded.forEachIndexed { index, item ->
+        var changed = false
+        loaded.forEach { item ->
             if (item.id.isEmpty()) {
                 item.id = UUID.randomUUID().toString()
-                SettingsManager.saveRoutingRuleset(index, item)
+                changed = true
             }
+        }
+        if (changed) {
+            MmkvManager.encodeRoutingRulesets(loaded)
         }
         rulesets.clear()
         rulesets.addAll(loaded)

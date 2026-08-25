@@ -1,0 +1,40 @@
+[
+  {
+    "id": "preset-ir-lan-ip",
+    "remarks": "Bypass LAN IP",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:private"
+    ]
+  },
+  {
+    "id": "preset-ir-lan-domain",
+    "remarks": "Bypass LAN domains",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:private"
+    ]
+  },
+  {
+    "id": "preset-ir-domains",
+    "remarks": "Bypass Iran domains",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:ir"
+    ]
+  },
+  {
+    "id": "preset-ir-ip",
+    "remarks": "Bypass Iran IP",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:ir"
+    ]
+  },
+  {
+    "id": "preset-ir-proxy-all",
+    "remarks": "Route everything through VPN",
+    "port": "0-65535",
+    "outboundTag": "proxy"
+  }
+]

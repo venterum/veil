@@ -1,0 +1,24 @@
+[
+  {
+    "id": "preset-global-lan-ip",
+    "remarks": "Bypass LAN IP",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:private"
+    ]
+  },
+  {
+    "id": "preset-global-lan-domain",
+    "remarks": "Bypass LAN domains",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:private"
+    ]
+  },
+  {
+    "id": "preset-global-proxy-all",
+    "remarks": "Route everything through VPN",
+    "port": "0-65535",
+    "outboundTag": "proxy"
+  }
+]

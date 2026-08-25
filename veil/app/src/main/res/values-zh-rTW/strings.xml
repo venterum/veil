@@ -436,11 +436,10 @@
     </string-array>
 
     <string-array name="preset_rulesets">
-        <item>繞過大陸 (Whitelist)</item>
-        <item>黑名單 (Blacklist)</item>
-        <item>全域 (Global)</item>
-        <item>伊朗 (Iran)</item>
-        <item>俄羅斯白名單 (Russia Whitelist)</item>
+        <item>Everything through VPN</item>
+        <item>Block ads</item>
+        <item>Russia without VPN</item>
+        <item>Russia without VPN + block ads</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

@@ -433,11 +433,10 @@
         <item>ডার্ক</item>
     </string-array>
     <string-array name="preset_rulesets">
-        <item>চায়না হোয়াইটলিস্ট</item>
-        <item>চায়না ব্ল্যাকলিস্ট</item>
-        <item>গ্লোবাল</item>
-        <item>ইরান হোয়াইটলিস্ট</item>
-        <item>রাশিয়া হোয়াইটলিস্ট</item>
+        <item>Everything through VPN</item>
+        <item>Block ads</item>
+        <item>Russia without VPN</item>
+        <item>Russia without VPN + block ads</item>
     </string-array>
 
         <string-array name="vpn_bypass_lan">

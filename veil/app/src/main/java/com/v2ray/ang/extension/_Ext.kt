@@ -6,9 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
-import android.app.Activity
 import android.widget.Toast
-import com.google.android.material.snackbar.Snackbar
 import com.v2ray.ang.AngApplication
 import com.v2ray.ang.enums.EConfigType
 import java.io.Serializable
@@ -19,44 +17,35 @@ val Context.v2RayApplication: AngApplication?
     get() = applicationContext as? AngApplication
 
 /**
- * Shows a toast message with the given resource ID.
+ * Shows a short-lived notification.
  *
- * @param message The resource ID of the message to show.
+ * Uses the platform [Toast] rather than a Material [com.google.android.material.snackbar.Snackbar]:
+ * snackbars are inflated through the View system, which can fail to resolve theme attributes
+ * under forced dynamic-color overlays, and they require an Activity window. A Toast works from
+ * any context (Activity or Application/Service) and cannot crash on inflation.
  */
-private fun Context.snackbar(message: CharSequence, duration: Int = Snackbar.LENGTH_SHORT) {
-    val view = (this as? Activity)?.window?.decorView?.findViewById<android.view.View>(android.R.id.content)
-    if (view != null) {
-        val snackbar = Snackbar.make(view, message, duration)
-        snackbar.view.translationY = -(90 * resources.displayMetrics.density).toInt().toFloat()
-        snackbar.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.setTextColor(android.graphics.Color.WHITE)
-        snackbar.show()
-    } else {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-}
-
 fun Context.toast(message: Int) {
-    snackbar(getString(message))
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }
 
 fun Context.toast(message: CharSequence) {
-    snackbar(message)
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }
 
 fun Context.toastSuccess(message: Int) {
-    snackbar(getString(message))
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }
 
 fun Context.toastSuccess(message: CharSequence) {
-    snackbar(message)
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }
 
 fun Context.toastError(message: Int) {
-    snackbar(getString(message))
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 }
 
 fun Context.toastError(message: CharSequence) {
-    snackbar(message)
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 }
 
 const val THRESHOLD = 1000L

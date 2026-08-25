@@ -23,6 +23,9 @@ class UserAssetViewModel(application: Application) : BaseViewModel(application) 
     private val _assetsFlow = MutableStateFlow<List<AssetUrlCache>>(emptyList())
     val assetsFlow: StateFlow<List<AssetUrlCache>> = _assetsFlow.asStateFlow()
 
+    private val _downloadState = MutableStateFlow(GeoDownloadState())
+    val downloadState: StateFlow<GeoDownloadState> = _downloadState.asStateFlow()
+
     val itemCount: Int
         get() = assets.size
 
@@ -74,21 +77,37 @@ class UserAssetViewModel(application: Application) : BaseViewModel(application) 
         proxyUsername: String? = null,
         proxyPassword: String? = null
     ): GeoDownloadResult {
-        val snapshot = getAssets()
-        var successCount = 0
-        val failures = mutableListOf<String>()
-
-        snapshot.forEach { cache ->
-            val item = cache.assetUrl
-            val portsToTry = if (httpPort == 0) listOf(0) else listOf(httpPort, 0)
-            if (portsToTry.any { tryDownload(item, extDir, it, proxyUsername, proxyPassword) }) {
-                successCount++
-            } else {
-                failures.add(item.remarks)
-            }
+        if (_downloadState.value.isRunning) {
+            return GeoDownloadResult(0, 0, emptyList())
         }
 
-        return GeoDownloadResult(successCount, failures.size, failures)
+        val snapshot = getAssets()
+        _downloadState.value = GeoDownloadState(isRunning = true, total = snapshot.size)
+
+        try {
+            var successCount = 0
+            val failures = mutableListOf<String>()
+
+            snapshot.forEach { cache ->
+                val item = cache.assetUrl
+                _downloadState.value = _downloadState.value.copy(currentFile = item.remarks)
+                val portsToTry = if (httpPort == 0) listOf(0) else listOf(httpPort, 0)
+                if (portsToTry.any { tryDownload(item, extDir, it, proxyUsername, proxyPassword) }) {
+                    successCount++
+                } else {
+                    failures.add(item.remarks)
+                }
+                _downloadState.value = _downloadState.value.copy(
+                    completed = _downloadState.value.completed + 1,
+                    successCount = successCount,
+                    failureCount = failures.size
+                )
+            }
+
+            return GeoDownloadResult(successCount, failures.size, failures)
+        } finally {
+            _downloadState.value = GeoDownloadState()
+        }
     }
 
     private fun tryDownload(
@@ -126,5 +145,14 @@ class UserAssetViewModel(application: Application) : BaseViewModel(application) 
         val successCount: Int,
         val failureCount: Int,
         val failedAssets: List<String>
+    )
+
+    data class GeoDownloadState(
+        val isRunning: Boolean = false,
+        val currentFile: String? = null,
+        val completed: Int = 0,
+        val total: Int = 0,
+        val successCount: Int = 0,
+        val failureCount: Int = 0
     )
 }

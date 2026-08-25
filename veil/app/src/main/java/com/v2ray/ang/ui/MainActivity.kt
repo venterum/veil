@@ -81,7 +81,6 @@ class MainActivity : HelperBaseActivity() {
     private var searchQuery by mutableStateOf("")
     private var bottomBarState by mutableStateOf(ExpressiveBottomBarState())
     private var connectionInfoState by mutableStateOf(ConnectionInfoSheetState())
-    private var currentSnackbar: com.google.android.material.snackbar.Snackbar? = null
 
     /**
      * MainActivity is the root of the app's task. The system already moves the
@@ -229,7 +228,6 @@ class MainActivity : HelperBaseActivity() {
             DrawerEntry.Item(R.id.sub_setting, R.drawable.ic_subscriptions_24dp, R.string.title_sub_setting),
             DrawerEntry.Item(R.id.per_app_proxy_settings, R.drawable.ic_per_apps_24dp, R.string.per_app_proxy_settings),
             DrawerEntry.Item(R.id.routing_setting, R.drawable.ic_routing_24dp, R.string.routing_settings_title),
-            DrawerEntry.Item(R.id.user_asset_setting, R.drawable.ic_file_24dp, R.string.title_user_asset_setting),
             DrawerEntry.Item(R.id.mode_selector, R.drawable.ic_tun_off_24dp, R.string.title_mode),
             DrawerEntry.Item(R.id.settings, R.drawable.ic_settings_24dp, R.string.title_settings),
             DrawerEntry.Header(R.string.title_drawer_section_more),
@@ -398,13 +396,7 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun showOrUpdateSnackbar(message: String) {
-        currentSnackbar?.dismiss()
-        val view = binding.root.findViewById<android.view.View>(R.id.main_content)
-        val snackbar = com.google.android.material.snackbar.Snackbar.make(view, message, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
-        snackbar.view.translationY = -(90 * resources.displayMetrics.density).toInt().toFloat()
-        snackbar.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.setTextColor(android.graphics.Color.WHITE)
-        snackbar.show()
-        currentSnackbar = snackbar
+        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
     }
 
     private fun setupGroupTab() {
@@ -827,12 +819,58 @@ class MainActivity : HelperBaseActivity() {
             : Boolean {
         try {
             val clipboard = Utils.getClipboard(this)
-            importBatchConfig(clipboard)
+            if (clipboard.isBlank()) {
+                toastError(R.string.toast_failure)
+                return true
+            }
+            lifecycleScope.launch(Dispatchers.IO) {
+                val preview = AngConfigManager.previewImport(clipboard)
+                withContext(Dispatchers.Main) {
+                    showImportClipboardDialog(clipboard, preview)
+                }
+            }
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to import config from clipboard", e)
             return false
         }
         return true
+    }
+
+    private fun showImportClipboardDialog(clipboard: String, preview: AngConfigManager.ImportPreview) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.import_clipboard_title)
+            .setMessage(buildImportClipboardMessage(preview))
+            .setPositiveButton(R.string.action_import) { _, _ ->
+                importBatchConfig(clipboard)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun buildImportClipboardMessage(preview: AngConfigManager.ImportPreview): String {
+        val sb = StringBuilder()
+        if (preview.configCount > 0) {
+            sb.append(getString(R.string.import_clipboard_configs, preview.configCount))
+            preview.configLabels.take(8).forEach { label ->
+                sb.append('\n').append("• ").append(label)
+            }
+            if (preview.configLabels.size > 8) {
+                sb.append('\n').append('…')
+            }
+        }
+        if (preview.subscriptionCount > 0) {
+            if (sb.isNotEmpty()) sb.append('\n')
+            sb.append(
+                getString(
+                    R.string.import_clipboard_subscription,
+                    preview.subscriptionUrls.firstOrNull().orEmpty()
+                )
+            )
+        }
+        if (sb.isEmpty()) {
+            sb.append(getString(R.string.import_clipboard_unrecognized))
+        }
+        return sb.toString()
     }
 
     private fun importBatchConfig(server: String?) {
@@ -1081,7 +1119,6 @@ class MainActivity : HelperBaseActivity() {
             R.id.sub_setting -> Intent(this, SubSettingActivity::class.java)
             R.id.per_app_proxy_settings -> Intent(this, PerAppProxyActivity::class.java)
             R.id.routing_setting -> Intent(this, RoutingSettingActivity::class.java)
-            R.id.user_asset_setting -> Intent(this, UserAssetActivity::class.java)
             R.id.settings -> Intent(this, SettingsActivity::class.java)
             R.id.logcat -> Intent(this, LogcatActivity::class.java)
             R.id.backup_restore -> Intent(this, BackupActivity::class.java)

@@ -1,22 +1,16 @@
 package com.v2ray.ang.enums
 
 enum class RoutingType(val fileName: String) {
-    WHITE("custom_routing_white"),
-    BLACK("custom_routing_black"),
-    GLOBAL("custom_routing_global"),
-    WHITE_IRAN("custom_routing_white_iran"),
-    WHITE_RUSSIA("custom_routing_white_russia");
+    GLOBAL("routing_preset_global"),
+    RU_DIRECT("routing_preset_ru_direct"),
+    CN_DIRECT("routing_preset_cn_direct"),
+    IR_DIRECT("routing_preset_ir_direct");
 
     companion object {
+        const val BLOCK_ADS_MODULE_FILE = "routing_preset_block_ads"
+
         fun fromIndex(index: Int): RoutingType {
-            return when (index) {
-                0 -> WHITE
-                1 -> BLACK
-                2 -> GLOBAL
-                3 -> WHITE_IRAN
-                4 -> WHITE_RUSSIA
-                else -> WHITE
-            }
+            return entries.getOrElse(index) { GLOBAL }
         }
     }
 }

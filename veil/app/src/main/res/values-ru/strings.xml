@@ -657,6 +657,13 @@
     >Удалено дубликатов профилей: %d</string>
     <string name="title_del_config_count">Удалено профилей: %d</string>
     <string name="title_import_config_count">Импортировано профилей: %d</string>
+    <string name="import_clipboard_title">Импортировать?</string>
+    <string name="action_import">Импортировать</string>
+    <string name="import_clipboard_configs">Профили серверов: %1$d</string>
+    <string name="import_clipboard_subscription">Подписка: %1$s</string>
+    <string
+        name="import_clipboard_unrecognized"
+    >В буфере обмена нет распознаваемого профиля.</string>
     <string
         name="title_export_config_count"
     >Экспортировано профилей: %d</string>
@@ -679,6 +686,13 @@
     <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">Доменная стратегия</string>
     <string name="routing_settings_title">Маршрутизация</string>
+    <string name="routing_settings_presets_title">Готовые режимы</string>
+    <string name="routing_settings_advanced_title">Расширенные</string>
+    <string name="routing_settings_custom_rules">Свои правила</string>
+    <string name="routing_settings_apply_preset_confirm">Применить режим? Текущие правила будут заменены.</string>
+    <string name="routing_settings_block_ads">Блокировать рекламу</string>
+    <string name="routing_settings_block_ads_desc">Блокирует рекламу и трекеры в любом режиме</string>
+    <string name="action_apply">Применить</string>
     <string
         name="routing_settings_tips"
     >Через запятую (,)\nЧто-то одно: домен, IP или процесс</string>
@@ -847,11 +861,17 @@
     </string-array>
 
     <string-array name="preset_rulesets">
-        <item>Белый список Китая</item>
-        <item>Чёрный список Китая</item>
-        <item>Общие</item>
-        <item>Белый список Ирана</item>
-        <item>Белый список России</item>
+        <item>Всё через VPN</item>
+        <item>Обход России</item>
+        <item>Обход Китая</item>
+        <item>Обход Ирана</item>
+    </string-array>
+
+    <string-array name="preset_rulesets_descriptions">
+        <item>Весь трафик идёт через VPN (локальная сеть в обход)</item>
+        <item>Российские приложения и сайты в обход VPN</item>
+        <item>Китайские приложения и сайты в обход VPN</item>
+        <item>Иранские приложения и сайты в обход VPN</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

@@ -601,10 +601,9 @@
         <item>WebView</item>
     </string-array>
     <string-array name="preset_rulesets">
-        <item>Danh sách trắng Trung Quốc</item>
-        <item>Danh sách đen Trung Quốc</item>
-        <item>Toàn cầu</item>
-        <item>Danh sách trắng Iran</item>
-        <item>Danh sách trắng Nga</item>
+        <item>Everything through VPN</item>
+        <item>Block ads</item>
+        <item>Russia without VPN</item>
+        <item>Russia without VPN + block ads</item>
     </string-array>
 </resources>

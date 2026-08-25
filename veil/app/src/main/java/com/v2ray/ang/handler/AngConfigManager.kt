@@ -199,6 +199,76 @@ object AngConfigManager {
     }
 
     /**
+     * Preview of what will be imported from clipboard content.
+     */
+    data class ImportPreview(
+        val configCount: Int,
+        val subscriptionCount: Int,
+        val configLabels: List<String>,
+        val subscriptionUrls: List<String>
+    )
+
+    /**
+     * Analyzes clipboard content and returns a preview of what will be imported,
+     * without performing any actual import.
+     *
+     * @param server The clipboard content.
+     * @return A preview describing the detected configurations and subscriptions.
+     */
+    fun previewImport(server: String?): ImportPreview {
+        var configCount = 0
+        var subscriptionCount = 0
+        val configLabels = mutableListOf<String>()
+        val subscriptionUrls = mutableListOf<String>()
+
+        fun analyze(text: String) {
+            text.lines().distinct().forEach { line ->
+                val trimmed = line.trim()
+                if (trimmed.isEmpty()) return@forEach
+                val config = parseConfig(trimmed, "", null)
+                if (config != null) {
+                    configCount++
+                    configLabels.add(config.remarks.ifBlank { config.description.orEmpty() })
+                } else if (Utils.isValidSubUrl(trimmed)) {
+                    subscriptionCount++
+                    subscriptionUrls.add(trimmed)
+                }
+            }
+        }
+
+        if (server.isNullOrBlank()) {
+            return ImportPreview(0, 0, emptyList(), emptyList())
+        }
+
+        val decoded = Utils.decode(server)
+        if (decoded.isNotBlank()) {
+            analyze(decoded)
+        }
+        if (configCount == 0 && subscriptionCount == 0) {
+            analyze(server)
+        }
+
+        // Detect custom config / WireGuard file
+        if (configCount == 0 && subscriptionCount == 0) {
+            val trimmed = server.trim()
+            val isCustom = trimmed.contains("inbounds") &&
+                    trimmed.contains("outbounds") &&
+                    trimmed.contains("routing")
+            val isWireguard = trimmed.startsWith("[Interface]") && trimmed.contains("[Peer]")
+            if (isCustom || isWireguard) {
+                configCount = 1
+            }
+        }
+
+        return ImportPreview(
+            configCount,
+            subscriptionCount,
+            configLabels.filter { it.isNotBlank() }.distinct(),
+            subscriptionUrls.distinct()
+        )
+    }
+
+    /**
      * Parses a batch of subscriptions.
      *
      * @param servers The servers string.

@@ -17,6 +17,7 @@ import com.google.android.material.card.MaterialCardView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
+import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
@@ -203,12 +204,7 @@ class SettingsActivity : BaseActivity() {
             socksPassword?.text = password
             socksUsername?.summary = username
             socksPassword?.summary = password
-            view?.let { v ->
-                val snackbar = com.google.android.material.snackbar.Snackbar.make(v, R.string.toast_socks_credentials_generated, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
-                snackbar.view.translationY = -(90 * resources.displayMetrics.density).toInt().toFloat()
-                snackbar.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.setTextColor(android.graphics.Color.WHITE)
-                snackbar.show()
-            }
+            activity?.toast(R.string.toast_socks_credentials_generated)
         }
 
         private fun openTelegramProxy() {

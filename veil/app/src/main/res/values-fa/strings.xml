@@ -434,11 +434,10 @@
     </string-array>
 
     <string-array name="preset_rulesets">
-        <item>لیست سفید چین ( دور زدن سرزمین اصلی )</item>
-        <item>لیست سیاه چین</item>
-        <item>جهانی(GLOBAL)</item>
-        <item>ایران</item>
-        <item>لیست سفید روسیه</item>
+        <item>Everything through VPN</item>
+        <item>Block ads</item>
+        <item>Russia without VPN</item>
+        <item>Russia without VPN + block ads</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

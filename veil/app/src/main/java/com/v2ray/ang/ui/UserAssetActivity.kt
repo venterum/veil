@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,8 +23,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
@@ -76,7 +79,6 @@ class UserAssetActivity : HelperBaseComponentActivity() {
 
     private val viewModel: UserAssetViewModel by viewModels()
     val extDir by lazy { File(Utils.userAssetPath(this)) }
-    private val isLoadingState = MutableStateFlow(false)
     private val geoFilesSourceState = MutableStateFlow("")
     private val refreshTrigger = MutableStateFlow(0)
 
@@ -99,7 +101,6 @@ class UserAssetActivity : HelperBaseComponentActivity() {
         UserAssetScreen(
             viewModel = viewModel,
             extDir = extDir,
-            isLoadingState = isLoadingState,
             geoFilesSourceState = geoFilesSourceState,
             refreshTrigger = refreshTrigger,
             geoFilesSourcesList = AppConfig.GEO_FILES_SOURCES.toList(),
@@ -163,16 +164,26 @@ class UserAssetActivity : HelperBaseComponentActivity() {
         }
     }
 
-    private fun copyFile(uri: Uri): String {
-        val targetFile = File(extDir, getCursorName(uri) ?: uri.toString())
-        contentResolver.openInputStream(uri).use { inputStream ->
-            targetFile.outputStream().use { fileOut ->
-                inputStream?.copyTo(fileOut)
-                toastSuccess(R.string.toast_success)
-                refreshData()
+    private fun copyFile(uri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val targetFile = File(extDir, getCursorName(uri) ?: uri.toString())
+                contentResolver.openInputStream(uri).use { inputStream ->
+                    targetFile.outputStream().use { fileOut ->
+                        inputStream?.copyTo(fileOut)
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    toastSuccess(R.string.toast_success)
+                    refreshData()
+                }
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to copy asset file", e)
+                withContext(Dispatchers.Main) {
+                    toastError(R.string.toast_asset_copy_failed)
+                }
             }
         }
-        return targetFile.path
     }
 
     private fun getCursorName(uri: Uri): String? = try {
@@ -214,23 +225,30 @@ class UserAssetActivity : HelperBaseComponentActivity() {
     }
 
     private fun downloadGeoFiles() {
+        if (viewModel.downloadState.value.isRunning) return
         refreshData()
-        isLoadingState.value = true
         toast(R.string.msg_downloading_content)
 
         val proxyUsername = SettingsManager.getSocksUsername()
         val proxyPassword = SettingsManager.getSocksPassword()
         val httpPort = SettingsManager.getHttpPort()
         lifecycleScope.launch(Dispatchers.IO) {
-            val result = viewModel.downloadGeoFiles(extDir, httpPort, proxyUsername, proxyPassword)
-            withContext(Dispatchers.Main) {
-                if (result.successCount > 0) {
-                    toast(getString(R.string.title_update_config_count, result.successCount))
-                } else {
-                    toast(getString(R.string.toast_failure))
+            try {
+                val result = viewModel.downloadGeoFiles(extDir, httpPort, proxyUsername, proxyPassword)
+                withContext(Dispatchers.Main) {
+                    if (result.successCount > 0) {
+                        toast(getString(R.string.title_update_config_count, result.successCount))
+                    } else {
+                        toast(getString(R.string.toast_failure))
+                    }
+                    refreshData()
                 }
-                refreshData()
-                isLoadingState.value = false
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to download geo files", e)
+                withContext(Dispatchers.Main) {
+                    toastError(R.string.toast_failure)
+                    refreshData()
+                }
             }
         }
     }
@@ -255,7 +273,6 @@ class UserAssetActivity : HelperBaseComponentActivity() {
 fun UserAssetScreen(
     viewModel: UserAssetViewModel,
     extDir: File,
-    isLoadingState: MutableStateFlow<Boolean>,
     geoFilesSourceState: MutableStateFlow<String>,
     refreshTrigger: MutableStateFlow<Int>,
     geoFilesSourcesList: List<String>,
@@ -268,9 +285,9 @@ fun UserAssetScreen(
     onEditAsset: (String) -> Unit,
     onRemoveAsset: (String) -> Unit
 ) {
-    val isLoading by isLoadingState.collectAsState()
     val geoFilesSource by geoFilesSourceState.collectAsState()
     val assets by viewModel.assetsFlow.collectAsStateWithLifecycle()
+    val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
     val trigger by refreshTrigger.collectAsState()
 
     var showAddMenu by remember { mutableStateOf(false) }
@@ -283,7 +300,7 @@ fun UserAssetScreen(
             AppTopBar(
                 title = stringResource(R.string.title_user_asset_setting),
                 onBackClick = onBackClick,
-                isLoading = isLoading,
+                isLoading = downloadState.isRunning,
                 actions = {
                     Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                         IconButton(onClick = { showAddMenu = true }) {
@@ -310,7 +327,7 @@ fun UserAssetScreen(
                             )
                         }
                     }
-                    IconButton(onClick = onDownloadClick) {
+                    IconButton(onClick = onDownloadClick, enabled = !downloadState.isRunning) {
                         Icon(painterResource(R.drawable.ic_cloud_download_24dp), contentDescription = stringResource(R.string.menu_item_download_file))
                     }
                 }
@@ -363,12 +380,14 @@ fun UserAssetScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun UserAssetItem(
+fun UserAssetItem(
     item: AssetUrlCache,
     extDir: File,
     onEdit: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    isDownloading: Boolean = false
 ) {
     val file = remember(item.guid, item.assetUrl.remarks) {
         extDir.listFiles()?.find { it.name == item.assetUrl.remarks }
@@ -405,6 +424,13 @@ private fun UserAssetItem(
                 maxLines = 1,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+        if (isDownloading) {
+            LoadingIndicator(
+                modifier = Modifier.size(22.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
         }
         if (showEditButton) {
             IconButton(onClick = onEdit) {
