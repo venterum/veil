@@ -218,7 +218,6 @@ class AllServerFragment : BaseFragment<FragmentAllServerBinding>() {
             EConfigType.CUSTOM -> ServerCustomConfigActivity::class.java
             EConfigType.POLICYGROUP -> ServerGroupActivity::class.java
             EConfigType.PROXYCHAIN -> ServerProxyChainActivity::class.java
-            EConfigType.OLCRTC -> OlcrtcActivity::class.java
             else -> ServerActivity::class.java
         }
 

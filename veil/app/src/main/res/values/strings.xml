@@ -99,6 +99,27 @@
         name="del_invalid_config_comfirm"
     >Please test before deleting! Confirm delete ?</string>
     <string name="server_lab_remarks">remarks</string>
+    <string name="server_section_general">Server</string>
+    <string name="server_section_wireguard">WireGuard</string>
+    <string name="server_section_hysteria2">Bandwidth &amp; Port Hopping</string>
+    <string name="server_section_olcrtc">Session</string>
+    <string name="server_section_security">Security</string>
+    <string name="server_section_reality">REALITY</string>
+    <string name="server_section_tls_advanced">Advanced TLS</string>
+    <string name="server_option_none">(none)</string>
+    <string name="server_title_new_server">New server</string>
+    <string name="server_hint_untitled">No address yet</string>
+    <string name="server_help_title">About this protocol</string>
+    <string name="server_help_open_docs">Open documentation</string>
+    <string name="server_help_desc_vmess">VMess is the encrypted proxy protocol of Project V2Ray, with rich transport options.</string>
+    <string name="server_help_desc_vless">VLESS is a lightweight proxy protocol from XTLS with flow control and REALITY/TLS support.</string>
+    <string name="server_help_desc_trojan">Trojan is designed to be indistinguishable from ordinary HTTPS traffic.</string>
+    <string name="server_help_desc_shadowsocks">Shadowsocks is a fast, lightweight encrypted proxy.</string>
+    <string name="server_help_desc_socks">Plain SOCKS5 proxy without extra encryption. Best for trusted local networks.</string>
+    <string name="server_help_desc_http">Plain HTTP proxy without extra encryption. Best for trusted local networks.</string>
+    <string name="server_help_desc_wireguard">WireGuard is a fast, modern VPN tunnel with strong cryptography.</string>
+    <string name="server_help_desc_hysteria2">Hysteria2 is a high-performance QUIC-based proxy tuned for lossy networks.</string>
+    <string name="server_help_desc_olcrtc">olcRTC is an encrypted TCP-over-WebRTC tunnel disguised as an ordinary video call.</string>
     <string name="server_lab_address">address</string>
     <string name="server_lab_port">port</string>
     <string name="server_lab_id">id</string>

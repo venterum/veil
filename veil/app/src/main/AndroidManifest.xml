@@ -160,10 +160,6 @@
             android:name=".ui.LogcatActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.OlcrtcActivity"
-            android:exported="false"
-            android:windowSoftInputMode="stateUnchanged" />
-        <activity
             android:name=".ui.RoutingSettingActivity"
             android:exported="false" />
         <activity

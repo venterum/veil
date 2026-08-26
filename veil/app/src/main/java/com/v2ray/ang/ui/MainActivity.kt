@@ -787,10 +787,6 @@ class MainActivity : HelperBaseActivity() {
             Intent()
                 .putExtra("subscriptionId", mainViewModel.subscriptionId)
                 .setClass(this, ServerProxyChainActivity::class.java)
-        } else if (createConfigType == EConfigType.OLCRTC.value) {
-            Intent()
-                .putExtra("subscriptionId", mainViewModel.subscriptionId)
-                .setClass(this, OlcrtcActivity::class.java)
         } else {
             Intent()
                 .putExtra("createConfigType", createConfigType)
