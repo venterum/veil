@@ -56,7 +56,11 @@ class CoreRootService : Service(), ServiceControl {
         super.onDestroy()
         setupJob?.cancel()
         RootProxyManager.stop(this)
-        CoreServiceManager.stopCoreLoop()
+        // Only stop the core if this instance is still the active service; a restart may
+        // have already replaced it. stopCoreLoop() blocks, so run it off the main thread.
+        if (CoreServiceManager.isCurrentService(this)) {
+            CoreServiceManager.stopCoreLoopAsync()
+        }
     }
 
     override fun getService(): Service = this

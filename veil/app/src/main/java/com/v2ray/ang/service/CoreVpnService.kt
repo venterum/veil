@@ -89,7 +89,7 @@ class CoreVpnService : VpnService(), ServiceControl {
 
     override fun onRevoke() {
         LogUtil.w(AppConfig.TAG, "StartCore-VPN: Permission revoked")
-        stopAllService()
+        serviceScope.launch { stopAllService() }
     }
 
 //    override fun onLowMemory() {
@@ -116,7 +116,11 @@ class CoreVpnService : VpnService(), ServiceControl {
             }
         }
 
-        NotificationManager.cancelNotification()
+        // Only cancel the notification if this instance is still the active service; a
+        // restart may have already replaced it and posted a new foreground notification.
+        if (CoreServiceManager.isCurrentService(this)) {
+            NotificationManager.cancelNotification()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

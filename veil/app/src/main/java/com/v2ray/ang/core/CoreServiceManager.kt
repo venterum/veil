@@ -36,12 +36,14 @@ import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
 import libv2ray.ProcessFinder
 import java.lang.ref.SoftReference
 import java.net.InetSocketAddress
+import java.util.concurrent.atomic.AtomicBoolean
 
 object CoreServiceManager {
 
@@ -50,6 +52,7 @@ object CoreServiceManager {
     private var currentConfig: ProfileItem? = null
     private var processFinder: XrayProcessFinder? = null
     private var browserDialer: IDialerService? = null
+    private val stopInProgress = AtomicBoolean(false)
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
@@ -112,6 +115,18 @@ object CoreServiceManager {
     }
 
     /**
+     * Cancels an in-progress connection attempt.
+     *
+     * Sets a cross-process cancellation flag (consumed by [doStartCoreLoop]) so that a start
+     * which is still generating its config aborts before launching the core, then sends the
+     * regular stop message to tear down any service that has already started.
+     */
+    fun cancelVService(context: Context) {
+        MmkvManager.encodeSettings(AppConfig.PREF_CANCEL_CONNECT, true)
+        stopVService(context)
+    }
+
+    /**
      * Checks if the V2Ray service is running.
      * @return True if the service is running, false otherwise.
      */
@@ -133,6 +148,9 @@ object CoreServiceManager {
      */
     @Throws(Exception::class)
     private fun startContextService(context: Context) {
+        // Clear any pending cancellation from a previous attempt so a fresh start proceeds.
+        MmkvManager.encodeSettings(AppConfig.PREF_CANCEL_CONNECT, false)
+
         if (coreController.isRunning) {
             LogUtil.w(AppConfig.TAG, "StartCore-Manager: Core already running")
             return
@@ -242,6 +260,11 @@ object CoreServiceManager {
 
     @Throws(Exception::class)
     private fun doStartCoreLoop(service: Service, vpnInterface: ParcelFileDescriptor?) {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CANCEL_CONNECT)) {
+            LogUtil.i(AppConfig.TAG, "StartCore-Manager: Connect cancelled before startup")
+            error("Connection cancelled")
+        }
+
         val guid = MmkvManager.getSelectServer() ?: error("No server selected")
         val config = MmkvManager.decodeServerConfig(guid) ?: error("Failed to decode server config")
 
@@ -283,11 +306,27 @@ object CoreServiceManager {
 
         NotificationManager.showNotification(currentConfig)
         CoreNativeManager.reconcileBrowserDialer(dialerAddr)
+
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CANCEL_CONNECT)) {
+            LogUtil.i(AppConfig.TAG, "StartCore-Manager: Connect cancelled before core start")
+            error("Connection cancelled")
+        }
+
         coreController.startLoop(result.content, tunFd)
 
         if (!coreController.isRunning) {
             error("Core failed to start")
         }
+
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CANCEL_CONNECT)) {
+            // A cancel arrived while the core was starting; stop it immediately.
+            LogUtil.i(AppConfig.TAG, "StartCore-Manager: Connect cancelled during core start")
+            coreController.stopLoop()
+            error("Connection cancelled")
+        }
+
+        // Cancellation flag is no longer needed once the core has started.
+        MmkvManager.encodeSettings(AppConfig.PREF_CANCEL_CONNECT, false)
 
         if (browserDialer != null) {
             browserDialer!!.stop()
@@ -316,13 +355,22 @@ object CoreServiceManager {
     fun stopCoreLoop(): Boolean {
         val service = getService() ?: return false
 
-        if (coreController.isRunning) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    coreController.stopLoop()
-                } catch (e: Exception) {
-                    LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop V2Ray loop", e)
+        // Stop the core synchronously so callers (e.g. a restart sequence) can rely on
+        // the core having actually released its ports before proceeding. The Go side
+        // sets IsRunning=false *before* invoking the shutdown() callback, so the re-entrant
+        // call that comes back through CoreCallback.shutdown() is skipped by the
+        // stopInProgress guard instead of recursively calling stopLoop().
+        if (stopInProgress.compareAndSet(false, true)) {
+            try {
+                if (coreController.isRunning) {
+                    try {
+                        coreController.stopLoop()
+                    } catch (e: Exception) {
+                        LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop V2Ray loop", e)
+                    }
                 }
+            } finally {
+                stopInProgress.set(false)
             }
         }
 
@@ -349,6 +397,16 @@ object CoreServiceManager {
         }
 
         return true
+    }
+
+    /**
+     * Asynchronous variant of [stopCoreLoop] for lifecycle callbacks that run on the
+     * main thread (e.g. [android.app.Service.onDestroy]).
+     */
+    fun stopCoreLoopAsync() {
+        CoroutineScope(Dispatchers.IO).launch {
+            stopCoreLoop()
+        }
     }
 
     /**
@@ -432,6 +490,14 @@ object CoreServiceManager {
      */
     private fun getService(): Service? {
         return serviceControl?.get()?.getService()
+    }
+
+    /**
+     * Whether the given service is still the currently registered [ServiceControl].
+     * Used by Service.onDestroy() to avoid tearing down a freshly-restarted core.
+     */
+    fun isCurrentService(service: Service): Boolean {
+        return getService() === service
     }
 
     /**
@@ -576,14 +642,24 @@ object CoreServiceManager {
                         stopContext.sendBroadcast(Intent(AppConfig.ACTION_STOP_TUN))
                     }
 
-                    serviceControl.stopService()
+                    // stopCoreLoop() now blocks until the core releases its ports, so run the
+                    // teardown off the main thread (onReceive runs on the main looper).
+                    CoroutineScope(Dispatchers.IO).launch {
+                        serviceControl.stopService()
+                    }
                 }
 
                 AppConfig.MSG_STATE_RESTART -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restart service")
-                    serviceControl.stopService()
-                    Thread.sleep(500L)
-                    startVService(serviceControl.getService())
+                    val appContext = serviceControl.getService().applicationContext
+                    CoroutineScope(Dispatchers.IO).launch {
+                        // stopCoreLoop() is synchronous, so by the time stopService() returns
+                        // the core has fully stopped and released its ports.
+                        serviceControl.stopService()
+                        // Let the old service finish onDestroy() before a new one is started.
+                        delay(300L)
+                        startVService(appContext)
+                    }
                 }
 
                 AppConfig.MSG_STATE_TUN_TOGGLE -> {

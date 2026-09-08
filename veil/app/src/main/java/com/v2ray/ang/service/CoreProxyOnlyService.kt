@@ -57,7 +57,11 @@ class CoreProxyOnlyService : Service(), ServiceControl {
     override fun onDestroy() {
         serviceScope.cancel()
         super.onDestroy()
-        CoreServiceManager.stopCoreLoop()
+        // Only stop the core if this instance is still the active service; a restart may
+        // have already replaced it. stopCoreLoop() blocks, so run it off the main thread.
+        if (CoreServiceManager.isCurrentService(this)) {
+            CoreServiceManager.stopCoreLoopAsync()
+        }
     }
 
     /**

@@ -366,6 +366,9 @@ class MainActivity : HelperBaseActivity() {
             if (!message.isNullOrEmpty()) {
                 showOrUpdateSnackbar(message)
             }
+            // A start failure (or a cancelled connection attempt) settles the loading state,
+            // otherwise the connect button would stay stuck in its loading spinner.
+            applyRunningState(isLoading = false, isRunning = mainViewModel.isRunning.value == true)
         }
         mainViewModel.startListenBroadcast()
         mainViewModel.initAssets(assets)
@@ -449,6 +452,13 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun handleFabAction() {
+        if (bottomBarState.isLoading) {
+            // The user tapped the button again while connecting — cancel the attempt.
+            CoreServiceManager.cancelVService(this)
+            applyRunningState(isLoading = false, isRunning = false)
+            return
+        }
+
         applyRunningState(isLoading = true, isRunning = false)
 
         if (mainViewModel.isRunning.value == true) {

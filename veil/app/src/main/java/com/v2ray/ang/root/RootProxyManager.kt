@@ -96,7 +96,7 @@ object RootProxyManager {
         return buildString {
             appendLine("set -e")
             appendLine("BIN='${bin.absolutePath}'")
-            appendLine("nohup sh -c 'while true; do echo ${AppConfig.ROOT_OOM_SCORE} > /proc/$corePid/oom_score_adj 2>/dev/null; sleep 5; done' >/dev/null 2>&1 &")
+            appendLine("nohup sh -c 'while [ -d /proc/$corePid ]; do echo ${AppConfig.ROOT_OOM_SCORE} > /proc/$corePid/oom_score_adj 2>/dev/null; sleep 5; done' >/dev/null 2>&1 &")
             appendLine("echo \$! > '$oomGuardPid'")
             appendLine("if [ ! -e /dev/net/tun ]; then mkdir -p /dev/net; mknod /dev/net/tun c 10 200; chmod 666 /dev/net/tun; fi")
             appendLine("cat > '$cfgFile' <<'HEVCFG'")

@@ -58,6 +58,7 @@ class DialerNativeService : IDialerService {
         private const val CONTROL_SOCKET_IDLE = 0
         private const val CONTROL_SOCKET_OPENING = 1
         private const val CONTROL_LOOP_DELAY_MS = 1000L
+        private const val MAX_RECONNECT_DELAY_MS = 30_000L
         private const val UNARY_BODY_WAIT_TIMEOUT_MS = 15_000L
         private val TOKEN_REGEX = Regex("""/websocket\?token=([^"'\s]+)""")
         private val METHODS_WITHOUT_BODY = setOf("GET", "HEAD")
@@ -115,6 +116,12 @@ class DialerNativeService : IDialerService {
     private var controlUrl: String? = null
     private var loopJob: Job? = null
     private var client: OkHttpClient? = null
+
+    @Volatile
+    private var nextReconnectAllowedAtMs = 0L
+
+    @Volatile
+    private var reconnectDelayMs = CONTROL_LOOP_DELAY_MS
 
     @Suppress("UNUSED_PARAMETER")
     override fun start(context: Context, dialerAddr: String) {
@@ -186,6 +193,7 @@ class DialerNativeService : IDialerService {
         val localClient = client ?: return false
         if (!running.get()) return false
         val url = controlUrl ?: return false
+        if (System.currentTimeMillis() < nextReconnectAllowedAtMs) return false
         if (!controlSocketState.compareAndSet(
                 CONTROL_SOCKET_IDLE,
                 CONTROL_SOCKET_OPENING
@@ -207,6 +215,28 @@ class DialerNativeService : IDialerService {
 
     private fun poolState(): String {
         return "idleGate=${controlSocketState.get()} liveSockets=${controlSockets.size}"
+    }
+
+    private fun onControlSocketReady() {
+        reconnectDelayMs = CONTROL_LOOP_DELAY_MS
+        nextReconnectAllowedAtMs = 0L
+    }
+
+    /**
+     * Backs off reconnection when a control socket closes without ever handling a task.
+     * Prevents a tight open/close loop (and the resulting TLS handshake + battery drain)
+     * when the server rejects idle connections quickly.
+     */
+    private fun scheduleReconnect() {
+        val delayMs = reconnectDelayMs
+        nextReconnectAllowedAtMs = System.currentTimeMillis() + delayMs
+        reconnectDelayMs = (reconnectDelayMs * 2).coerceAtMost(MAX_RECONNECT_DELAY_MS)
+        scope.launch {
+            delay(delayMs)
+            if (running.get() && controlSocketState.get() == CONTROL_SOCKET_IDLE) {
+                maintainControlSocketPool()
+            }
+        }
     }
 
     private fun debug(message: String, throwable: Throwable? = null) {
@@ -290,6 +320,7 @@ class DialerNativeService : IDialerService {
         override fun onMessage(webSocket: WebSocket, text: String) {
             if (taskAccepted.compareAndSet(false, true)) {
                 controlSocketState.set(CONTROL_SOCKET_IDLE)
+                onControlSocketReady()
                 debug(
                     "BrowserDialer: control socket accepted task socketId=$socketId url=$controlUrl textSize=${text.length} ${poolState()}"
                 )
@@ -358,7 +389,7 @@ class DialerNativeService : IDialerService {
             val removed = controlSockets.remove(webSocket)
             if (!taskAccepted.get()) {
                 controlSocketState.set(CONTROL_SOCKET_IDLE)
-                tryOpenNextControlSocket()
+                scheduleReconnect()
             }
             val started = taskStartedAtMs.get()
             val duration =

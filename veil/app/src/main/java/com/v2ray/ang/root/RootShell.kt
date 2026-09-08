@@ -26,14 +26,34 @@ object RootShell {
             val process = ProcessBuilder("su", "-c", command)
                 .redirectErrorStream(true)
                 .start()
-            val output = process.inputStream.bufferedReader().use { it.readText() }
+
+            // Drain stdout on a background thread so the pipe never fills up and
+            // blocks the process, while the main thread enforces the timeout.
+            val output = StringBuilder()
+            val reader = Thread({
+                try {
+                    process.inputStream.bufferedReader().use { r ->
+                        val buf = CharArray(4096)
+                        var n: Int
+                        while (r.read(buf).also { n = it } != -1) {
+                            output.append(buf, 0, n)
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Stream is closed when the process is destroyed or exits.
+                }
+            }, "rootshell-stdout")
+            reader.isDaemon = true
+            reader.start()
+
             val finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
             if (!finished) {
                 process.destroy()
                 LogUtil.e(AppConfig.TAG, "RootShell: timed out: $command")
-                return Result(-1, output)
+                return Result(-1, output.toString())
             }
-            val result = Result(process.exitValue(), output)
+            reader.join()
+            val result = Result(process.exitValue(), output.toString())
             if (!result.success) {
                 LogUtil.w(AppConfig.TAG, "RootShell: '$command' exited ${result.code}: ${output.trim()}")
             }

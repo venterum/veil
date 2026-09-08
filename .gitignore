@@ -71,4 +71,7 @@ Thumbs.db
 # Ignore agent context file (local AI/agent instructions)
 AGENTS.md
 
+# Ignore changelog file
+CHANGELOG.md
+
 # Separate projects (not part of veil)
