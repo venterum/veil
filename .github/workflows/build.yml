@@ -69,6 +69,7 @@ jobs:
     - name: Build libv2ray (Xray + olcRTC)
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
+        go install golang.org/x/mobile/cmd/gobind@latest
         export PATH="$(go env GOPATH)/bin:$PATH"
         bash compile-libv2ray.sh
 
