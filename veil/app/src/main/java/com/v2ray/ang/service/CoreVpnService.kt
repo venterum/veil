@@ -89,7 +89,7 @@ class CoreVpnService : VpnService(), ServiceControl {
 
     override fun onRevoke() {
         LogUtil.w(AppConfig.TAG, "StartCore-VPN: Permission revoked")
-        serviceScope.launch { stopAllService() }
+        stopAllService()
     }
 
 //    override fun onLowMemory() {

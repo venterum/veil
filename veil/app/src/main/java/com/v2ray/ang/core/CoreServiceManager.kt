@@ -43,7 +43,6 @@ import libv2ray.CoreController
 import libv2ray.ProcessFinder
 import java.lang.ref.SoftReference
 import java.net.InetSocketAddress
-import java.util.concurrent.atomic.AtomicBoolean
 
 object CoreServiceManager {
 
@@ -52,7 +51,6 @@ object CoreServiceManager {
     private var currentConfig: ProfileItem? = null
     private var processFinder: XrayProcessFinder? = null
     private var browserDialer: IDialerService? = null
-    private val stopInProgress = AtomicBoolean(false)
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
@@ -355,22 +353,13 @@ object CoreServiceManager {
     fun stopCoreLoop(): Boolean {
         val service = getService() ?: return false
 
-        // Stop the core synchronously so callers (e.g. a restart sequence) can rely on
-        // the core having actually released its ports before proceeding. The Go side
-        // sets IsRunning=false *before* invoking the shutdown() callback, so the re-entrant
-        // call that comes back through CoreCallback.shutdown() is skipped by the
-        // stopInProgress guard instead of recursively calling stopLoop().
-        if (stopInProgress.compareAndSet(false, true)) {
-            try {
-                if (coreController.isRunning) {
-                    try {
-                        coreController.stopLoop()
-                    } catch (e: Exception) {
-                        LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop V2Ray loop", e)
-                    }
+        if (coreController.isRunning) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    coreController.stopLoop()
+                } catch (e: Exception) {
+                    LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop V2Ray loop", e)
                 }
-            } finally {
-                stopInProgress.set(false)
             }
         }
 
@@ -400,12 +389,14 @@ object CoreServiceManager {
     }
 
     /**
-     * Asynchronous variant of [stopCoreLoop] for lifecycle callbacks that run on the
-     * main thread (e.g. [android.app.Service.onDestroy]).
+     * Waits (up to [timeoutMs]) until the core has fully stopped and released its ports.
+     * Used by the restart sequence, which must not start a fresh core while the previous
+     * one is still shutting down asynchronously.
      */
-    fun stopCoreLoopAsync() {
-        CoroutineScope(Dispatchers.IO).launch {
-            stopCoreLoop()
+    suspend fun awaitCoreStopped(timeoutMs: Long = 10_000L) {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (coreController.isRunning && System.currentTimeMillis() < deadline) {
+            delay(50L)
         }
     }
 
@@ -642,21 +633,19 @@ object CoreServiceManager {
                         stopContext.sendBroadcast(Intent(AppConfig.ACTION_STOP_TUN))
                     }
 
-                    // stopCoreLoop() now blocks until the core releases its ports, so run the
-                    // teardown off the main thread (onReceive runs on the main looper).
-                    CoroutineScope(Dispatchers.IO).launch {
-                        serviceControl.stopService()
-                    }
+                    serviceControl.stopService()
                 }
 
                 AppConfig.MSG_STATE_RESTART -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restart service")
                     val appContext = serviceControl.getService().applicationContext
                     CoroutineScope(Dispatchers.IO).launch {
-                        // stopCoreLoop() is synchronous, so by the time stopService() returns
-                        // the core has fully stopped and released its ports.
                         serviceControl.stopService()
-                        // Let the old service finish onDestroy() before a new one is started.
+                        // stopCoreLoop() stops the core asynchronously, so wait until it has
+                        // actually released its ports before starting a fresh core.
+                        awaitCoreStopped()
+                        // Give the core's shutdown() callback a moment to finish its teardown
+                        // (stopSelf + interface close) before a new service takes over.
                         delay(300L)
                         startVService(appContext)
                     }
