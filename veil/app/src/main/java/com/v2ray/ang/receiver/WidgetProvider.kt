@@ -164,7 +164,8 @@ private fun VeilWidgetContent(isRunning: Boolean) {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(colors.surface)
+            // widgetBackground — фон как у стандартных виджетов Google/системы (светлее surface)
+            .background(colors.widgetBackground)
             .cornerRadius(999.dp)
             .padding(all = 12.dp),
         contentAlignment = Alignment.Center
