@@ -16,6 +16,7 @@ enum class EConfigType(val value: Int, val protocolScheme: String) {
     HYSTERIA(900, AppConfig.HYSTERIA),
     HTTP(10, AppConfig.HTTP),
     OLCRTC(11, AppConfig.OLCRTC),
+    OPENFLUX(12, AppConfig.OPENFLUX),
     POLICYGROUP(101, AppConfig.CUSTOM),
     PROXYCHAIN(102, AppConfig.CUSTOM);
 

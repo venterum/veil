@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.core.OpenFluxManager
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.enums.NetworkType
@@ -32,6 +33,7 @@ class ServerEditUiState(
     companion object {
         val OLCRTC_CARRIERS = listOf("jitsi", "wbstream", "telemost")
         val OLCRTC_TRANSPORTS = listOf("datachannel", "vp8channel", "seichannel", "videochannel")
+        val OPENFLUX_TRANSPORTS = OpenFluxManager.TRANSPORTS
         private val TRANSPORT_TYPES =
             listOf(EConfigType.VMESS, EConfigType.SHADOWSOCKS, EConfigType.VLESS, EConfigType.TROJAN)
     }
@@ -39,9 +41,9 @@ class ServerEditUiState(
     val securityOptions: List<String> =
         if (configType == EConfigType.SHADOWSOCKS) shadowsocksSecuritys else securitys
 
-    val showAddressPort = configType != EConfigType.OLCRTC
+    val showAddressPort = configType != EConfigType.OLCRTC && configType != EConfigType.OPENFLUX
     val showCredential = configType !in setOf(
-        EConfigType.SOCKS, EConfigType.HTTP, EConfigType.WIREGUARD, EConfigType.OLCRTC
+        EConfigType.SOCKS, EConfigType.HTTP, EConfigType.WIREGUARD, EConfigType.OLCRTC, EConfigType.OPENFLUX
     )
     val showSocksAuth = configType == EConfigType.SOCKS || configType == EConfigType.HTTP
     val showVlessExtras = configType == EConfigType.VLESS
@@ -52,6 +54,7 @@ class ServerEditUiState(
     val showWireguardSection = configType == EConfigType.WIREGUARD
     val showHysteriaSection = configType == EConfigType.HYSTERIA2
     val showOlcrtcSection = configType == EConfigType.OLCRTC
+    val showOpenfluxSection = configType == EConfigType.OPENFLUX
 
     var remarks by mutableStateOf("")
     var address by mutableStateOf("")
@@ -107,6 +110,12 @@ class ServerEditUiState(
     var olcrtcClientId by mutableStateOf("")
     var olcrtcKeyHex by mutableStateOf("")
     var olcrtcEngine by mutableStateOf("")
+
+    var openfluxTransportIndex by mutableStateOf(0)
+    var openfluxUrl by mutableStateOf("")
+    var openfluxMaxToken by mutableStateOf("")
+    var openfluxMaxUid by mutableStateOf("")
+    var openfluxKey by mutableStateOf("")
 
     val network: String get() = networkOptions.getOrElse(networkIndex) { networkOptions[0] }
     val flow: String get() = flowOptions.getOrElse(flowIndex) { flowOptions[0] }
@@ -216,6 +225,17 @@ class ServerEditUiState(
             olcrtcKeyHex = config.olcrtcKeyHex.orEmpty()
             olcrtcEngine = config.olcrtcEngine.orEmpty()
         }
+
+        if (config.configType == EConfigType.OPENFLUX) {
+            val transportIdx = OPENFLUX_TRANSPORTS.indexOf(
+                config.openfluxTransport?.takeIf { it.isNotBlank() } ?: OpenFluxManager.TRANSPORT_YANDEX
+            )
+            if (transportIdx >= 0) openfluxTransportIndex = transportIdx
+            openfluxUrl = config.openfluxUrl.orEmpty()
+            openfluxMaxToken = config.openfluxMaxToken.orEmpty()
+            openfluxMaxUid = config.openfluxMaxUid.orEmpty()
+            openfluxKey = config.openfluxKey.orEmpty()
+        }
     }
 
     fun transportTypes(networkValue: String): List<String> = when (networkValue) {
@@ -294,6 +314,13 @@ class ServerEditUiState(
     val showOlcrtcEngine: Boolean
         get() = OLCRTC_TRANSPORTS.getOrElse(olcrtcTransportIndex) { "" } != "datachannel"
 
+    val openfluxTransport: String
+        get() = OPENFLUX_TRANSPORTS.getOrElse(openfluxTransportIndex) { OPENFLUX_TRANSPORTS[0] }
+    val showOpenfluxUrl: Boolean
+        get() = openfluxTransport != OpenFluxManager.TRANSPORT_ONEME
+    val showOpenfluxMaxCredentials: Boolean
+        get() = openfluxTransport == OpenFluxManager.TRANSPORT_ONEME
+
     fun validate(): Int? {
         if (remarks.isBlank()) return R.string.server_lab_remarks
         if (showAddressPort) {
@@ -312,6 +339,14 @@ class ServerEditUiState(
         if (configType == EConfigType.OLCRTC) {
             if (olcrtcRoomId.isBlank()) return R.string.olcrtc_lab_room_id
             if (olcrtcKeyHex.isBlank()) return R.string.olcrtc_lab_key_hex
+        }
+        if (configType == EConfigType.OPENFLUX) {
+            if (openfluxTransport != OpenFluxManager.TRANSPORT_ONEME && openfluxUrl.isBlank()) {
+                return R.string.openflux_lab_url
+            }
+            if (openfluxTransport == OpenFluxManager.TRANSPORT_ONEME && openfluxMaxToken.isBlank()) {
+                return R.string.openflux_lab_max_token
+            }
         }
         if (configType == EConfigType.TROJAN && streamSecurity.isBlank()) {
             return R.string.server_lab_stream_security
@@ -376,6 +411,14 @@ class ServerEditUiState(
                 config.olcrtcClientId = olcrtcClientId.trim().nullIfBlank()
                 config.olcrtcKeyHex = olcrtcKeyHex.trim()
                 config.olcrtcEngine = olcrtcEngine.trim().nullIfBlank()
+            }
+
+            EConfigType.OPENFLUX -> {
+                config.openfluxTransport = openfluxTransport
+                config.openfluxUrl = openfluxUrl.trim().nullIfBlank()
+                config.openfluxMaxToken = openfluxMaxToken.trim().nullIfBlank()
+                config.openfluxMaxUid = openfluxMaxUid.trim().nullIfBlank()
+                config.openfluxKey = openfluxKey.trim().nullIfBlank()
             }
 
             else -> Unit

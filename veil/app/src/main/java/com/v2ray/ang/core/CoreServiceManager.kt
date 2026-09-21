@@ -170,6 +170,7 @@ object CoreServiceManager {
 
         if (!config.configType.isComplexType()
             && config.configType != EConfigType.OLCRTC
+            && config.configType != EConfigType.OPENFLUX
             && !Utils.isValidUrl(config.server)
             && !Utils.isPureIpAddress(config.server.orEmpty())
         ) {
@@ -279,6 +280,20 @@ object CoreServiceManager {
             MmkvManager.encodeServerConfig(guid, config)
         }
 
+        if (config.configType == EConfigType.OPENFLUX) {
+            LogUtil.w(
+                AppConfig.TAG,
+                "StartCore-Manager: OPENFLUX config detected, starting OpenFlux transport=${config.openfluxTransport}"
+            )
+            OpenFluxManager.socketProtector = serviceControl?.get()?.let { sc ->
+                { fd -> sc.vpnProtect(fd) }
+            }
+            if (!OpenFluxManager.start(service, config)) {
+                error("Failed to start OpenFlux")
+            }
+            MmkvManager.encodeServerConfig(guid, config)
+        }
+
         val result = CoreConfigManager.getV2rayConfig(service, guid)
         LogUtil.d(AppConfig.TAG, result.content)
         if (!result.status) {
@@ -373,6 +388,11 @@ object CoreServiceManager {
         if (currentConfig?.configType == EConfigType.OLCRTC) {
             OlcrtcManager.stop()
             OlcrtcManager.socketProtector = null
+        }
+
+        if (currentConfig?.configType == EConfigType.OPENFLUX) {
+            OpenFluxManager.stop()
+            OpenFluxManager.socketProtector = null
         }
 
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")

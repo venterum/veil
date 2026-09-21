@@ -60,6 +60,7 @@
     <string name="add_config_wireguard" translatable="false">WireGuard</string>
     <string name="add_config_hysteria2" translatable="false">Hysteria2</string>
     <string name="add_config_olcrtc" translatable="false">olcRTC</string>
+    <string name="add_config_openflux" translatable="false">OpenFlux</string>
     <string name="menu_item_save_config">Save config</string>
     <string name="menu_item_edit_config">Edit config</string>
     <string name="menu_item_del_config">Delete config</string>
@@ -94,6 +95,7 @@
         name="menu_item_import_config_manually_hysteria2"
     >Add [Hysteria2]</string>
     <string name="menu_item_import_config_manually_olcrtc">Add [olcRTC]</string>
+    <string name="menu_item_import_config_manually_openflux">Add [OpenFlux]</string>
     <string name="del_config_comfirm">Confirm delete ?</string>
     <string
         name="del_invalid_config_comfirm"
@@ -103,6 +105,7 @@
     <string name="server_section_wireguard">WireGuard</string>
     <string name="server_section_hysteria2">Bandwidth &amp; Port Hopping</string>
     <string name="server_section_olcrtc">Session</string>
+    <string name="server_section_openflux">OpenFlux</string>
     <string name="server_section_security">Security</string>
     <string name="server_section_reality">REALITY</string>
     <string name="server_section_tls_advanced">Advanced TLS</string>
@@ -120,6 +123,7 @@
     <string name="server_help_desc_wireguard">WireGuard is a fast, modern VPN tunnel with strong cryptography.</string>
     <string name="server_help_desc_hysteria2">Hysteria2 is a high-performance QUIC-based proxy tuned for lossy networks.</string>
     <string name="server_help_desc_olcrtc">olcRTC is an encrypted TCP-over-WebRTC tunnel disguised as an ordinary video call.</string>
+    <string name="server_help_desc_openflux">OpenFlux is a TCP tunnel with pluggable transports (Yandex Docs, MAX, Cups.online). The client runs a local SOCKS5 proxy; you must run an OpenFlux exit node on a VPS.</string>
     <string name="server_lab_address">address</string>
     <string name="server_lab_port">port</string>
     <string name="server_lab_id">id</string>
@@ -244,6 +248,16 @@
     <string
         name="olcrtc_lab_engine"
     >Transport parameters (key=value&amp;...)</string>
+    <string name="openflux_lab_transport">Transport</string>
+    <string name="openflux_lab_url">Document URL / room list</string>
+    <string
+        name="openflux_hint_url"
+    >Public document URL, e.g. https://docs.yandex.ru/docs/view?url=… (same URL as the exit node), or the base64 room list printed by the exit node</string>
+    <string name="openflux_lab_max_token">MAX token</string>
+    <string name="openflux_lab_max_uid">MAX peer user ID</string>
+    <string
+        name="openflux_lab_key"
+    >Encryption key (optional, shared secret)</string>
     <string
         name="toast_allow_insecure_deprecated"
     >WARNING: Skipping certificate verification "allowInsecure" will be disabled in August 2026. Please use certificate fingerprints as soon as possible. This feature will not be available after its expiration.</string>
@@ -537,6 +551,11 @@
     <string
         name="summary_pref_server_card_style"
     >Compact card with overflow menu. Disable to use the classic card with action buttons.</string>
+
+    <string name="title_pref_server_emoji_avatar">Emoji &amp; letter avatars</string>
+    <string
+        name="summary_pref_server_emoji_avatar"
+    >Show a leading avatar on compact cards built from the name: an emoji if the name starts with one, otherwise the first letter. Applies to the compact style only and is hidden in two-column mode.</string>
 
     <string name="title_pref_group_all_display">Enable show all groups</string>
     <string

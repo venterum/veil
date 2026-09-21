@@ -69,6 +69,7 @@ object AppConfig {
     const val PREF_GOOGLE_SANS = "pref_google_sans"
     const val PREF_APP_ICON = "pref_app_icon"
     const val PREF_SERVER_CARD_STYLE = "pref_server_card_style"
+    const val PREF_SERVER_EMOJI_AVATAR = "pref_server_emoji_avatar"
     const val PREF_SERVER_SEARCH_BUTTON_ENABLED = "pref_server_search_button_enabled"
     const val PREF_IPV6_ENABLED = "pref_ipv6_enabled"
     const val PREF_PREFER_IPV6 = "pref_prefer_ipv6"
@@ -175,6 +176,7 @@ object AppConfig {
     const val PORT_LOCAL_DNS = "10853"
     const val PORT_SOCKS = "10808"
     const val PORT_OLCRTC_SOCKS = "10809"
+    const val PORT_OPENFLUX_SOCKS = "10811"
     const val WIREGUARD_LOCAL_ADDRESS_V4 = "172.16.0.2/32"
     const val WIREGUARD_LOCAL_ADDRESS_V6 = "2606:4700:110:8f81:d551:a0:532e:a2b3/128"
     const val WIREGUARD_LOCAL_MTU = "1420"
@@ -222,6 +224,7 @@ object AppConfig {
     const val HYSTERIA2 = "hysteria2://"
     const val HY2 = "hy2://"
     const val OLCRTC = "olcrtc://"
+    const val OPENFLUX = "openflux://"
 
     /** Give a good name to this, IDK*/
     const val VPN = "VPN"

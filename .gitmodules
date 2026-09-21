@@ -7,3 +7,6 @@
 [submodule "olcrtc"]
 	path = olcrtc
 	url = git@github.com:openlibrecommunity/olcrtc.git
+[submodule "OpenFlux"]
+	path = OpenFlux
+	url = https://github.com/p1neappleXpress/OpenFlux

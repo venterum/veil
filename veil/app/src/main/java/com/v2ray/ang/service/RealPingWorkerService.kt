@@ -3,6 +3,7 @@ package com.v2ray.ang.service
 import android.content.Context
 import com.v2ray.ang.core.CoreConfigManager
 import com.v2ray.ang.core.CoreNativeManager
+import com.v2ray.ang.core.OpenFluxManager
 import com.v2ray.ang.dto.RealPingEvent
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isComplexType
@@ -83,6 +84,11 @@ class RealPingWorkerService(
         val retFailure = -1L
 
         val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
+
+        if (config.configType == EConfigType.OPENFLUX) {
+            return OpenFluxManager.ping(config, SettingsManager.getDelayTestUrl())
+        }
+
         if (!config.configType.isComplexType()
             && config.configType != EConfigType.HYSTERIA2
             && config.server.isNotNullEmpty()

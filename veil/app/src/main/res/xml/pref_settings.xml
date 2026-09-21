@@ -57,6 +57,14 @@
         <SwitchPreferenceCompat
             android:widgetLayout="@layout/preference_material_switch"
             android:defaultValue="true"
+            android:dependency="pref_server_card_style"
+            android:key="pref_server_emoji_avatar"
+            android:summary="@string/summary_pref_server_emoji_avatar"
+            android:title="@string/title_pref_server_emoji_avatar" />
+
+        <SwitchPreferenceCompat
+            android:widgetLayout="@layout/preference_material_switch"
+            android:defaultValue="true"
             android:key="pref_server_search_button_enabled"
             android:summary="@string/summary_pref_server_search_button"
             android:title="@string/title_pref_server_search_button" />

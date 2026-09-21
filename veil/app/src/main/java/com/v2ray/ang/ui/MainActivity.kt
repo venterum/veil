@@ -659,7 +659,8 @@ class MainActivity : HelperBaseActivity() {
         R.id.import_manually_trojan,
         R.id.import_manually_wireguard,
         R.id.import_manually_hysteria2,
-        R.id.import_manually_olcrtc -> handleImportMenuAction(item.itemId)
+        R.id.import_manually_olcrtc,
+        R.id.import_manually_openflux -> handleImportMenuAction(item.itemId)
 
         R.id.export_all -> {
             exportAll()
@@ -726,6 +727,7 @@ class MainActivity : HelperBaseActivity() {
             R.id.import_manually_wireguard -> importManually(EConfigType.WIREGUARD.value)
             R.id.import_manually_hysteria2 -> importManually(EConfigType.HYSTERIA2.value)
             R.id.import_manually_olcrtc -> importManually(EConfigType.OLCRTC.value)
+            R.id.import_manually_openflux -> importManually(EConfigType.OPENFLUX.value)
             else -> return false
         }
         return true

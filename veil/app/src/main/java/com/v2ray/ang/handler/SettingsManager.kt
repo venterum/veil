@@ -571,6 +571,14 @@ object SettingsManager {
     }
 
     /**
+     * Whether the compact server card shows a leading avatar block built from
+     * the remark (an emoji if present, otherwise the first character).
+     */
+    fun getServerEmojiAvatar(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_SERVER_EMOJI_AVATAR, true)
+    }
+
+    /**
      *  Check if process routing can be used.
      */
     fun canUseProcessRouting(): Boolean {

@@ -56,6 +56,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     private var selectedGuid by mutableStateOf(MmkvManager.getSelectServer().orEmpty())
     private var doubleColumn by mutableStateOf(false)
     private var cardStyleNew by mutableStateOf(true)
+    private var showEmojiAvatar by mutableStateOf(true)
     private var cachedServers by mutableStateOf<List<ServersCache>>(emptyList())
     private var hasShown by mutableStateOf(false)
 
@@ -111,6 +112,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
                             servers = displayedServers,
                             isRunning = running,
                             cardStyleNew = cardStyleNew,
+                            showEmojiAvatar = showEmojiAvatar,
                             doubleColumn = doubleColumn,
                             grouped = false,
                             showIcons = true,
@@ -138,6 +140,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     private fun refreshDisplayFlags() {
         doubleColumn = MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)
         cardStyleNew = SettingsManager.getServerCardStyle() == "new"
+        showEmojiAvatar = SettingsManager.getServerEmojiAvatar()
     }
 
     override fun onResume() {

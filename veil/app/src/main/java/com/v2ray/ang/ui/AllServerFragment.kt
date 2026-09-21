@@ -59,6 +59,7 @@ class AllServerFragment : BaseFragment<FragmentAllServerBinding>() {
     private var grouped by mutableStateOf(false)
     private var doubleColumn by mutableStateOf(false)
     private var cardStyleNew by mutableStateOf(true)
+    private var showEmojiAvatar by mutableStateOf(true)
     private var showIcons by mutableStateOf(false)
     private var cachedServers by mutableStateOf<List<ServersCache>>(emptyList())
     private var hasShown by mutableStateOf(false)
@@ -115,6 +116,7 @@ class AllServerFragment : BaseFragment<FragmentAllServerBinding>() {
                             servers = displayedServers,
                             isRunning = running,
                             cardStyleNew = cardStyleNew,
+                            showEmojiAvatar = showEmojiAvatar,
                             doubleColumn = doubleColumn,
                             grouped = grouped,
                             showIcons = showIcons,
@@ -143,6 +145,7 @@ class AllServerFragment : BaseFragment<FragmentAllServerBinding>() {
         grouped = mainViewModel.isAllGroupedMode()
         doubleColumn = MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)
         cardStyleNew = SettingsManager.getServerCardStyle() == "new"
+        showEmojiAvatar = SettingsManager.getServerEmojiAvatar()
         showIcons = mainViewModel.shouldShowAllTabIcons()
     }
 

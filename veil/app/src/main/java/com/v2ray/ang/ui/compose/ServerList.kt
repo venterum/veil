@@ -62,9 +62,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.emoji2.text.EmojiCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.OlcrtcManager
@@ -206,6 +208,7 @@ fun ServerListScreen(
     servers: List<ServersCache>,
     isRunning: Boolean,
     cardStyleNew: Boolean,
+    showEmojiAvatar: Boolean,
     doubleColumn: Boolean,
     grouped: Boolean,
     showIcons: Boolean,
@@ -227,6 +230,7 @@ fun ServerListScreen(
             sections = sections,
             isRunning = isRunning,
             cardStyleNew = cardStyleNew,
+            showEmojiAvatar = showEmojiAvatar,
             selectedGuid = selectedGuid,
             collapsedIds = collapsedIds,
             listState = listState,
@@ -241,6 +245,7 @@ fun ServerListScreen(
             servers = servers,
             isRunning = isRunning,
             cardStyleNew = cardStyleNew,
+            showEmojiAvatar = showEmojiAvatar,
             showIcons = showIcons,
             showSubscriptionChip = showSubscriptionChip,
             selectedGuid = selectedGuid,
@@ -256,6 +261,7 @@ fun ServerListScreen(
             servers = servers,
             isRunning = isRunning,
             cardStyleNew = cardStyleNew,
+            showEmojiAvatar = showEmojiAvatar,
             showIcons = showIcons,
             showSubscriptionChip = showSubscriptionChip,
             selectedGuid = selectedGuid,
@@ -274,6 +280,7 @@ private fun FlatServerList(
     servers: List<ServersCache>,
     isRunning: Boolean,
     cardStyleNew: Boolean,
+    showEmojiAvatar: Boolean,
     showIcons: Boolean,
     showSubscriptionChip: Boolean,
     selectedGuid: String?,
@@ -305,6 +312,7 @@ private fun FlatServerList(
                         isSelected = sc.guid == selectedGuid,
                         isRunning = isRunning,
                         cardStyleNew = cardStyleNew,
+                        showEmojiAvatar = showEmojiAvatar,
                         showIcons = showIcons,
                         doubleColumn = false,
                         grouped = false,
@@ -326,6 +334,7 @@ private fun GridServerList(
     servers: List<ServersCache>,
     isRunning: Boolean,
     cardStyleNew: Boolean,
+    showEmojiAvatar: Boolean,
     showIcons: Boolean,
     showSubscriptionChip: Boolean,
     selectedGuid: String?,
@@ -358,6 +367,7 @@ private fun GridServerList(
                         isSelected = sc.guid == selectedGuid,
                         isRunning = isRunning,
                         cardStyleNew = cardStyleNew,
+                        showEmojiAvatar = showEmojiAvatar,
                         showIcons = showIcons,
                         doubleColumn = true,
                         grouped = false,
@@ -381,6 +391,7 @@ private fun GroupedServerList(
     sections: List<ServerSection>,
     isRunning: Boolean,
     cardStyleNew: Boolean,
+    showEmojiAvatar: Boolean,
     selectedGuid: String?,
     collapsedIds: Set<String>,
     listState: LazyListState,
@@ -403,6 +414,7 @@ private fun GroupedServerList(
                 total = sections.size,
                 isRunning = isRunning,
                 cardStyleNew = cardStyleNew,
+                showEmojiAvatar = showEmojiAvatar,
                 selectedGuid = selectedGuid,
                 isExpanded = section.subscriptionId !in collapsedIds,
                 onToggle = { onToggleGroup(section.subscriptionId) },
@@ -424,6 +436,7 @@ private fun GroupSection(
     total: Int,
     isRunning: Boolean,
     cardStyleNew: Boolean,
+    showEmojiAvatar: Boolean,
     selectedGuid: String?,
     isExpanded: Boolean,
     onToggle: () -> Unit,
@@ -537,6 +550,7 @@ private fun GroupSection(
                             isSelected = sc.guid == selectedGuid,
                             isRunning = isRunning,
                             cardStyleNew = cardStyleNew,
+                            showEmojiAvatar = showEmojiAvatar,
                             showIcons = false,
                             doubleColumn = false,
                             grouped = true,
@@ -563,6 +577,7 @@ private fun ServerCard(
     isSelected: Boolean,
     isRunning: Boolean,
     cardStyleNew: Boolean,
+    showEmojiAvatar: Boolean,
     showIcons: Boolean,
     doubleColumn: Boolean,
     grouped: Boolean,
@@ -577,6 +592,16 @@ private fun ServerCard(
     val guid = server.guid
 
     val name = profile.remarks
+    val (leadingEmoji, displayName) = remember(name) { extractLeadingEmoji(name) }
+    val avatarLabel = remember(name, showEmojiAvatar, doubleColumn) {
+        if (showEmojiAvatar && !doubleColumn) {
+            leadingEmoji ?: initialAvatarLabel(displayName)
+        } else {
+            null
+        }
+    }
+    // Keep the emoji inline in the title when no avatar block is shown.
+    val displayTitle = if (avatarLabel != null) displayName else name
     val address = getAddress(profile)
     val protocolDesc = getProtocolDescription(profile)
     val aff = MmkvManager.decodeServerAffiliationInfo(guid)
@@ -603,7 +628,8 @@ private fun ServerCard(
     ) {
         if (cardStyleNew) {
             NewServerCardContent(
-                name = name,
+                name = displayTitle,
+                avatarLabel = avatarLabel,
                 subChip = subChip,
                 protocolDesc = protocolDesc,
                 testResult = testResult,
@@ -742,6 +768,7 @@ private fun ClassicServerCardContent(
 @Composable
 private fun NewServerCardContent(
     name: String,
+    avatarLabel: String?,
     subChip: String,
     protocolDesc: String,
     testResult: String,
@@ -756,17 +783,30 @@ private fun NewServerCardContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 8.dp, end = 4.dp, bottom = 8.dp),
+            .padding(
+                start = if (avatarLabel != null) 8.dp else 16.dp,
+                top = 8.dp,
+                end = 4.dp,
+                bottom = 8.dp,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (avatarLabel != null) {
+            ServerAvatarBlock(avatarLabel)
+            Spacer(Modifier.width(12.dp))
+        }
         Column(Modifier.weight(1f)) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            // A remark made up solely of an emoji leaves no title text once the
+            // emoji moved into the avatar, so skip the empty line.
+            if (name.isNotBlank()) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (subChip.isNotEmpty()) {
                 Row(
                     modifier = Modifier.padding(top = 2.dp),
@@ -892,6 +932,96 @@ private fun SubscriptionChip(text: String) {
     }
 }
 
+@Composable
+private fun ServerAvatarBlock(label: String) {
+    val isEmoji = label.isEmojiSymbol()
+    Box(
+        modifier = Modifier
+            .size(46.dp)
+            .clip(MaterialTheme.shapes.large)
+            // Tonal container without an outline: the secondary-container fill reads
+            // as an avatar on any card background (normal, selected, grouped) and
+            // keeps the emoji's own colours dominant.
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .clearAndSetSemantics { },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            style = if (isEmoji) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * Splits a leading emoji off a remark so it can be shown as a leading block
+ * instead of inline in the title. Returns (emoji, remainder) or (null, name).
+ */
+private fun extractLeadingEmoji(name: String): Pair<String?, String> {
+    val trimmed = name.trimStart()
+    if (trimmed.isEmpty()) return null to name
+    val first = firstGrapheme(trimmed) ?: return null to name
+    if (!first.isEmojiSymbol()) return null to name
+    return first to trimmed.substring(first.length).trimStart()
+}
+
+/** First grapheme of the name, uppercased, for the initial-letter avatar. */
+private fun initialAvatarLabel(name: String): String? {
+    val trimmed = name.trimStart()
+    if (trimmed.isEmpty()) return null
+    val first = firstGrapheme(trimmed) ?: return null
+    // Uppercase first, then take the leading grapheme: "ß" -> "SS" -> "S",
+    // keeping the single-letter intent that per-char uppercase would break.
+    val upper = first.uppercase()
+    return firstGrapheme(upper) ?: upper
+}
+
+/** Leading grapheme cluster, so multi-codepoint emoji stay intact. */
+private fun firstGrapheme(text: String): String? {
+    if (text.isEmpty()) return null
+    val iterator = java.text.BreakIterator.getCharacterInstance()
+    iterator.setText(text)
+    val end = iterator.next()
+    if (end <= 0 || end == java.text.BreakIterator.DONE) return null
+    return text.substring(0, end)
+}
+
+private fun String.isEmojiSymbol(): Boolean {
+    // EmojiCompat knows keycaps, flags, ZWJ sequences and ©/®/™ that a raw
+    // codepoint scan can miss; fall back if the font metadata is not ready yet.
+    // Int.MAX_VALUE asks about every metadata version, so EMOJI_SUPPORTED and
+    // EMOJI_FALLBACK both count as "an emoji", EMOJI_UNSUPPORTED does not.
+    try {
+        val match = EmojiCompat.get().getEmojiMatch(this, Int.MAX_VALUE)
+        if (match != EmojiCompat.EMOJI_UNSUPPORTED) return true
+    } catch (_: Throwable) {
+        // Not initialised/loaded — use the codepoint heuristic below.
+    }
+    if (isEmpty()) return false
+    var i = 0
+    while (i < length) {
+        val cp = Character.codePointAt(this, i)
+        if (cp > 0x7F && cp.isEmojiCodePoint()) return true
+        i += Character.charCount(cp)
+    }
+    return false
+}
+
+private fun Int.isEmojiCodePoint(): Boolean =
+    this in 0x1F000..0x1FAFF || // emoji & pictographs
+        this in 0x1F1E6..0x1F1FF || // regional indicators (flags)
+        this in 0x2600..0x27BF || // misc symbols & dingbats
+        this in 0x2B00..0x2BFF || // misc symbols and arrows
+        this in 0x2900..0x297F || // supplemental arrows
+        this in 0x2190..0x21FF || // arrows
+        this in 0x2300..0x23FF || // misc technical
+        this == 0x00A9 || this == 0x00AE || // © ®
+        this == 0x203C || this == 0x2049 ||
+        this == 0x20E3 || this == 0x2122 || this == 0x2139 || // keycap, ™ ℹ
+        this in 0xFE00..0xFE0F // variation selectors
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun CardShell(
@@ -1000,6 +1130,9 @@ private fun getAddress(profile: ProfileItem): String {
             profile.olcrtcServerUrl
         )
     }
+    if (profile.configType == EConfigType.OPENFLUX) {
+        return profile.openfluxUrl.nullIfBlank() ?: profile.openfluxTransport.orEmpty()
+    }
     return profile.description.nullIfBlank() ?: AngConfigManager.generateDescription(profile)
 }
 
@@ -1018,6 +1151,13 @@ private fun getProtocolDescription(profile: ProfileItem): String {
         parts.add("olcRTC")
         profile.olcrtcCarrier?.let { parts.add(it) }
         profile.olcrtcTransport?.let { parts.add(it) }
+        return parts.joinToString(" / ")
+    }
+
+    if (profile.configType == EConfigType.OPENFLUX) {
+        val parts = mutableListOf<String>()
+        parts.add("OpenFlux")
+        profile.openfluxTransport?.let { parts.add(it) }
         return parts.joinToString(" / ")
     }
 

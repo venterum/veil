@@ -33,6 +33,7 @@ object CoreOutboundBuilder {
             EConfigType.HYSTERIA2 -> toOutboundHysteria2(profileItem)
             EConfigType.HTTP -> toOutboundHttp(profileItem)
             EConfigType.OLCRTC -> toOutboundOlcrtc(profileItem)
+            EConfigType.OPENFLUX -> toOutboundOpenflux(profileItem)
             else -> null
         }
 
@@ -259,6 +260,17 @@ object CoreOutboundBuilder {
         outboundBean.settings?.servers?.first()?.let { server ->
             server.address = AppConfig.LOOPBACK
             server.port = (profileItem.serverPort ?: AppConfig.PORT_OLCRTC_SOCKS).toInt()
+        }
+
+        return outboundBean
+    }
+
+    private fun toOutboundOpenflux(profileItem: ProfileItem): OutboundBean? {
+        val outboundBean = createInitOutbound(EConfigType.SOCKS) ?: return null
+
+        outboundBean.settings?.servers?.first()?.let { server ->
+            server.address = AppConfig.LOOPBACK
+            server.port = (profileItem.serverPort ?: AppConfig.PORT_OPENFLUX_SOCKS).toInt()
         }
 
         return outboundBean

@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.EnhancedEncryption
 import androidx.compose.material.icons.outlined.HelpOutline
@@ -230,6 +231,8 @@ private fun ProtocolHero(uiState: ServerEditUiState) {    val newServerLabel = s
     val summary = if (uiState.configType == EConfigType.OLCRTC) {
         "${ServerEditUiState.OLCRTC_CARRIERS.getOrElse(uiState.olcrtcCarrierIndex) { "" }}" +
                 "  •  ${ServerEditUiState.OLCRTC_TRANSPORTS.getOrElse(uiState.olcrtcTransportIndex) { "" }}"
+    } else if (uiState.configType == EConfigType.OPENFLUX) {
+        uiState.openfluxTransport
     } else if (uiState.address.isNotBlank()) {
         if (uiState.port.isNotBlank()) "${uiState.address}:${uiState.port}" else uiState.address
     } else {
@@ -356,6 +359,7 @@ private fun protocolDocsUrl(configType: EConfigType): String? = when (configType
     EConfigType.WIREGUARD -> "https://www.wireguard.com/quickstart/"
     EConfigType.HYSTERIA2 -> "https://v2.hysteria.network/docs/"
     EConfigType.OLCRTC -> "https://github.com/openlibrecommunity/olcrtc#readme"
+    EConfigType.OPENFLUX -> "https://github.com/p1neappleXpress/OpenFlux#readme"
     else -> null
 }
 
@@ -369,6 +373,7 @@ private fun protocolDescriptionRes(configType: EConfigType): Int = when (configT
     EConfigType.WIREGUARD -> R.string.server_help_desc_wireguard
     EConfigType.HYSTERIA2 -> R.string.server_help_desc_hysteria2
     EConfigType.OLCRTC -> R.string.server_help_desc_olcrtc
+    EConfigType.OPENFLUX -> R.string.server_help_desc_openflux
     else -> R.string.server_hint_untitled
 }
 
@@ -381,6 +386,7 @@ private fun protocolIcon(configType: EConfigType): ImageVector = when (configTyp
     EConfigType.WIREGUARD -> Icons.Outlined.VpnLock
     EConfigType.HYSTERIA2 -> Icons.Outlined.RocketLaunch
     EConfigType.OLCRTC -> Icons.Outlined.Videocam
+    EConfigType.OPENFLUX -> Icons.Outlined.Cloud
     else -> Icons.Outlined.Lan
 }
 
@@ -586,6 +592,45 @@ private fun SectionContent(
                     placeholder = "key=value&key=value"
                 )
             }
+        }
+    }
+
+    if (uiState.showOpenfluxSection) {
+        SectionHeader(title = stringResource(R.string.server_section_openflux))
+        FormCard {
+            EditDropdownField(
+                label = stringResource(R.string.openflux_lab_transport),
+                selectedIndex = uiState.openfluxTransportIndex,
+                options = ServerEditUiState.OPENFLUX_TRANSPORTS,
+                noneLabel = noneLabel,
+                onSelectedIndex = { uiState.openfluxTransportIndex = it }
+            )
+            AnimatedField(visible = uiState.showOpenfluxUrl) {
+                EditTextField(
+                    label = stringResource(R.string.openflux_lab_url),
+                    value = uiState.openfluxUrl,
+                    onValueChange = { uiState.openfluxUrl = it },
+                    placeholder = stringResource(R.string.openflux_hint_url)
+                )
+            }
+            AnimatedField(visible = uiState.showOpenfluxMaxCredentials) {
+                EditTextField(
+                    label = stringResource(R.string.openflux_lab_max_token),
+                    value = uiState.openfluxMaxToken,
+                    onValueChange = { uiState.openfluxMaxToken = it }
+                )
+                EditTextField(
+                    label = stringResource(R.string.openflux_lab_max_uid),
+                    value = uiState.openfluxMaxUid,
+                    onValueChange = { uiState.openfluxMaxUid = it.filter(Char::isDigit) },
+                    keyboardType = KeyboardType.Number
+                )
+            }
+            EditTextField(
+                label = stringResource(R.string.openflux_lab_key),
+                value = uiState.openfluxKey,
+                onValueChange = { uiState.openfluxKey = it }
+            )
         }
     }
 

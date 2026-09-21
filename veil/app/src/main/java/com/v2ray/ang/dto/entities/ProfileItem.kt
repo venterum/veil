@@ -78,6 +78,12 @@ data class ProfileItem(
     var olcrtcKeyHex: String? = null,
     var olcrtcEngine: String? = null,
 
+    var openfluxTransport: String? = null,
+    var openfluxUrl: String? = null,
+    var openfluxMaxToken: String? = null,
+    var openfluxMaxUid: String? = null,
+    var openfluxKey: String? = null,
+
     ) {
     companion object {
         fun create(configType: EConfigType): ProfileItem {
@@ -141,6 +147,12 @@ data class ProfileItem(
                 && this.olcrtcRoomId == obj.olcrtcRoomId
                 && this.olcrtcClientId == obj.olcrtcClientId
                 && this.olcrtcKeyHex == obj.olcrtcKeyHex
+
+                && this.openfluxTransport == obj.openfluxTransport
+                && this.openfluxUrl == obj.openfluxUrl
+                && this.openfluxMaxToken == obj.openfluxMaxToken
+                && this.openfluxMaxUid == obj.openfluxMaxUid
+                && this.openfluxKey == obj.openfluxKey
                 )
     }
 }

@@ -67,6 +67,10 @@
                 android:id="@+id/import_manually_olcrtc"
                 android:title="@string/menu_item_import_config_manually_olcrtc"
                 app:showAsAction="never" />
+            <item
+                android:id="@+id/import_manually_openflux"
+                android:title="@string/menu_item_import_config_manually_openflux"
+                app:showAsAction="never" />
         </menu>
     </item>
     <item

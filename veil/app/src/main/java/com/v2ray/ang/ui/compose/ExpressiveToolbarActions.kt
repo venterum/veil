@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -45,6 +47,7 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Videocam
@@ -238,6 +241,7 @@ private fun AddConfigSheet(
         AddConfigAction(R.id.import_manually_socks, R.string.add_config_socks, Icons.Filled.Password, MaterialShapes.Oval.toShape()),
         AddConfigAction(R.id.import_manually_http, R.string.add_config_http, Icons.Filled.Language, MaterialShapes.Circle.toShape()),
         AddConfigAction(R.id.import_manually_olcrtc, R.string.add_config_olcrtc, Icons.Filled.Videocam, MaterialShapes.Clover4Leaf.toShape()),
+        AddConfigAction(R.id.import_manually_openflux, R.string.add_config_openflux, Icons.Filled.Cloud, MaterialShapes.Ghostish.toShape()),
     )
 
     ModalBottomSheet(
@@ -300,26 +304,14 @@ private fun AddConfigSheet(
                     )
                 }
             }
-            Text(
-                text = stringResource(R.string.add_config_protocol_section),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            servers.chunked(3).forEach { rowActions ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    rowActions.forEachIndexed { index, action ->
-                        ProtocolTile(
-                            action = action,
-                            onClick = { onAction(action.id) },
-                            modifier = Modifier.weight(1f),
-                            colorIndex = index,
-                        )
-                    }
-                    repeat(3 - rowActions.size) { Box(Modifier.weight(1f)) }
+            ConfigListSection(titleRes = R.string.add_config_protocol_section) {
+                servers.forEachIndexed { index, action ->
+                    ConfigListRow(
+                        action = action,
+                        onClick = { onAction(action.id) },
+                        colorIndex = index,
+                        showDivider = index != servers.lastIndex,
+                    )
                 }
             }
         }
@@ -458,15 +450,38 @@ private fun FeatureTile(
     }
 }
 
+@Composable
+private fun ConfigListSection(
+    titleRes: Int,
+    content: @Composable () -> Unit,
+) {
+    Column(modifier = Modifier.padding(top = 12.dp)) {
+        Text(
+            text = stringResource(titleRes),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+        )
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column { content() }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ProtocolTile(
+private fun ConfigListRow(
     action: AddConfigAction,
     onClick: () -> Unit,
     colorIndex: Int,
-    modifier: Modifier = Modifier,
+    showDivider: Boolean,
+    caption: String? = null,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    val hapticFeedback = LocalHapticFeedback.current
     val containerColors = listOf(
         MaterialTheme.colorScheme.primaryContainer,
         MaterialTheme.colorScheme.secondaryContainer,
@@ -477,49 +492,63 @@ private fun ProtocolTile(
         MaterialTheme.colorScheme.onSecondaryContainer,
         MaterialTheme.colorScheme.onTertiaryContainer,
     )
-    val chipColors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary,
-    )
-    val chipContentColors = listOf(
-        MaterialTheme.colorScheme.onPrimary,
-        MaterialTheme.colorScheme.onSecondary,
-        MaterialTheme.colorScheme.onTertiary,
-    )
-    Surface(
-        onClick = onClick,
-        modifier = modifier
-            .heightIn(min = 96.dp)
-            .expressivePressScale(interactionSource),
-        interactionSource = interactionSource,
-        shape = MaterialTheme.shapes.large,
-        color = containerColors[colorIndex],
-        contentColor = contentColors[colorIndex],
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+    val index = ((colorIndex % 3) + 3) % 3
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClick()
+                }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(action.shape ?: MaterialShapes.Circle.toShape())
-                    .background(chipColors[colorIndex]),
+                    .background(containerColors[index]),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = action.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = chipContentColors[colorIndex],
+                    modifier = Modifier.size(22.dp),
+                    tint = contentColors[index],
                 )
             }
-            Text(
-                text = stringResource(action.label),
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(action.label),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                caption?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        if (showDivider) {
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 72.dp),
+                color = MaterialTheme.colorScheme.outlineVariant,
             )
         }
     }
