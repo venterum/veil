@@ -72,6 +72,19 @@ An Xray client for Android with the standard V2Ray/Xray protocols plus two plugg
 
 ---
 
+## Support the project
+
+If you find Veil useful, you can support development with USDT:
+
+| Network              | Address                                      |
+|----------------------|----------------------------------------------|
+| **Tron** (TRC-20)            | `TSv3rM2MS7Q9Nyrc1JR43y4xRjDrZmWDSU`         |
+| **BNB Smart Chain** (BEP-20) | `0x2dfCb2fd70Dd8d03D1c831CC4635Edcb9De80F45` |
+
+Thank you ❤️
+
+---
+
 ## Legal
 
 For lawful use only. You are responsible for complying with the laws of your jurisdiction and for the servers you choose to use. The author does not endorse or encourage illegal activity.
