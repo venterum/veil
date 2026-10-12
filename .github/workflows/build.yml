@@ -13,6 +13,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The "Upload to release" step creates/updates a release, which needs a
+    # writable token; the repository default is read-only.
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
