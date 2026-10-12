@@ -103,39 +103,6 @@
         <item name="subheaderTextAppearance">@style/TextAppearance.Material3.TitleSmall</item>
     </style>
 
-    <style name="ThemeOverlay.App.Preference" parent="PreferenceThemeOverlay">
-        <item name="preferenceStyle">@style/Preference.App.Card</item>
-        <item name="preferenceCategoryStyle">@style/Preference.App.Category</item>
-        <item name="switchPreferenceCompatStyle">@style/Preference.App.Switch</item>
-        <item name="checkBoxPreferenceStyle">@style/Preference.App.CheckBox</item>
-        <item name="dialogPreferenceStyle">@style/Preference.App.Dialog</item>
-        <item name="editTextPreferenceStyle">@style/Preference.App.EditText</item>
-    </style>
-
-    <style name="Preference.App.Card" parent="Preference.Material">
-        <item name="android:layout">@layout/preference_card</item>
-    </style>
-
-    <style name="Preference.App.Switch" parent="Preference.SwitchPreferenceCompat.Material">
-        <item name="android:layout">@layout/preference_card</item>
-    </style>
-
-    <style name="Preference.App.CheckBox" parent="Preference.CheckBoxPreference.Material">
-        <item name="android:layout">@layout/preference_card</item>
-    </style>
-
-    <style name="Preference.App.Dialog" parent="Preference.DialogPreference.Material">
-        <item name="android:layout">@layout/preference_card</item>
-    </style>
-
-    <style name="Preference.App.EditText" parent="Preference.DialogPreference.EditTextPreference.Material">
-        <item name="android:layout">@layout/preference_card</item>
-    </style>
-
-    <style name="Preference.App.Category" parent="Preference.Category.Material">
-        <item name="android:layout">@layout/preference_category_card</item>
-    </style>
-
     <style name="ThemeOverlay.App.SystemFont" parent="">
         <item name="android:fontFamily">sans-serif</item>
         <item name="fontFamily">sans-serif</item>

@@ -324,8 +324,11 @@ private fun UpdateStatusCard(
                         color = contentColor.copy(alpha = 0.85f),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
+                            // heightIn must come before verticalScroll: the screen's outer
+                            // scroll hands infinite max height to its children, and a scroll
+                            // modifier measured with infinite constraints throws.
                             .heightIn(max = 220.dp)
+                            .verticalScroll(rememberScrollState())
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))

@@ -285,9 +285,6 @@ object CoreServiceManager {
                 AppConfig.TAG,
                 "StartCore-Manager: OPENFLUX config detected, starting OpenFlux transport=${config.openfluxTransport}"
             )
-            OpenFluxManager.socketProtector = serviceControl?.get()?.let { sc ->
-                { fd -> sc.vpnProtect(fd) }
-            }
             if (!OpenFluxManager.start(service, config)) {
                 error("Failed to start OpenFlux")
             }
@@ -392,7 +389,6 @@ object CoreServiceManager {
 
         if (currentConfig?.configType == EConfigType.OPENFLUX) {
             OpenFluxManager.stop()
-            OpenFluxManager.socketProtector = null
         }
 
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")

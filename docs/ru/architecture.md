@@ -25,7 +25,7 @@ veil использует **три независимых Go-модуля**, с�
                                                           olcRTC transport              OpenFlux transport
                                                           (gomobile AAR)                (gomobile AAR)
                                                                 │                              │
-                                                    WebRTC/SFU сервер          Yandex Docs / MAX / Cups.online
+                                                    WebRTC/SFU сервер          Yandex Docs / Volga / Board / MAX / Cups / Mail.ru
                                                                 │                              │
                                                      удалённый olcRTC сервер      удалённый OpenFlux exit node
                                                                 │                              │
@@ -40,7 +40,7 @@ veil использует **три независимых Go-модуля**, с�
 | ------------------------------------- | ------------ | ----------------------------------------------------------------- |
 | `github.com/2dust/AndroidLibXrayLite` | `libv2ray.*` | Ядро Xray: роутинг, протоколы, DNS, статистика                    |
 | `olcrtc/mobile`                       | `mobile.*`   | Транспорт olcRTC: WebRTC-туннель, SOCKS5-сервер                   |
-| `openfluxmobile`                      | `openflux.*` | Транспорт OpenFlux: TCP-туннель со сменными транспортами, SOCKS5  |
+| `openfluxmobile`                      | `openflux.*` | Транспорт OpenFlux: фасад над upstream-мостом `openflux-mobile` (Session-профили с классическим fallback, негоциация кодека, cookie-хранилище captcha), локальный SOCKS5-сервер |
 
 Исходники модулей **не модифицированы**. Они компилируются вместе в единый `libgojni.so` и `classes.jar`.
 
@@ -71,7 +71,7 @@ veil использует **три независимых Go-модуля**, с�
 
 1. `CoreServiceManager.doStartCoreLoop()` определяет `EConfigType.OPENFLUX`
 2. Запускается `OpenFluxManager.start(config)`:
-   - Запускает Go-клиент OpenFlux через биндинг `openflux.*` (транспорт, URL документа, креды MAX, опциональный ключ шифрования → `start()`/`waitReady()`)
+   - Запускает Go-клиент OpenFlux через фасад `openflux.*` над upstream-мостом `openflux-mobile` (тот же код, что и в официальных клиентах OpenFlux): транспорт (URL документа для Yandex Docs / Volga / Board / Cups.online / Mail.ru, токен + uid для MAX, опциональный ключ шифрования), предпочитаемый кодек и cookie-хранилище в files dir приложения для решённых captcha → `start()`/`waitReady()`
    - Открывает SOCKS5-сервер на `127.0.0.1:{port}` (по умолчанию `10811`)
 3. Xray core запускается со стандартным конфигом
 4. `CoreOutboundBuilder.toOutboundOpenflux()` создаёт SOCKS5 outbound на `127.0.0.1:{port}`

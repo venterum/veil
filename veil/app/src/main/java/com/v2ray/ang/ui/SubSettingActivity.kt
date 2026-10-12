@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.NetworkPing
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -182,6 +184,8 @@ fun SubSettingScreen(
                             subCache = subCache,
                             confirmRemove = confirmRemove,
                             onEdit = { onEditSub(subCache.guid) },
+                            onUpdate = { viewModel.updateOne(subCache.guid) },
+                            onPing = { viewModel.pingOne(subCache.guid) },
                             onRemove = {
                                 if (confirmRemove) removeTarget = subCache.guid
                                 else onRemoveSub(subCache.guid)
@@ -307,6 +311,8 @@ private fun SubscriptionItemCard(
     subCache: com.v2ray.ang.dto.entities.SubscriptionCache,
     confirmRemove: Boolean,
     onEdit: () -> Unit,
+    onUpdate: () -> Unit,
+    onPing: () -> Unit,
     onRemove: () -> Unit,
     onShare: () -> Unit,
     onToggle: (Boolean) -> Unit
@@ -462,6 +468,21 @@ private fun SubscriptionItemCard(
                     }
                 }
                 Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = onPing) {
+                    Icon(
+                        imageVector = Icons.Filled.NetworkPing,
+                        contentDescription = stringResource(R.string.title_sub_ping),
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                if (!subItem.url.isNullOrEmpty()) {
+                    IconButton(onClick = onUpdate) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_restore_24dp),
+                            contentDescription = stringResource(R.string.title_sub_update)
+                        )
+                    }
+                }
                 if (!subItem.url.isNullOrEmpty()) {
                     IconButton(onClick = onShare) {
                         Icon(

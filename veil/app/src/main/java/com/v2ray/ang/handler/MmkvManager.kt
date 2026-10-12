@@ -739,6 +739,31 @@ object MmkvManager {
         return state
     }
 
+    /**
+     * MMKV-backed String state, auto-persists and notifies on change.
+     * Used for text fields, list preferences and numeric fields stored as strings.
+     */
+    @Composable
+    fun rememberMmkvString(
+        key: String,
+        default: String = ""
+    ): MutableState<String> {
+        val state = remember(key) {
+            mutableStateOf(decodeSettingsString(key, default) ?: default)
+        }
+
+        LaunchedEffect(key) {
+            snapshotFlow { state.value }
+                .drop(1)
+                .distinctUntilChanged()
+                .collectLatest { value ->
+                    encodeSettings(key, value)
+                    SettingsChangeManager.notifySettingChanged(key)
+                }
+        }
+        return state
+    }
+
     //endregion
 
     //region WebDAV

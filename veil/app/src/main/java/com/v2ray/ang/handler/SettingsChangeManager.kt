@@ -1,8 +1,18 @@
 package com.v2ray.ang.handler
 
+import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 
+/**
+ * Single entry point for reacting to a persisted setting change.
+ *
+ * Any code that writes to MMKV settings should call [notifySettingChanged] with the
+ * changed key. This keeps side effects (log level refresh, night mode, activity
+ * recreation, service restart flags) in one place instead of duplicating them at
+ * every call site.
+ */
 object SettingsChangeManager {
     private val _restartService = MutableStateFlow(false)
     private val _setupGroupTab = MutableStateFlow(false)
@@ -12,20 +22,58 @@ object SettingsChangeManager {
         AppConfig.PREF_CONFIRM_REMOVE,
         AppConfig.PREF_DOUBLE_COLUMN_DISPLAY,
         AppConfig.PREF_GROUP_ALL_DISPLAY,
+        AppConfig.PREF_GROUP_ALL_MODE,
+        AppConfig.PREF_GROUP_ALL_ICONS_VISIBLE,
         AppConfig.PREF_LANGUAGE,
         AppConfig.PREF_UI_MODE_NIGHT,
+        AppConfig.PREF_DYNAMIC_COLOR,
+        AppConfig.PREF_GOOGLE_SANS,
         AppConfig.PREF_IS_BOOTED,
+        AppConfig.PREF_SPEED_TOOLBAR_ENABLED,
+        AppConfig.PREF_SERVER_CARD_STYLE,
+        AppConfig.PREF_SERVER_EMOJI_AVATAR,
+        AppConfig.PREF_SERVER_SEARCH_BUTTON_ENABLED,
     )
 
     /**
      * Called when a setting value changes.
-     * Triggers service restart if the key is not UI-only, and always refreshes UI tabs.
+     * Applies key-specific side effects, triggers a service restart for keys that
+     * require it, and always refreshes the UI tabs.
      */
     fun notifySettingChanged(key: String) {
+        applyKeySideEffects(key)
+
         if (key !in uiOnlyKeys) {
             makeRestartService()
         }
         makeSetupGroupTab()
+    }
+
+    /**
+     * Side effects that must run immediately after a specific key changes.
+     * These used to live in the now-removed PreferenceDataStore bridge.
+     */
+    private fun applyKeySideEffects(key: String) {
+        if (key == AppConfig.PREF_LOGLEVEL) {
+            LogUtil.refreshLogLevel()
+        }
+
+        // Night mode is handled by AppCompatDelegate, which recreates activities itself.
+        if (key == AppConfig.PREF_UI_MODE_NIGHT) {
+            SettingsManager.setNightMode()
+        }
+
+        // Dynamic color forces Google Sans state and recreates all live activities.
+        if (key == AppConfig.PREF_DYNAMIC_COLOR || key == AppConfig.PREF_GOOGLE_SANS) {
+            AngApplication.application.recreateAllActivities()
+        }
+
+        // When language changes, force Google Sans on/off and recreate everything.
+        if (key == AppConfig.PREF_LANGUAGE) {
+            val isEnglish = SettingsManager.getLocale().language == "en"
+            MmkvManager.encodeSettings(AppConfig.PREF_GOOGLE_SANS, isEnglish)
+            AngApplication.application.recreateAllActivities()
+        }
     }
 
     // Mark restartService as requiring a restart

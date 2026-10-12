@@ -317,9 +317,23 @@ class ServerEditUiState(
     val openfluxTransport: String
         get() = OPENFLUX_TRANSPORTS.getOrElse(openfluxTransportIndex) { OPENFLUX_TRANSPORTS[0] }
     val showOpenfluxUrl: Boolean
-        get() = openfluxTransport != OpenFluxManager.TRANSPORT_ONEME
+        get() = OpenFluxManager.usesUrl(openfluxTransport)
     val showOpenfluxMaxCredentials: Boolean
-        get() = openfluxTransport == OpenFluxManager.TRANSPORT_ONEME
+        get() = !showOpenfluxUrl
+    val openfluxUrlLabelRes: Int
+        get() = when (openfluxTransport) {
+            OpenFluxManager.TRANSPORT_MAILRU -> R.string.openflux_lab_url_mailru
+            OpenFluxManager.TRANSPORT_CUPSONLINE -> R.string.openflux_lab_url_cups
+            else -> R.string.openflux_lab_url_document
+        }
+    val openfluxUrlHintRes: Int
+        get() = when (openfluxTransport) {
+            OpenFluxManager.TRANSPORT_VYANDEX -> R.string.openflux_hint_url_vyandex
+            OpenFluxManager.TRANSPORT_BOARDS -> R.string.openflux_hint_url_boards
+            OpenFluxManager.TRANSPORT_MAILRU -> R.string.openflux_hint_url_mailru
+            OpenFluxManager.TRANSPORT_CUPSONLINE -> R.string.openflux_hint_url_cups
+            else -> R.string.openflux_hint_url_yandex
+        }
 
     fun validate(): Int? {
         if (remarks.isBlank()) return R.string.server_lab_remarks
@@ -341,10 +355,10 @@ class ServerEditUiState(
             if (olcrtcKeyHex.isBlank()) return R.string.olcrtc_lab_key_hex
         }
         if (configType == EConfigType.OPENFLUX) {
-            if (openfluxTransport != OpenFluxManager.TRANSPORT_ONEME && openfluxUrl.isBlank()) {
-                return R.string.openflux_lab_url
+            if (showOpenfluxUrl && openfluxUrl.isBlank()) {
+                return openfluxUrlLabelRes
             }
-            if (openfluxTransport == OpenFluxManager.TRANSPORT_ONEME && openfluxMaxToken.isBlank()) {
+            if (showOpenfluxMaxCredentials && openfluxMaxToken.isBlank()) {
                 return R.string.openflux_lab_max_token
             }
         }

@@ -123,7 +123,7 @@
     <string name="server_help_desc_wireguard">WireGuard is a fast, modern VPN tunnel with strong cryptography.</string>
     <string name="server_help_desc_hysteria2">Hysteria2 is a high-performance QUIC-based proxy tuned for lossy networks.</string>
     <string name="server_help_desc_olcrtc">olcRTC is an encrypted TCP-over-WebRTC tunnel disguised as an ordinary video call.</string>
-    <string name="server_help_desc_openflux">OpenFlux is a TCP tunnel with pluggable transports (Yandex Docs, MAX, Cups.online). The client runs a local SOCKS5 proxy; you must run an OpenFlux exit node on a VPS.</string>
+    <string name="server_help_desc_openflux">OpenFlux is a TCP tunnel with pluggable transports (Yandex Docs, Volga, Board, MAX, Cups.online, Mail.ru). The client runs a local SOCKS5 proxy; you must run an OpenFlux exit node on a VPS.</string>
     <string name="server_lab_address">address</string>
     <string name="server_lab_port">port</string>
     <string name="server_lab_id">id</string>
@@ -249,10 +249,18 @@
         name="olcrtc_lab_engine"
     >Transport parameters (key=value&amp;...)</string>
     <string name="openflux_lab_transport">Transport</string>
-    <string name="openflux_lab_url">Document URL / room list</string>
+    <string name="openflux_lab_url_document">Document URL</string>
+    <string name="openflux_lab_url_mailru">Mail.ru public link</string>
+    <string name="openflux_lab_url_cups">Room list (base64)</string>
     <string
-        name="openflux_hint_url"
-    >Public document URL, e.g. https://docs.yandex.ru/docs/view?url=… (same URL as the exit node), or the base64 room list printed by the exit node</string>
+        name="openflux_hint_url_yandex"
+    >Public Yandex Docs URL, same as the exit node (e.g. https://docs.yandex.ru/docs/view?url=…)</string>
+    <string name="openflux_hint_url_vyandex">Yandex Volga document URL, same as the exit node</string>
+    <string name="openflux_hint_url_boards">Yandex board URL, same as the exit node</string>
+    <string
+        name="openflux_hint_url_mailru"
+    >Mail.ru public link, e.g. AbCdEfGh1/IjKlMnOp2 or https://cloud.mail.ru/public/…</string>
+    <string name="openflux_hint_url_cups">Base64 room list printed by the exit node</string>
     <string name="openflux_lab_max_token">MAX token</string>
     <string name="openflux_lab_max_uid">MAX peer user ID</string>
     <string
@@ -647,6 +655,7 @@
     <string
         name="summary_app_icon"
     >Choose how Veil looks on your home screen</string>
+    <string name="settings_search_results">Results for “%1$s”</string>
     <string name="app_icon_default">Classic</string>
     <string name="app_icon_default_desc">The original Veil look</string>
     <string name="app_icon_wink">Wink</string>
@@ -695,6 +704,7 @@
         name="toast_invalid_update_interval"
     >Invalid update interval. Minimum is 15 minutes.</string>
     <string name="title_sub_update">Update subscription</string>
+    <string name="title_sub_ping">Ping subscription</string>
     <string name="title_real_ping_all_server">Real delay config</string>
     <string name="title_user_asset_setting">Asset files</string>
     <string name="title_sort_by_test_results">Sorting by test results</string>

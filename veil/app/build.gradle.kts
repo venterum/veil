@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.vntrum.veil"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = 13
         versionName = "0.7.0"
@@ -135,7 +135,6 @@ dependencies {
     implementation(libs.androidx.emoji2)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.preference.ktx)
     implementation(libs.recyclerview)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.viewpager2)

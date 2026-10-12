@@ -4,6 +4,7 @@ import android.app.Application
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.SubscriptionUpdateResult
+import com.v2ray.ang.dto.TestServiceMessage
 import com.v2ray.ang.dto.entities.SubscriptionCache
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.extension.moveItem
@@ -11,8 +12,10 @@ import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.util.MessageUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,28 +78,7 @@ class SubscriptionsViewModel(application: Application) : BaseViewModel(applicati
                 val result = withContext(Dispatchers.IO) {
                     AngConfigManager.updateConfigViaSubAll()
                 }
-
-                when {
-                    result.successCount + result.failureCount + result.skipCount == 0 ->
-                        toast(R.string.title_update_subscription_no_subscription)
-
-                    result.successCount > 0 && result.failureCount + result.skipCount == 0 ->
-                        toast(getString(R.string.title_update_config_count, result.configCount))
-
-                    else ->
-                        toast(
-                            getString(
-                                R.string.title_update_subscription_result,
-                                result.configCount,
-                                result.successCount,
-                                result.failureCount,
-                                result.skipCount
-                            )
-                        )
-                }
-                if (result.hwidRejectedCount > 0) {
-                    toast(getString(R.string.title_hwid_rejected, result.hwidRejectedCount))
-                }
+                showUpdateResult(result)
                 reload()
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -104,6 +86,77 @@ class SubscriptionsViewModel(application: Application) : BaseViewModel(applicati
                 LogUtil.e(AppConfig.TAG, "Subscription update failed", e)
                 toastError(R.string.toast_failure)
             }
+        }
+    }
+
+    /**
+     * Updates a single subscription and resets its auto-update timer.
+     */
+    fun updateOne(subId: String) {
+        val item = MmkvManager.decodeSubscription(subId) ?: return
+        launchLoading {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    AngConfigManager.updateConfigViaSub(SubscriptionCache(subId, item))
+                }
+                SubscriptionUpdater.syncOne(app, subId)
+                showUpdateResult(result)
+                reload()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Subscription update failed for $subId", e)
+                toastError(R.string.toast_failure)
+            }
+        }
+    }
+
+    /**
+     * Measures the real ping for every server of a single subscription.
+     */
+    fun pingOne(subId: String) {
+        val guids = MmkvManager.decodeServerList(subId)
+        if (guids.isEmpty()) {
+            toastError(R.string.toast_none_data)
+            return
+        }
+        MessageUtil.sendMsg2TestService(
+            app,
+            TestServiceMessage(key = AppConfig.MSG_MEASURE_CONFIG_CANCEL)
+        )
+        MmkvManager.clearAllTestDelayResults(guids)
+        MessageUtil.sendMsg2TestService(
+            app,
+            TestServiceMessage(
+                key = AppConfig.MSG_MEASURE_CONFIG_START,
+                subscriptionId = subId,
+                serverGuids = emptyList()
+            )
+        )
+        toast(getString(R.string.connection_test_testing_count, guids.size))
+    }
+
+    private fun showUpdateResult(result: SubscriptionUpdateResult) {
+        when {
+            result.successCount + result.failureCount + result.skipCount == 0 ->
+                toast(R.string.title_update_subscription_no_subscription)
+
+            result.successCount > 0 && result.failureCount + result.skipCount == 0 ->
+                toast(getString(R.string.title_update_config_count, result.configCount))
+
+            else ->
+                toast(
+                    getString(
+                        R.string.title_update_subscription_result,
+                        result.configCount,
+                        result.successCount,
+                        result.failureCount,
+                        result.skipCount
+                    )
+                )
+        }
+        if (result.hwidRejectedCount > 0) {
+            toast(getString(R.string.title_hwid_rejected, result.hwidRejectedCount))
         }
     }
 }

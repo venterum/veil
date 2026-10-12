@@ -10,6 +10,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -346,7 +347,7 @@ fun PreferenceGroupHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall,
-        color = colorFabActive,
+        color = MaterialTheme.colorScheme.primary,
         modifier = modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
@@ -363,20 +364,23 @@ fun CollapsiblePreferenceGroupHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onExpandedChange(!expanded) }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onExpandedChange(!expanded) }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            color = colorFabActive,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.weight(1f)
         )
         Icon(
             painter = painterResource(R.drawable.ic_expand_more_24dp),
             contentDescription = null,
-            tint = colorFabActive,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .size(24.dp)
                 .rotate(if (expanded) 180f else 0f)

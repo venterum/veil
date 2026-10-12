@@ -57,7 +57,6 @@
         <!-- Status bar and navigation bar - system bars -->
         <item name="android:statusBarColor">@color/md_theme_surface</item>
         <item name="android:navigationBarColor">@color/md_theme_surface</item>
-        <item name="preferenceTheme">@style/ThemeOverlay.App.Preference</item>
 
         <!-- Splash screen (Android 12+) -->
         <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_splash</item>

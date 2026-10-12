@@ -3,10 +3,8 @@ package openflux
 import (
 	"context"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 )
 
@@ -16,10 +14,13 @@ const (
 	pingSampleDelay = 80 * time.Millisecond
 )
 
-// Ping starts the client if it is not already running, waits for readiness and
-// measures the best HTTP round-trip through the local SOCKS5 listener. Returns
-// the latency in milliseconds, or -1 on failure. When Ping starts the client it
-// also stops it again before returning.
+// Ping measures the best HTTP round-trip through the local SOCKS5 listener.
+// It starts the tunnel when it is not running and stops it again before
+// returning. Returns the latency in milliseconds, or -1 on failure.
+//
+// The upstream bridge runs one tunnel per process: when a tunnel is already
+// up, the probe reuses it only if it was started from the same profile, and
+// returns -1 otherwise.
 func (c *Client) Ping(timeoutMillis int, targetURL string) int64 {
 	if targetURL == "" {
 		targetURL = defaultPingURL
@@ -31,20 +32,11 @@ func (c *Client) Ping(timeoutMillis int, targetURL string) int64 {
 		timeoutMillis = 15000
 	}
 
-	startedHere, ok := c.ensureStarted()
-	if !ok {
+	addr, done, err := c.withTunnel(timeoutMillis)
+	if err != nil {
 		return -1
 	}
-	if startedHere {
-		defer func() { _ = c.Stop() }()
-	}
-	if err := c.WaitReady(timeoutMillis); err != nil {
-		return -1
-	}
-
-	c.mu.Lock()
-	addr := net.JoinHostPort(c.socksHost, strconv.Itoa(c.socksPort))
-	c.mu.Unlock()
+	defer done()
 
 	sampleTimeout := time.Duration(timeoutMillis) * time.Millisecond
 	if sampleTimeout > 5*time.Second {
@@ -70,38 +62,45 @@ func (c *Client) Ping(timeoutMillis int, targetURL string) int64 {
 	return best
 }
 
-// Check starts the client if needed and reports "ok" or an error string. Useful
-// for a UI connectivity test button.
+// Check reports "ok" once the tunnel is up, or an error string. Useful for a
+// UI connectivity test button.
 func (c *Client) Check(timeoutMillis int) string {
 	if timeoutMillis <= 0 {
 		timeoutMillis = 15000
 	}
-	startedHere, ok := c.ensureStarted()
-	if !ok {
-		return "start failed"
-	}
-	if startedHere {
-		defer func() { _ = c.Stop() }()
-	}
-	if err := c.WaitReady(timeoutMillis); err != nil {
+	_, done, err := c.withTunnel(timeoutMillis)
+	if err != nil {
 		return err.Error()
 	}
+	defer done()
 	return "ok"
 }
 
-// ensureStarted starts the client when idle. The bool is false if starting
-// failed; the first return value reports whether this call did the start.
-func (c *Client) ensureStarted() (bool, bool) {
-	c.mu.Lock()
-	running := c.running
-	c.mu.Unlock()
-	if running {
-		return false, true
+// withTunnel returns the address of a connected SOCKS5 listener and a cleanup
+// that stops a tunnel this call started. A tunnel another client already owns
+// is reused only when it was started from the same profile.
+func (c *Client) withTunnel(timeoutMillis int) (string, func(), error) {
+	if addr, ownerKey, ok := runningProxy(); ok {
+		if ownerKey != c.profileKey() {
+			return "", nil, ErrBridgeBusy
+		}
+		if err := waitConnected(timeoutMillis); err != nil {
+			return "", nil, err
+		}
+		return addr, func() {}, nil
 	}
+
 	if err := c.Start(); err != nil {
-		return false, false
+		return "", nil, err
 	}
-	return true, true
+	if err := c.WaitReady(timeoutMillis); err != nil {
+		_ = c.Stop()
+		return "", nil, err
+	}
+	c.mu.Lock()
+	addr := c.addr
+	c.mu.Unlock()
+	return addr, func() { _ = c.Stop() }, nil
 }
 
 func newSOCKSPingClient(socksAddr string, timeout time.Duration) *http.Transport {

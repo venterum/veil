@@ -25,7 +25,7 @@ App (Android)
                                                           olcRTC transport              OpenFlux transport
                                                           (gomobile AAR)                (gomobile AAR)
                                                                 │                              │
-                                                    WebRTC/SFU server          Yandex Docs / MAX / Cups.online
+                                                    WebRTC/SFU server          Yandex Docs / Volga / Board / MAX / Cups / Mail.ru
                                                                 │                              │
                                                      remote olcRTC server        remote OpenFlux exit node
                                                                 │                              │
@@ -40,7 +40,7 @@ App (Android)
 |---|---|---|
 | `github.com/2dust/AndroidLibXrayLite` | `libv2ray.*` | Xray core: routing, protocols, DNS, stats |
 | `olcrtc/mobile` | `mobile.*` | olcRTC transport: WebRTC tunnel, SOCKS5 server |
-| `openfluxmobile` | `openflux.*` | OpenFlux transport: TCP tunnel with pluggable transports, SOCKS5 server |
+| `openfluxmobile` | `openflux.*` | OpenFlux transport: a facade over the upstream `openflux-mobile` bridge (Session profiles with a classic fallback, codec negotiation, captcha cookies), exposing a local SOCKS5 server |
 
 No module's source code is modified. They are compiled together into a single `libgojni.so` + `classes.jar`.
 
@@ -71,7 +71,7 @@ All Xray, olcRTC and OpenFlux components run in the same Android process:
 
 1. `CoreServiceManager.doStartCoreLoop()` detects `EConfigType.OPENFLUX`
 2. `OpenFluxManager.start(config)` is called:
-   - Starts the OpenFlux Go client via the `openflux.*` binding (transport, document URL, MAX credentials, optional encryption key → `start()`/`waitReady()`)
+   - Starts the OpenFlux Go client through the `openflux.*` facade over the upstream `openflux-mobile` bridge (the code path the official OpenFlux clients use): transport (document URL for Yandex Docs / Volga / Board / Cups.online / Mail.ru, token + uid for MAX, optional encryption key), preferred codec, and a cookie store in the app's files dir for solved captchas → `start()`/`waitReady()`
    - Opens a SOCKS5 server on `127.0.0.1:{port}` (default `10811`)
 3. Xray core starts with a standard config
 4. `CoreOutboundBuilder.toOutboundOpenflux()` creates a SOCKS5 outbound to `127.0.0.1:{port}`

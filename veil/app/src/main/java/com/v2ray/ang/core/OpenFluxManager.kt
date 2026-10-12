@@ -6,7 +6,7 @@ import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.util.LogUtil
 import openflux.Client
 import openflux.Openflux
-import openflux.SocketProtector
+import java.io.File
 import java.net.ServerSocket
 
 /**
@@ -18,23 +18,39 @@ object OpenFluxManager {
 
     private const val WAIT_READY_MS = 15000L
     private const val PING_TIMEOUT_MS = 15000L
+    private const val COOKIE_STORE_NAME = "openflux-cookies.json"
 
     const val TRANSPORT_YANDEX = "yandex"
     const val TRANSPORT_VYANDEX = "vyandex"
+    const val TRANSPORT_BOARDS = "boards"
+    const val TRANSPORT_MAILRU = "mailru"
     const val TRANSPORT_ONEME = "oneme"
     const val TRANSPORT_CUPSONLINE = "cupsonline"
 
-    val TRANSPORTS = listOf(TRANSPORT_YANDEX, TRANSPORT_VYANDEX, TRANSPORT_ONEME, TRANSPORT_CUPSONLINE)
+    val TRANSPORTS = listOf(
+        TRANSPORT_YANDEX,
+        TRANSPORT_VYANDEX,
+        TRANSPORT_BOARDS,
+        TRANSPORT_MAILRU,
+        TRANSPORT_ONEME,
+        TRANSPORT_CUPSONLINE
+    )
 
+    /** MAX (oneme) is configured with a token/uid; every other transport with a URL. */
+    fun usesUrl(transport: String?): Boolean =
+        transport?.takeIf { it.isNotBlank() } != TRANSPORT_ONEME
+
+    /**
+     * Application context captured on the first start, so latency probes can
+     * share the tunnel's cookie store without a Context parameter.
+     */
     @Volatile
-    var socketProtector: ((Int) -> Boolean)? = null
+    private var appContext: Context? = null
 
     private val client: Client by lazy { Client() }
 
-    private val protector = object : SocketProtector {
-        override fun protect(fd: Long): Boolean =
-            socketProtector?.invoke(fd.toInt()) ?: true
-    }
+    private fun cookieStorePath(context: Context): String =
+        File(context.filesDir, COOKIE_STORE_NAME).absolutePath
 
     @Volatile
     private var logPump: Thread? = null
@@ -54,7 +70,7 @@ object OpenFluxManager {
 
         val transport = config.openfluxTransport?.takeIf { it.isNotBlank() } ?: TRANSPORT_YANDEX
         val url = config.openfluxUrl.orEmpty().trim()
-        if (url.isBlank()) {
+        if (usesUrl(transport) && url.isBlank()) {
             LogUtil.e(AppConfig.TAG, "OpenFluxManager: url is empty")
             return false
         }
@@ -69,13 +85,16 @@ object OpenFluxManager {
         config.serverPort = socksPort.toString()
 
         return try {
-            client.setProtector(protector)
+            appContext = context.applicationContext
             client.setTransport(transport)
             client.setURL(url)
             client.setMaxCredentials(config.openfluxMaxToken.orEmpty(), config.openfluxMaxUid?.toLongOrNull() ?: 0L)
             client.setEncryptionKey(config.openfluxKey.orEmpty())
             client.setSocks(AppConfig.LOOPBACK, socksPort.toLong())
             client.setDebug(false)
+            // Persist solved-captcha cookies across restarts; a failure here
+            // must not take the tunnel down.
+            runCatching { client.setCookieStore(cookieStorePath(context)) }
 
             LogUtil.d(
                 AppConfig.TAG,
@@ -179,6 +198,9 @@ object OpenFluxManager {
         probe.setMaxCredentials(config.openfluxMaxToken.orEmpty(), config.openfluxMaxUid?.toLongOrNull() ?: 0L)
         probe.setEncryptionKey(config.openfluxKey.orEmpty())
         probe.setSocks(AppConfig.LOOPBACK, port.toLong())
+        appContext?.let { ctx ->
+            runCatching { probe.setCookieStore(cookieStorePath(ctx)) }
+        }
         return probe
     }
 

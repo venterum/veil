@@ -143,12 +143,16 @@ object UpdateCheckerManager {
         val v2 = version2.split(".")
 
         for (i in 0 until maxOf(v1.size, v2.size)) {
-            val num1 = if (i < v1.size) v1[i].toInt() else 0
-            val num2 = if (i < v2.size) v2[i].toInt() else 0
+            val num1 = if (i < v1.size) v1[i].leadingNumber() else 0
+            val num2 = if (i < v2.size) v2[i].leadingNumber() else 0
             if (num1 != num2) return num1 - num2
         }
         return 0
     }
+
+    /** The leading digits of a version component ("0-beta" -> 0), or 0 when there are none. */
+    private fun String.leadingNumber(): Int =
+        takeWhile { it.isDigit() }.toIntOrNull() ?: 0
 
     private fun getDownloadUrl(release: GitHubRelease, abi: String): String {
         val fDroid = "fdroid"

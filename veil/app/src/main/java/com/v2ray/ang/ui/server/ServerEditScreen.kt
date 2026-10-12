@@ -607,10 +607,10 @@ private fun SectionContent(
             )
             AnimatedField(visible = uiState.showOpenfluxUrl) {
                 EditTextField(
-                    label = stringResource(R.string.openflux_lab_url),
+                    label = stringResource(uiState.openfluxUrlLabelRes),
                     value = uiState.openfluxUrl,
                     onValueChange = { uiState.openfluxUrl = it },
-                    placeholder = stringResource(R.string.openflux_hint_url)
+                    placeholder = stringResource(uiState.openfluxUrlHintRes)
                 )
             }
             AnimatedField(visible = uiState.showOpenfluxMaxCredentials) {
