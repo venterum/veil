@@ -38,6 +38,7 @@ import androidx.glance.layout.width
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
+import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.util.MessageUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,12 +48,25 @@ import kotlinx.coroutines.launch
 val isRunningKey = booleanPreferencesKey("isRunning")
 private const val ACTION_RELOAD = "com.v2ray.ang.widget.RELOAD"
 
+/**
+ * Cross-process ground truth for the core state: the daemon writes this flag
+ * on start/stop and it is readable from the main process (multi-process MMKV).
+ * The widget runs in the main process, so it must never ask its own core state.
+ */
+private fun isWidgetServiceRunning(): Boolean =
+    MmkvManager.decodeSettingsBool(AppConfig.PREF_WIDGET_SERVICE_RUNNING, false)
+
 class WidgetProvider : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = VeilWidget
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        updateAllWidgetsState(context, CoreServiceManager.isRunning())
+        // The widget runs in the main process while the core runs in the daemon
+        // process, so the local core state is meaningless here. Render from the
+        // persisted cross-process flag and ask the daemon for its authoritative
+        // state (it answers with an activity broadcast).
+        MessageUtil.sendMsg2Service(context, AppConfig.MSG_REGISTER_CLIENT, "")
+        updateAllWidgetsState(context, isWidgetServiceRunning())
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -61,14 +75,20 @@ class WidgetProvider : GlanceAppWidgetReceiver() {
         when (intent.action) {
             // 1. Клик по кнопке ВКЛ/ВЫКЛ
             AppConfig.BROADCAST_ACTION_WIDGET_CLICK -> {
-                val currentlyRunning = CoreServiceManager.isRunning()
+                val currentlyRunning = isWidgetServiceRunning()
 
                 // Мгновенно обновляем UI через официальный State Glance
                 updateAllWidgetsState(context, !currentlyRunning)
 
                 // Вызываем надежный системный запуск из оригинала
                 if (currentlyRunning) {
-                    CoreServiceManager.stopVService(context)
+                    MessageUtil.sendMsg2ServiceForResult(context, AppConfig.MSG_STATE_STOP, "") { handled ->
+                        if (!handled) {
+                            // The daemon is gone; the flag was stale. Reflect it.
+                            MmkvManager.encodeSettings(AppConfig.PREF_WIDGET_SERVICE_RUNNING, false)
+                            updateAllWidgetsState(context, false)
+                        }
+                    }
                 } else {
                     CoreServiceManager.startVServiceFromToggle(context)
                 }
@@ -76,11 +96,17 @@ class WidgetProvider : GlanceAppWidgetReceiver() {
 
             // 2. Клик по кнопке ПЕРЕЗАГРУЗКА
             ACTION_RELOAD -> {
-                updateAllWidgetsState(context, true)
-
-                if (CoreServiceManager.isRunning()) {
-                    MessageUtil.sendMsg2Service(context, AppConfig.MSG_STATE_RESTART, "")
+                if (isWidgetServiceRunning()) {
+                    // The daemon restarts the core in place; the service, notification
+                    // and tunnel stay up. If no daemon answers, the flag was stale and
+                    // a normal start is needed instead.
+                    MessageUtil.sendMsg2ServiceForResult(context, AppConfig.MSG_STATE_RESTART, "") { handled ->
+                        if (!handled) {
+                            CoreServiceManager.startVServiceFromToggle(context)
+                        }
+                    }
                 } else {
+                    updateAllWidgetsState(context, true)
                     CoreServiceManager.startVServiceFromToggle(context)
                 }
             }
@@ -137,8 +163,8 @@ object VeilWidget : GlanceAppWidget() {
             GlanceTheme(DynamicThemeColorProviders) {
                 // Подписываемся на изменения состояния!
                 val prefs = currentState<Preferences>()
-                // Берем состояние из виджета, либо (если это первый запуск) у ядра
-                val isRunning = prefs[isRunningKey] ?: CoreServiceManager.isRunning()
+                // Берем состояние из виджета, либо (если это первый запуск) из MMKV
+                val isRunning = prefs[isRunningKey] ?: isWidgetServiceRunning()
 
                 VeilWidgetContent(isRunning = isRunning)
             }

@@ -1,5 +1,6 @@
 package com.v2ray.ang.core
 
+import android.app.Activity
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -43,6 +44,7 @@ import libv2ray.CoreController
 import libv2ray.ProcessFinder
 import java.lang.ref.SoftReference
 import java.net.InetSocketAddress
+import java.util.concurrent.atomic.AtomicBoolean
 
 object CoreServiceManager {
 
@@ -51,6 +53,15 @@ object CoreServiceManager {
     private var currentConfig: ProfileItem? = null
     private var processFinder: XrayProcessFinder? = null
     private var browserDialer: IDialerService? = null
+
+    /** TUN descriptor the core was started with; null in proxy-only and root modes. */
+    private var currentVpnInterface: ParcelFileDescriptor? = null
+
+    /** True while an in-place restart runs; suppresses the shutdown callback's service stop. */
+    private val isRestarting = AtomicBoolean(false)
+
+    /** True while [mMsgReceive] is registered with the active service. */
+    private var receiverRegistered = false
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
@@ -297,13 +308,17 @@ object CoreServiceManager {
             error(result.errorMessage.ifBlank { "Failed to get V2Ray config" })
         }
 
-        val mFilter = IntentFilter(AppConfig.BROADCAST_ACTION_SERVICE)
-        mFilter.addAction(Intent.ACTION_SCREEN_ON)
-        mFilter.addAction(Intent.ACTION_SCREEN_OFF)
-        mFilter.addAction(Intent.ACTION_USER_PRESENT)
-        ContextCompat.registerReceiver(service, mMsgReceive, mFilter, Utils.receiverFlags())
+        if (!receiverRegistered) {
+            val mFilter = IntentFilter(AppConfig.BROADCAST_ACTION_SERVICE)
+            mFilter.addAction(Intent.ACTION_SCREEN_ON)
+            mFilter.addAction(Intent.ACTION_SCREEN_OFF)
+            mFilter.addAction(Intent.ACTION_USER_PRESENT)
+            ContextCompat.registerReceiver(service, mMsgReceive, mFilter, Utils.receiverFlags())
+            receiverRegistered = true
+        }
 
         currentConfig = config
+        currentVpnInterface = vpnInterface
         var tunFd = vpnInterface?.fd ?: 0
         val dialerAddr = if (currentConfig?.browserDialerMode.isNullOrEmpty()) {
             ""
@@ -351,18 +366,21 @@ object CoreServiceManager {
         }
 
         // Persist for the widget (multi-process MMKV, visible across processes).
-        MmkvManager.encodeSettings("pref_widget_service_running", true)
+        MmkvManager.encodeSettings(AppConfig.PREF_WIDGET_SERVICE_RUNNING, true)
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
         NotificationManager.startSpeedNotification()
         LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core started successfully")
     }
 
     /**
-     * Stops the V2Ray core service.
-     * Unregisters broadcast receivers, stops notifications, and shuts down plugins.
-     * @return True if the core was stopped successfully, false otherwise.
+     * Stops the V2Ray core loop.
+     *
+     * @param keepServiceAlive When true (an in-place restart), the service, its foreground
+     *   notification and the registered receiver are left alone; only the core and its
+     *   plugins are torn down. The restart coroutine starts a fresh core afterwards.
+     * @return True if the core was stopped, false when no service is registered.
      */
-    fun stopCoreLoop(): Boolean {
+    fun stopCoreLoop(keepServiceAlive: Boolean = false): Boolean {
         val service = getService() ?: return false
 
         if (coreController.isRunning) {
@@ -391,17 +409,90 @@ object CoreServiceManager {
             OpenFluxManager.stop()
         }
 
-        MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
-        MmkvManager.encodeSettings("pref_widget_service_running", false)
-        NotificationManager.cancelNotification()
+        if (!keepServiceAlive) {
+            currentVpnInterface = null
+            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
+            MmkvManager.encodeSettings(AppConfig.PREF_WIDGET_SERVICE_RUNNING, false)
+            NotificationManager.cancelNotification()
+            unregisterMsgReceiver(service)
+        }
 
+        return true
+    }
+
+    /**
+     * Restarts the core in place: the service, its foreground notification and, in VPN
+     * mode, the tunnel interface all stay up; only the core is stopped and started again
+     * from a freshly built config. Used by the notification and widget restart actions,
+     * where tearing the service down and starting a new one from the background is
+     * unreliable (foreground-service start restrictions, process death while waiting).
+     *
+     * @return True if a restart was started, false if one is already in flight or no
+     *   service is registered.
+     */
+    fun restartCoreLoop(): Boolean {
+        if (!isRestarting.compareAndSet(false, true)) {
+            LogUtil.w(AppConfig.TAG, "StartCore-Manager: Restart already in progress")
+            return false
+        }
+
+        val service = getService()
+        if (service == null) {
+            isRestarting.set(false)
+            return false
+        }
+
+        // No live core (e.g. it failed earlier): restarting is a plain start.
+        if (!coreController.isRunning) {
+            isRestarting.set(false)
+            startVService(service)
+            return true
+        }
+
+        val vpnInterface = currentVpnInterface
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restarting core in place")
+                stopCoreLoop(keepServiceAlive = true)
+                // stopLoop() runs asynchronously; wait until the ports are released.
+                awaitCoreStopped()
+                // Let the Go side's shutdown teardown finish before a new core takes over.
+                delay(200L)
+
+                if (!isRestarting.get()) {
+                    // A stop arrived while we were waiting; leave the core down.
+                    LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restart cancelled by stop")
+                    return@launch
+                }
+
+                doStartCoreLoop(service, vpnInterface)
+                LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core restarted")
+            } catch (t: Throwable) {
+                val message = t.message?.takeUnless { it.isBlank() } ?: t.javaClass.simpleName
+                LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to restart core: $message", t)
+                MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, message)
+                // Leave a clean state: no foreground service with a dead core.
+                isRestarting.set(false)
+                NotificationManager.cancelNotification()
+                serviceControl?.get()?.stopService()
+                return@launch
+            } finally {
+                isRestarting.set(false)
+            }
+        }
+        return true
+    }
+
+    /** Unregisters [mMsgReceive] once; safe to call when it is not registered. */
+    private fun unregisterMsgReceiver(service: Service) {
+        if (!receiverRegistered) return
         try {
             service.unregisterReceiver(mMsgReceive)
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to unregister receiver", e)
+        } finally {
+            receiverRegistered = false
         }
-
-        return true
     }
 
     /**
@@ -522,9 +613,15 @@ object CoreServiceManager {
 
         /**
          * Called when V2Ray core shuts down.
+         * During an in-place restart the service must stay alive for the restart
+         * coroutine; in every other case the core shutting down stops the service.
          * @return 0 for success, any other value for failure.
          */
         override fun shutdown(): Long {
+            if (isRestarting.get()) {
+                LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core stopped for restart")
+                return 0
+            }
             val serviceControl = serviceControl?.get() ?: return -1
             return try {
                 serviceControl.stopService()
@@ -636,6 +733,12 @@ object CoreServiceManager {
                 AppConfig.MSG_STATE_STOP -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Stop service")
 
+                    // Tell an ordered sender (the widget) that the daemon handled this.
+                    if (isOrderedBroadcast) resultCode = Activity.RESULT_OK
+
+                    // Cancel an in-flight in-place restart so it does not resurrect the core.
+                    isRestarting.set(false)
+
                     // Stop TUN first if running in Hybrid Mode, before proxy shuts down.
                     val stopContext = serviceControl.getService()
                     if (stopContext != null
@@ -654,17 +757,15 @@ object CoreServiceManager {
 
                 AppConfig.MSG_STATE_RESTART -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restart service")
-                    val appContext = serviceControl.getService().applicationContext
-                    CoroutineScope(Dispatchers.IO).launch {
-                        serviceControl.stopService()
-                        // stopCoreLoop() stops the core asynchronously, so wait until it has
-                        // actually released its ports before starting a fresh core.
-                        awaitCoreStopped()
-                        // Give the core's shutdown() callback a moment to finish its teardown
-                        // (stopSelf + interface close) before a new service takes over.
-                        delay(300L)
-                        startVService(appContext)
-                    }
+
+                    // Tell an ordered sender (the widget) that the daemon handled this.
+                    if (isOrderedBroadcast) resultCode = Activity.RESULT_OK
+
+                    // Restart the core in place: the service, notification and VPN
+                    // interface stay up, so no new foreground service has to be started
+                    // from the background (which Android rejects) and the tunnel is not
+                    // torn down while the old core shuts down.
+                    restartCoreLoop()
                 }
 
                 AppConfig.MSG_STATE_TUN_TOGGLE -> {

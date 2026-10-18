@@ -36,6 +36,11 @@ class CoreRootService : Service(), ServiceControl {
         NotificationManager.showNotification(null)
 
         setupJob = serviceScope.launch {
+            if (CoreServiceManager.isRunning()) {
+                LogUtil.i(AppConfig.TAG, "StartCore-Root: Core is already running")
+                return@launch
+            }
+
             if (!CoreServiceManager.startCoreLoop(null)) {
                 LogUtil.e(AppConfig.TAG, "StartCore-Root: core failed to start")
                 stopService()

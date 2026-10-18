@@ -128,6 +128,12 @@ class CoreVpnService : VpnService(), ServiceControl {
         NotificationManager.showNotification(null)
         // VPN interface creation and core startup can block; run them off the main thread.
         serviceScope.launch {
+            if (CoreServiceManager.isRunning()) {
+                // A duplicate start (widget, tile, boot, always-on VPN) must not tear
+                // down the live tunnel; keep the notification and carry on.
+                LogUtil.i(AppConfig.TAG, "StartCore-VPN: Core is already running")
+                return@launch
+            }
             setupVpnService()
             startService()
         }

@@ -252,6 +252,7 @@
     <string name="openflux_lab_url_document">Document URL</string>
     <string name="openflux_lab_url_mailru">Mail.ru public link</string>
     <string name="openflux_lab_url_cups">Room list (base64)</string>
+    <string name="openflux_lab_url_avito">Avito room list (base64)</string>
     <string
         name="openflux_hint_url_yandex"
     >Public Yandex Docs URL, same as the exit node (e.g. https://docs.yandex.ru/docs/view?url=…)</string>
@@ -261,6 +262,7 @@
         name="openflux_hint_url_mailru"
     >Mail.ru public link, e.g. AbCdEfGh1/IjKlMnOp2 or https://cloud.mail.ru/public/…</string>
     <string name="openflux_hint_url_cups">Base64 room list printed by the exit node</string>
+    <string name="openflux_hint_url_avito">Base64 room list printed by the Avito exit node</string>
     <string name="openflux_lab_max_token">MAX token</string>
     <string name="openflux_lab_max_uid">MAX peer user ID</string>
     <string

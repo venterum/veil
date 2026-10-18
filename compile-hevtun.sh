@@ -96,5 +96,29 @@ for abi in $ABIS; do
   cp "$TMPDIR/libs-exec/$abi/hevsockstun" "$__dir/libs/$abi/libhevsockstun.so"
 done
 
+# 3) Fail fast when the produced JNI library does not implement the native
+#    contract declared in veil/app/.../service/TProxyService.kt. JNI_OnLoad
+#    registers that exact method table and returns JNI_ERR on any mismatch, so
+#    a stale library silently breaks hev TUN (hybrid mode always uses it) at
+#    runtime with "JNI_ERR returned from JNI_OnLoad".
+for abi in $ABIS; do
+  jni="$__dir/libs/$abi/libhev-socks5-tunnel.so"
+  for expected in \
+      "com/v2ray/ang/service/TProxyService" \
+      "TProxyStartService" \
+      "TProxyStopService" \
+      "TProxyIsRunning" \
+      "TProxyGetStats" \
+      "(Ljava/lang/String;I)Z" \
+      "()Z" \
+      "()[J"; do
+    if ! grep -qF -- "$expected" "$jni"; then
+      echo "ERROR: $jni is missing '$expected'; it does not match the JNI contract in TProxyService.kt" >&2
+      exit 1
+    fi
+  done
+done
+echo "JNI contract check passed for: $ABIS"
+
 popd
 rm -rf $TMPDIR

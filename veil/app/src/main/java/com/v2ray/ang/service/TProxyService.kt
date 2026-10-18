@@ -21,18 +21,36 @@ class TProxyService(
     companion object {
         @JvmStatic
         @Suppress("FunctionName")
-        private external fun TProxyStartService(configPath: String, fd: Int)
+        private external fun TProxyStartService(configPath: String, fd: Int): Boolean
 
         @JvmStatic
         @Suppress("FunctionName")
-        private external fun TProxyStopService()
+        private external fun TProxyStopService(): Boolean
+
+        @JvmStatic
+        @Suppress("FunctionName")
+        private external fun TProxyIsRunning(): Boolean
 
         @JvmStatic
         @Suppress("FunctionName")
         private external fun TProxyGetStats(): LongArray?
 
-        init {
+        /**
+         * Whether the bundled hev-socks5-tunnel JNI library loaded successfully.
+         *
+         * The native method table is part of the library's ABI: JNI_OnLoad registers the
+         * methods above on com.v2ray.ang.service.TProxyService with exact signatures, and
+         * fails with JNI_ERR when a declared method is missing or mismatched (e.g. a stale
+         * libhev-socks5-tunnel.so built for an older contract). System.loadLibrary then
+         * throws, so the failure is caught here to only disable hev TUN instead of
+         * crashing the whole daemon process.
+         */
+        val isNativeAvailable: Boolean = try {
             System.loadLibrary("hev-socks5-tunnel")
+            true
+        } catch (t: Throwable) {
+            LogUtil.e(AppConfig.TAG, "HevSocks5Tunnel: failed to load native library", t)
+            false
         }
     }
 
@@ -41,6 +59,11 @@ class TProxyService(
      */
     override fun startTun2Socks() {
 //        LogUtil.i(AppConfig.TAG, "Starting HevSocks5Tunnel via JNI")
+
+        if (!isNativeAvailable) {
+            LogUtil.e(AppConfig.TAG, "HevSocks5Tunnel: native library unavailable, not starting tun2socks")
+            return
+        }
 
         val configContent = buildConfig()
         val configFile = File(context.filesDir, "hev-socks5-tunnel.yaml").apply {
@@ -51,9 +74,11 @@ class TProxyService(
 
         try {
 //            LogUtil.i(AppConfig.TAG, "TProxyStartService...")
-            TProxyStartService(configFile.absolutePath, vpnInterface.fd)
-        } catch (e: Exception) {
-            LogUtil.e(AppConfig.TAG, "HevSocks5Tunnel exception: ${e.message}")
+            if (!TProxyStartService(configFile.absolutePath, vpnInterface.fd)) {
+                LogUtil.e(AppConfig.TAG, "HevSocks5Tunnel: TProxyStartService returned false")
+            }
+        } catch (t: Throwable) {
+            LogUtil.e(AppConfig.TAG, "HevSocks5Tunnel exception: ${t.message}", t)
         }
     }
 
@@ -101,11 +126,13 @@ class TProxyService(
      * Stops the tun2socks process
      */
     override fun stopTun2Socks() {
+        if (!isNativeAvailable) return
+
         try {
             LogUtil.i(AppConfig.TAG, "TProxyStopService...")
             TProxyStopService()
-        } catch (e: Exception) {
-            LogUtil.e(AppConfig.TAG, "Failed to stop hev-socks5-tunnel", e)
+        } catch (t: Throwable) {
+            LogUtil.e(AppConfig.TAG, "Failed to stop hev-socks5-tunnel", t)
         }
     }
 }

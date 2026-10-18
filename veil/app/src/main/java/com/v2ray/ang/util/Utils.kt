@@ -560,15 +560,14 @@ object Utils {
     }
 
     /**
-     * Get the receiver flags based on the Android version.
+     * Flags for the app's internal broadcast receivers.
      *
-     * @return The receiver flags.
+     * These receivers only exchange messages between the app's own processes
+     * (daemon, UI, widget, tile), so they must not be exported — otherwise any
+     * app could send stop/restart/tun-toggle commands. On API < 33 ContextCompat
+     * ignores the flag and registers a normal in-app receiver.
      */
-    fun receiverFlags(): Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        ContextCompat.RECEIVER_EXPORTED
-    } else {
-        ContextCompat.RECEIVER_NOT_EXPORTED
-    }
+    fun receiverFlags(): Int = ContextCompat.RECEIVER_NOT_EXPORTED
 
     /**
      * Check if the package is Xray.

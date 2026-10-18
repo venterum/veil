@@ -82,7 +82,7 @@ func New() *Client {
 	}
 }
 
-// SetTransport selects yandex, vyandex, boards, mailru, oneme or cupsonline.
+// SetTransport selects yandex, vyandex, boards, mailru, avito, oneme or cupsonline.
 func (c *Client) SetTransport(transportType string) error {
 	if !supportedTransport(transportType) {
 		return fmt.Errorf("%w: %q", ErrUnsupported, transportType)
@@ -93,7 +93,7 @@ func (c *Client) SetTransport(transportType string) error {
 	return nil
 }
 
-// SetURL sets the transport payload: the Yandex/Vyandex/Boards/Mail.ru
+// SetURL sets the transport payload: the Yandex/Vyandex/Boards/Mail.ru/Avito
 // document URL or the Cups.online base64 room list; ignored for oneme.
 func (c *Client) SetURL(url string) {
 	c.mu.Lock()
@@ -374,7 +374,7 @@ func usesURL(transportType string) bool {
 
 func supportedTransport(transportType string) bool {
 	switch transportType {
-	case "yandex", "vyandex", "boards", "mailru", "oneme", "cupsonline":
+	case "yandex", "vyandex", "boards", "mailru", "avito", "oneme", "cupsonline":
 		return true
 	default:
 		return false

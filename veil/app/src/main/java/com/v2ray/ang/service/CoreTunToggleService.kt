@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.StrictMode
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.LOOPBACK
 import com.v2ray.ang.BuildConfig
@@ -78,7 +79,8 @@ class CoreTunToggleService : VpnService() {
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
-        registerReceiver(
+        ContextCompat.registerReceiver(
+            this,
             stopTunReceiver,
             IntentFilter(AppConfig.ACTION_STOP_TUN),
             Utils.receiverFlags()
@@ -150,6 +152,15 @@ class CoreTunToggleService : VpnService() {
     }
 
     private fun setupTunService() {
+        if (!TProxyService.isNativeAvailable) {
+            LogUtil.e(
+                AppConfig.TAG,
+                "StartCore-TunToggle: hev-socks5-tunnel JNI library unavailable, aborting TUN"
+            )
+            stopAllService()
+            return
+        }
+
         val prepare = prepare(this)
         if (prepare != null) {
             LogUtil.e(AppConfig.TAG, "StartCore-TunToggle: Permission not granted")

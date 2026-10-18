@@ -1,5 +1,7 @@
 package com.v2ray.ang.util
 
+import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -22,6 +24,33 @@ object MessageUtil {
      */
     fun sendMsg2Service(ctx: Context, what: Int, content: Serializable) {
         sendMsg(ctx, AppConfig.BROADCAST_ACTION_SERVICE, what, content)
+    }
+
+    /**
+     * Sends an ordered message to the service and reports whether the daemon
+     * receiver handled it. When the daemon is not running (no receiver is
+     * registered) the initial canceled result reaches [onResult] unchanged.
+     */
+    fun sendMsg2ServiceForResult(ctx: Context, what: Int, content: Serializable, onResult: (Boolean) -> Unit) {
+        val resultReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                onResult(resultCode == Activity.RESULT_OK)
+            }
+        }
+        try {
+            ctx.sendOrderedBroadcast(
+                messageIntent(AppConfig.BROADCAST_ACTION_SERVICE, what, content),
+                null,
+                resultReceiver,
+                null,
+                Activity.RESULT_CANCELED,
+                null,
+                null,
+            )
+        } catch (e: Exception) {
+            LogUtil.e(AppConfig.TAG, "Failed to send ordered message to service", e)
+            onResult(false)
+        }
     }
 
     /**
@@ -79,14 +108,18 @@ object MessageUtil {
      */
     private fun sendMsg(ctx: Context, action: String, what: Int, content: Serializable) {
         try {
-            val intent = Intent()
-            intent.action = action
-            intent.`package` = AppConfig.ANG_PACKAGE
-            intent.putExtra("key", what)
-            intent.putExtra("content", content)
-            ctx.sendBroadcast(intent)
+            ctx.sendBroadcast(messageIntent(action, what, content))
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to send message with action: $action", e)
         }
+    }
+
+    private fun messageIntent(action: String, what: Int, content: Serializable): Intent {
+        val intent = Intent()
+        intent.action = action
+        intent.`package` = AppConfig.ANG_PACKAGE
+        intent.putExtra("key", what)
+        intent.putExtra("content", content)
+        return intent
     }
 }

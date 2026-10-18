@@ -58,7 +58,7 @@ An Xray client for Android with the standard V2Ray/Xray protocols plus two plugg
 
 - **Protocols:** VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, Hysteria2
 - **olcRTC:** Jitsi / Telemost / WbStream carriers; DataChannel / VP8 / SEI transports
-- **OpenFlux:** Yandex Docs / Volga / Board / MAX / Cups.online / Mail.ru transports; runs the upstream OpenFlux mobile bridge (Session profiles with a classic fallback), requires a self-hosted exit node
+- **OpenFlux:** Yandex Docs / Volga / Board / MAX / Cups.online / Mail.ru / Avito transports; runs the upstream OpenFlux mobile bridge (Session profiles with a classic fallback), requires a self-hosted exit node
 - **Modes:** VPN (TUN), proxy-only (SOCKS5), hybrid (SOCKS5 with an in-app TUN toggle), root
 - **Proxy chains:** route through multiple servers
 - **Routing:** one-tap presets (Bypass RU / CN / IR), block ads, per-app proxy, custom rules, GeoIP / Geosite asset downloads

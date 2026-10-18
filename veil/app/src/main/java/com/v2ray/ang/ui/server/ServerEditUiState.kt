@@ -324,6 +324,7 @@ class ServerEditUiState(
         get() = when (openfluxTransport) {
             OpenFluxManager.TRANSPORT_MAILRU -> R.string.openflux_lab_url_mailru
             OpenFluxManager.TRANSPORT_CUPSONLINE -> R.string.openflux_lab_url_cups
+            OpenFluxManager.TRANSPORT_AVITO -> R.string.openflux_lab_url_avito
             else -> R.string.openflux_lab_url_document
         }
     val openfluxUrlHintRes: Int
@@ -332,6 +333,7 @@ class ServerEditUiState(
             OpenFluxManager.TRANSPORT_BOARDS -> R.string.openflux_hint_url_boards
             OpenFluxManager.TRANSPORT_MAILRU -> R.string.openflux_hint_url_mailru
             OpenFluxManager.TRANSPORT_CUPSONLINE -> R.string.openflux_hint_url_cups
+            OpenFluxManager.TRANSPORT_AVITO -> R.string.openflux_hint_url_avito
             else -> R.string.openflux_hint_url_yandex
         }
 

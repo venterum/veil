@@ -43,6 +43,10 @@ class CoreProxyOnlyService : Service(), ServiceControl {
         // thread because it can block on config generation, DNS resolution, and JNI.
         NotificationManager.showNotification(null)
         serviceScope.launch {
+            if (CoreServiceManager.isRunning()) {
+                LogUtil.i(AppConfig.TAG, "StartCore-Proxy: Core is already running")
+                return@launch
+            }
             if (!CoreServiceManager.startCoreLoop(null)) {
                 LogUtil.e(AppConfig.TAG, "StartCore-Proxy: Core failed to start, stopping service")
                 stopService()

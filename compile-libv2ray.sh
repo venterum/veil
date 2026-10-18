@@ -55,8 +55,8 @@ replace openflux-mobile => $__dir/OpenFlux/mobile
 
 replace openfluxmobile => $__dir/openfluxmobile
 
-// olcrtc implements pion's transport/v4 interfaces, while OpenFlux v0.5.1
-// (telemost) pins the transport/v5 family. Keep the whole pion stack at the
+// olcrtc implements pion's transport/v4 interfaces, while OpenFlux's telemost
+// carrier pins the transport/v5 family. Keep the whole pion stack at the
 // last transport/v4 releases (the set webrtc v4.2.20 needs) so both modules
 // can coexist in one binary. Only the telemost/MAX carriers use pion.
 replace github.com/pion/webrtc/v4 => github.com/pion/webrtc/v4 v4.2.20

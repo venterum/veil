@@ -34,7 +34,7 @@ class BootReceiver : BroadcastReceiver() {
         // After a clean reboot all user-space processes are gone, so the VPN
         // service is definitely not running.  The MMKV flag may still carry a
         // stale true from before shutdown — reset it.
-        MmkvManager.encodeSettings("pref_widget_service_running", false)
+        MmkvManager.encodeSettings(AppConfig.PREF_WIDGET_SERVICE_RUNNING, false)
         CoroutineScope(Dispatchers.Default).launch {
             VeilWidget.updateAll(context)
         }

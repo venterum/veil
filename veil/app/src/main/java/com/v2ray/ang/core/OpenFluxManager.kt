@@ -26,6 +26,7 @@ object OpenFluxManager {
     const val TRANSPORT_MAILRU = "mailru"
     const val TRANSPORT_ONEME = "oneme"
     const val TRANSPORT_CUPSONLINE = "cupsonline"
+    const val TRANSPORT_AVITO = "avito"
 
     val TRANSPORTS = listOf(
         TRANSPORT_YANDEX,
@@ -33,7 +34,8 @@ object OpenFluxManager {
         TRANSPORT_BOARDS,
         TRANSPORT_MAILRU,
         TRANSPORT_ONEME,
-        TRANSPORT_CUPSONLINE
+        TRANSPORT_CUPSONLINE,
+        TRANSPORT_AVITO
     )
 
     /** MAX (oneme) is configured with a token/uid; every other transport with a URL. */
