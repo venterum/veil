@@ -58,15 +58,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val connectionIp by lazy { MutableLiveData<String>() }
     val connectionIpDetail by lazy { MutableLiveData<com.v2ray.ang.dto.IPAPIInfo?>() }
     val snackbarMessage by lazy { MutableLiveData<String>() }
+    private var receiverRegistered = false
 
     /**
      * Refer to the official documentation for [registerReceiver](https://developer.android.com/reference/androidx/core/content/ContextCompat#registerReceiver(android.content.Context,android.content.BroadcastReceiver,android.content.IntentFilter,int):
      * `registerReceiver(Context, BroadcastReceiver, IntentFilter, int)`.
+     *
+     * The receiver is registered once per ViewModel; the activity may call this again
+     * after a configuration change, in which case only the state query is re-sent.
      */
     fun startListenBroadcast() {
-        setRunningState(false)
-        val mFilter = IntentFilter(AppConfig.BROADCAST_ACTION_ACTIVITY)
-        ContextCompat.registerReceiver(getApplication(), mMsgReceiver, mFilter, Utils.receiverFlags())
+        if (!receiverRegistered) {
+            setRunningState(false)
+            val mFilter = IntentFilter(AppConfig.BROADCAST_ACTION_ACTIVITY)
+            ContextCompat.registerReceiver(getApplication(), mMsgReceiver, mFilter, Utils.receiverFlags())
+            receiverRegistered = true
+        }
         MessageUtil.sendMsg2Service(getApplication(), AppConfig.MSG_REGISTER_CLIENT, "")
     }
 
@@ -74,7 +81,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Called when the ViewModel is cleared.
      */
     override fun onCleared() {
-        getApplication<AngApplication>().unregisterReceiver(mMsgReceiver)
+        if (receiverRegistered) {
+            getApplication<AngApplication>().unregisterReceiver(mMsgReceiver)
+            receiverRegistered = false
+        }
         LogUtil.i(AppConfig.TAG, "Main ViewModel is cleared")
         super.onCleared()
     }
@@ -192,11 +202,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Updates both the LiveData and StateFlow used to signal a list refresh.
+     * Updates both the LiveData and the revision flow used to signal a list refresh.
+     * The StateFlow is a monotonic tick because repeated equal values would be
+     * conflated and the main screen would not recompute derived group counts.
      */
     private fun setUpdateListAction(position: Int) {
         updateListAction.value = position
-        _updateListActionFlow.value = position
+        _updateListActionFlow.value += 1
     }
 
     /**
@@ -279,8 +291,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Gets the subscriptions.
+     *
+     * The "All" group is always shown when there are no subscriptions, otherwise a
+     * fresh install (or a user who hid the All tab) would have no page where manually
+     * added servers could appear.
+     *
      * @param context The context.
-     * @return A pair of lists containing the subscription IDs and remarks.
+     * @return The groups shown by the main pager.
      */
     fun getSubscriptions(context: Context): List<GroupMapItem> {
         val subscriptions = MmkvManager.decodeSubscriptions()
@@ -291,7 +308,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val groups = mutableListOf<GroupMapItem>()
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_ALL_DISPLAY)) {
+        if (subscriptions.isEmpty() || MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_ALL_DISPLAY)) {
             groups.add(
                 GroupMapItem(
                     id = "",

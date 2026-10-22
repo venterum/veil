@@ -495,6 +495,10 @@ object SettingsManager {
         }
     }
 
+    /** Pure-black palette for dark mode, opt-in from Settings. */
+    fun isAmoledThemeEnabled(): Boolean =
+        MmkvManager.decodeSettingsBool(AppConfig.PREF_AMOLED_THEME, false)
+
     /**
      * Retrieves the currently selected VPN interface address configuration.
      * This method reads the user's preference for VPN interface addressing and returns

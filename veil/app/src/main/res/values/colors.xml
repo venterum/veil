@@ -54,6 +54,16 @@
     <color name="md_theme_outline">#847469</color>
     <color name="md_theme_outlineVariant">#D6C3B6</color>
 
+    <!-- AMOLED overlay: pure black background with near-black surface tiers. -->
+    <color name="amoled_surface">#000000</color>
+    <color name="amoled_surface_container_lowest">#000000</color>
+    <color name="amoled_surface_container_low">#070707</color>
+    <color name="amoled_surface_container">#0D0D0D</color>
+    <color name="amoled_surface_container_high">#141414</color>
+    <color name="amoled_surface_container_highest">#1C1C1C</color>
+    <color name="amoled_surface_variant">#2A2A2A</color>
+    <color name="amoled_outline_variant">#2E2E2E</color>
+
     <color name="md_theme_inversePrimary">#FFB77B</color>
     <color name="md_theme_shadow">#000000</color>
     <color name="md_theme_surfaceTint">#8F4C00</color>

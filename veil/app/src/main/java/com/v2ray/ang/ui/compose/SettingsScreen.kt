@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -269,6 +270,16 @@ private fun UiSettingsSection(
     val sEmojiAvatar = stringResource(R.string.summary_pref_server_emoji_avatar)
     val tSearchButton = stringResource(R.string.title_pref_server_search_button)
     val sSearchButton = stringResource(R.string.summary_pref_server_search_button)
+    val tQuickTest = stringResource(R.string.title_pref_quick_action_test_all)
+    val sQuickTest = stringResource(R.string.summary_pref_quick_action_test_all)
+    val tQuickSort = stringResource(R.string.title_pref_quick_action_sort)
+    val sQuickSort = stringResource(R.string.summary_pref_quick_action_sort)
+    val tQuickUpdate = stringResource(R.string.title_pref_quick_action_update)
+    val sQuickUpdate = stringResource(R.string.summary_pref_quick_action_update)
+    val tUnsupportedPing = stringResource(R.string.title_pref_unsupported_ping_pill)
+    val sUnsupportedPing = stringResource(R.string.summary_pref_unsupported_ping_pill)
+    val tBolderFont = stringResource(R.string.title_pref_main_bolder_font)
+    val sBolderFont = stringResource(R.string.summary_pref_main_bolder_font)
     val tGroupAll = stringResource(R.string.title_pref_group_all_display)
     val sGroupAll = stringResource(R.string.summary_pref_group_all_display)
     val tGroupAllMode = stringResource(R.string.title_pref_group_all_mode)
@@ -278,6 +289,10 @@ private fun UiSettingsSection(
     val tNight = stringResource(R.string.title_pref_ui_mode_night)
     val tDynamicColor = stringResource(R.string.title_pref_dynamic_color)
     val sDynamicColor = stringResource(R.string.summary_pref_dynamic_color)
+    val tAmoled = stringResource(R.string.title_pref_amoled_theme)
+    val sAmoled = stringResource(R.string.summary_pref_amoled_theme)
+    val sAmoledLight = stringResource(R.string.summary_pref_amoled_theme_light)
+    val isDarkTheme = isSystemInDarkTheme()
     val tGoogleSans = stringResource(R.string.title_pref_google_sans)
     val sGoogleSans = stringResource(R.string.summary_pref_google_sans)
     val tAppIcon = stringResource(R.string.title_app_icon)
@@ -296,10 +311,13 @@ private fun UiSettingsSection(
         show(tSpeedStatusLive, sSpeedStatusLive) || show(tSpeedLock, sSpeedLock) ||
         show(tConfirmRemove, sConfirmRemove) || show(tStartScan, sStartScan) ||
         show(tCardStyle, sCardStyle) || show(tEmojiAvatar, sEmojiAvatar) ||
-        show(tSearchButton, sSearchButton) || show(tGroupAll, sGroupAll) ||
+        show(tSearchButton, sSearchButton) ||
+        show(tQuickTest, sQuickTest) || show(tQuickSort, sQuickSort) ||
+        show(tQuickUpdate, sQuickUpdate) || show(tUnsupportedPing, sUnsupportedPing) ||
+        show(tBolderFont, sBolderFont) || show(tGroupAll, sGroupAll) ||
         show(tGroupAllMode) || (show(tGroupAllIcons, sGroupAllIcons) && groupAllMode == "mode1") ||
         show(tLanguage) || show(tNight) || show(tDynamicColor, sDynamicColor) ||
-        show(tGoogleSans, sGoogleSans) || show(tAppIcon, sAppIcon)
+        show(tAmoled, sAmoled) || show(tGoogleSans, sGoogleSans) || show(tAppIcon, sAppIcon)
     if (!sectionVisible) return
 
     val groupAllModeEntries = stringArrayResource(R.array.group_all_mode_entries).toList()
@@ -341,10 +359,31 @@ private fun UiSettingsSection(
                 default = true, enabled = cardStyle
             )
         }
+        if (show(tUnsupportedPing, sUnsupportedPing)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_UNSUPPORTED_PING_PILL, tUnsupportedPing, sUnsupportedPing,
+                default = true
+            )
+        }
         if (show(tSearchButton, sSearchButton)) {
             SettingsSwitchRow(
                 state, AppConfig.PREF_SERVER_SEARCH_BUTTON_ENABLED, tSearchButton, sSearchButton,
                 default = true
+            )
+        }
+        if (show(tQuickTest, sQuickTest)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_QUICK_ACTION_TEST_ALL, tQuickTest, sQuickTest, default = true
+            )
+        }
+        if (show(tQuickSort, sQuickSort)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_QUICK_ACTION_SORT, tQuickSort, sQuickSort, default = true
+            )
+        }
+        if (show(tQuickUpdate, sQuickUpdate)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_QUICK_ACTION_UPDATE, tQuickUpdate, sQuickUpdate, default = true
             )
         }
         if (show(tGroupAll, sGroupAll)) {
@@ -370,6 +409,19 @@ private fun UiSettingsSection(
         }
         if (show(tDynamicColor, sDynamicColor)) {
             SettingsSwitchRow(state, AppConfig.PREF_DYNAMIC_COLOR, tDynamicColor, sDynamicColor, default = true)
+        }
+        if (show(tAmoled, sAmoled)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_AMOLED_THEME, tAmoled,
+                if (isDarkTheme) sAmoled else sAmoledLight,
+                enabled = isDarkTheme
+            )
+        }
+        if (show(tBolderFont, sBolderFont)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_MAIN_BOLDER_FONT, tBolderFont, sBolderFont,
+                default = true
+            )
         }
         if (show(tGoogleSans, sGoogleSans)) {
             SettingsSwitchRow(

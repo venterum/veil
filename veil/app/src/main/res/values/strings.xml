@@ -20,6 +20,24 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="migration_success">Data migration success!</string>
     <string name="action_stop_service">Stop service</string>
+    <string name="connection_connecting">Connecting…</string>
+    <string name="main_empty_group_title">No servers here yet</string>
+    <string name="main_empty_group_message">Use the + button to add a config or update a subscription.</string>
+    <string name="main_empty_search_title">No matches</string>
+    <string name="main_empty_search_message">Try a different search term.</string>
+    <string name="main_mode_sheet_subtitle">How traffic leaves this device.</string>
+    <string name="main_mode_vpn_desc">Route all device traffic through a VPN tunnel.</string>
+    <string name="main_mode_proxy_desc">Run a local proxy that apps can connect to.</string>
+    <string name="main_mode_hybrid_desc">Proxy core with on-demand TUN for apps.</string>
+    <plurals name="main_header_group_count">
+        <item quantity="one">%1$s · %2$d config</item>
+        <item quantity="other">%1$s · %2$d configs</item>
+    </plurals>
+    <string name="main_quick_test_all">Test all</string>
+    <string name="main_quick_sort">Sort</string>
+    <string name="main_quick_update">Update</string>
+    <string name="main_loading_servers">Loading servers…</string>
+    <string name="main_tun_short" translatable="false">TUN</string>
     <string name="migration_fail">Data migration failed!</string>
     <string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
@@ -649,6 +667,34 @@
     <string
         name="summary_pref_dynamic_color"
     >Use Material You colors from the system wallpaper (Android 12+)</string>
+    <string name="title_pref_quick_action_test_all">Test all button</string>
+    <string
+        name="summary_pref_quick_action_test_all"
+    >Show the Test all shortcut above the server list</string>
+    <string name="title_pref_quick_action_sort">Sort button</string>
+    <string
+        name="summary_pref_quick_action_sort"
+    >Show the Sort shortcut above the server list</string>
+    <string name="title_pref_quick_action_update">Update button</string>
+    <string
+        name="summary_pref_quick_action_update"
+    >Show the Update shortcut above the server list</string>
+    <string name="title_pref_main_bolder_font">Use bolder font in main screen</string>
+    <string
+        name="summary_pref_main_bolder_font"
+    >Use semibold headings and medium server names</string>
+    <string name="title_pref_unsupported_ping_pill">Ping unavailable pill</string>
+    <string
+        name="summary_pref_unsupported_ping_pill"
+    >Show a “No ping” pill on olcRTC and OpenFlux servers that cannot be tested</string>
+    <string name="main_ping_unavailable">N/A</string>
+    <string name="title_pref_amoled_theme">AMOLED theme</string>
+    <string
+        name="summary_pref_amoled_theme"
+    >Pure black surfaces in dark mode</string>
+    <string
+        name="summary_pref_amoled_theme_light"
+    >Available in dark mode</string>
     <string name="title_pref_google_sans">Use Google Sans</string>
     <string
         name="summary_pref_google_sans"

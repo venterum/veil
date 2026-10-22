@@ -27,12 +27,18 @@ object SettingsChangeManager {
         AppConfig.PREF_LANGUAGE,
         AppConfig.PREF_UI_MODE_NIGHT,
         AppConfig.PREF_DYNAMIC_COLOR,
+        AppConfig.PREF_AMOLED_THEME,
         AppConfig.PREF_GOOGLE_SANS,
         AppConfig.PREF_IS_BOOTED,
         AppConfig.PREF_SPEED_TOOLBAR_ENABLED,
         AppConfig.PREF_SERVER_CARD_STYLE,
         AppConfig.PREF_SERVER_EMOJI_AVATAR,
         AppConfig.PREF_SERVER_SEARCH_BUTTON_ENABLED,
+        AppConfig.PREF_QUICK_ACTION_TEST_ALL,
+        AppConfig.PREF_QUICK_ACTION_SORT,
+        AppConfig.PREF_QUICK_ACTION_UPDATE,
+        AppConfig.PREF_UNSUPPORTED_PING_PILL,
+        AppConfig.PREF_MAIN_BOLDER_FONT,
     )
 
     /**
@@ -63,8 +69,11 @@ object SettingsChangeManager {
             SettingsManager.setNightMode()
         }
 
-        // Dynamic color forces Google Sans state and recreates all live activities.
-        if (key == AppConfig.PREF_DYNAMIC_COLOR || key == AppConfig.PREF_GOOGLE_SANS) {
+        // Color/font changes recreate all live activities so the new theme applies everywhere.
+        if (key == AppConfig.PREF_DYNAMIC_COLOR ||
+            key == AppConfig.PREF_AMOLED_THEME ||
+            key == AppConfig.PREF_GOOGLE_SANS
+        ) {
             AngApplication.application.recreateAllActivities()
         }
 

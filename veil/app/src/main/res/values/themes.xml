@@ -117,6 +117,24 @@
         <item name="trackTint">@color/branded_switch_track_tint</item>
     </style>
 
+    <!-- Pure-black overlay applied at runtime when AMOLED is enabled in dark mode. -->
+    <style name="ThemeOverlay_App_Amoled" parent="">
+        <item name="android:colorBackground">@color/amoled_surface</item>
+        <item name="android:windowBackground">@color/amoled_surface</item>
+        <item name="colorSurface">@color/amoled_surface</item>
+        <item name="colorSurfaceContainerLowest">@color/amoled_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/amoled_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/amoled_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/amoled_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/amoled_surface_container_highest</item>
+        <item name="colorSurfaceVariant">@color/amoled_surface_variant</item>
+        <item name="colorOutlineVariant">@color/amoled_outline_variant</item>
+        <item name="android:statusBarColor">@color/amoled_surface</item>
+        <item name="android:navigationBarColor">@color/amoled_surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+    </style>
+
     <!-- Runtime overlay used on API 33+ to disable Activity transitions,
          which conflict with the system predictive back gesture. -->
     <style name="Override_DisableWindowActivityTransitions">

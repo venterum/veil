@@ -1,12 +1,10 @@
 package com.v2ray.ang.ui.compose
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -22,10 +20,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -63,8 +61,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.emoji2.text.EmojiCompat
 import com.v2ray.ang.AppConfig
@@ -77,6 +75,8 @@ import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.nullIfBlank
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.ui.compose.main.LocalBolderMainFont
+import com.v2ray.ang.ui.compose.main.LocalShowUnsupportedPingPill
 import com.v2ray.ang.util.Utils
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -170,38 +170,8 @@ private fun buildServerSection(subId: String, servers: List<ServersCache>): Serv
 }
 
 /**
- * Wraps the server list with an entrance/exit animation that plays whenever a
- * tab becomes active or inactive, giving a subtle fade + slide-in effect driven
- * by the theme's expressive motion tokens.
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun ServerListTabTransition(
-    visible: Boolean,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    val transitionState = remember { MutableTransitionState(false) }
-    LaunchedEffect(visible) { transitionState.targetState = visible }
-
-    val fadeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
-    val slideSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntOffset>()
-    val exitFadeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
-
-    AnimatedVisibility(
-        visibleState = transitionState,
-        modifier = modifier,
-        enter = fadeIn(fadeSpec) + slideInVertically(slideSpec) { it / 12 },
-        exit = fadeOut(exitFadeSpec),
-    ) {
-        content()
-    }
-}
-
-/**
- * Shared server-list UI used by both [com.v2ray.ang.ui.AllServerFragment] and
- * [com.v2ray.ang.ui.GroupServerFragment]. Renders the server cards in one of three
- * layouts: flat list, double-column grid, or grouped sections.
+ * Server-list UI hosted by the main screen. Renders the server cards in one of
+ * three layouts: flat list, double-column grid, or grouped sections.
  */
 @Composable
 fun ServerListScreen(
@@ -325,7 +295,6 @@ private fun FlatServerList(
                 }
             }
         }
-        item(key = "footer") { Spacer(Modifier.height(80.dp)) }
     }
 }
 
@@ -380,9 +349,6 @@ private fun GridServerList(
                 }
             }
         }
-        item(key = "footer", span = { GridItemSpan(maxLineSpan) }) {
-            Spacer(Modifier.height(80.dp))
-        }
     }
 }
 
@@ -424,7 +390,6 @@ private fun GroupedServerList(
                 onRemove = onRemove,
             )
         }
-        item(key = "footer") { Spacer(Modifier.height(80.dp)) }
     }
 }
 
@@ -447,9 +412,19 @@ private fun GroupSection(
 ) {
     val haptic = LocalHapticFeedback.current
     val shape = sectionContainerShape(index, total)
+    val progress by animateFloatAsState(
+        targetValue = section.trafficProgress / 100f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "sectionTraffic",
+    )
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 0f else -90f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "sectionChevron",
+    )
     Surface(
         shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 2.dp),
@@ -469,12 +444,33 @@ private fun GroupSection(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = section.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = if (LocalBolderMainFont.current) {
+                            FontWeight.SemiBold
+                        } else {
+                            FontWeight.Medium
+                        },
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .padding(horizontal = 7.dp, vertical = 2.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = section.servers.size.toString(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFeatureSettings = "tnum",
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -489,7 +485,7 @@ private fun GroupSection(
                             ),
                             modifier = Modifier
                                 .size(24.dp)
-                                .rotate(if (isExpanded) 0f else -90f),
+                                .rotate(chevronRotation),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -522,10 +518,12 @@ private fun GroupSection(
                             )
                         }
                         LinearProgressIndicator(
-                            progress = { section.trafficProgress / 100f },
+                            progress = { progress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 2.dp),
+                                .padding(top = 3.dp)
+                                .clip(RoundedCornerShape(50)),
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         )
                         if (section.expiryText.isNotEmpty()) {
                             Text(
@@ -605,12 +603,9 @@ private fun ServerCard(
     val address = getAddress(profile)
     val protocolDesc = getProtocolDescription(profile)
     val aff = MmkvManager.decodeServerAffiliationInfo(guid)
-    val testResult = aff?.getTestDelayString().orEmpty()
-    val testResultColor = if ((aff?.testDelayMillis ?: 0L) < 0L) {
-        MaterialTheme.colorScheme.error
-    } else {
-        MaterialTheme.colorScheme.tertiary
-    }
+    val testDelay = aff?.testDelayMillis ?: 0L
+    val showPingUnavailable = LocalShowUnsupportedPingPill.current &&
+        (profile.configType == EConfigType.OLCRTC || profile.configType == EConfigType.OPENFLUX)
     val subChip = if (showSubscriptionChip) subscriptionChipText(profile) else ""
 
     val shape = if (grouped) {
@@ -632,8 +627,8 @@ private fun ServerCard(
                 avatarLabel = avatarLabel,
                 subChip = subChip,
                 protocolDesc = protocolDesc,
-                testResult = testResult,
-                testResultColor = testResultColor,
+                testDelay = testDelay,
+                showPingUnavailable = showPingUnavailable,
                 showConnectedDot = isSelected && isRunning,
                 showMoreButton = !grouped,
                 onShare = onShare,
@@ -646,8 +641,8 @@ private fun ServerCard(
                 subChip = subChip,
                 address = address,
                 protocolDesc = protocolDesc,
-                testResult = testResult,
-                testResultColor = testResultColor,
+                testDelay = testDelay,
+                showPingUnavailable = showPingUnavailable,
                 showActions = showIcons && !doubleColumn,
                 showMoreButton = !grouped,
                 onShare = onShare,
@@ -664,8 +659,8 @@ private fun ClassicServerCardContent(
     subChip: String,
     address: String,
     protocolDesc: String,
-    testResult: String,
-    testResultColor: androidx.compose.ui.graphics.Color,
+    testDelay: Long,
+    showPingUnavailable: Boolean,
     showActions: Boolean,
     showMoreButton: Boolean,
     onShare: (Boolean) -> Unit,
@@ -682,6 +677,11 @@ private fun ClassicServerCardContent(
             Text(
                 text = name,
                 style = MaterialTheme.typography.titleMedium,
+                fontWeight = if (LocalBolderMainFont.current) {
+                    FontWeight.Medium
+                } else {
+                    FontWeight.Normal
+                },
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -691,32 +691,40 @@ private fun ClassicServerCardContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (subChip.isNotEmpty()) {
-                    SubscriptionChip(subChip)
-                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = subChip,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 96.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
                 }
                 Text(
                     text = address,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Row(modifier = Modifier.padding(top = 8.dp)) {
-                Text(
-                    text = protocolDesc,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (testResult.isNotEmpty()) {
-                    Text(
-                        text = testResult,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = testResultColor,
-                    )
+            }
+            Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = protocolDesc,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (showPingUnavailable) {
+                    Spacer(Modifier.width(8.dp))
+                    UnsupportedPingPill()
+                } else if (testDelay != 0L) {
+                    Spacer(Modifier.width(8.dp))
+                    LatencyPill(testDelay)
                 }
             }
         }
@@ -771,8 +779,8 @@ private fun NewServerCardContent(
     avatarLabel: String?,
     subChip: String,
     protocolDesc: String,
-    testResult: String,
-    testResultColor: androidx.compose.ui.graphics.Color,
+    testDelay: Long,
+    showPingUnavailable: Boolean,
     showConnectedDot: Boolean,
     showMoreButton: Boolean,
     onShare: (Boolean) -> Unit,
@@ -784,46 +792,43 @@ private fun NewServerCardContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = if (avatarLabel != null) 8.dp else 16.dp,
-                top = 8.dp,
-                end = 4.dp,
-                bottom = 8.dp,
+                start = if (avatarLabel != null) 8.dp else 14.dp,
+                top = 7.dp,
+                end = 6.dp,
+                bottom = 7.dp,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (avatarLabel != null) {
             ServerAvatarBlock(avatarLabel)
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(10.dp))
         }
         Column(Modifier.weight(1f)) {
             // A remark made up solely of an emoji leaves no title text once the
-            // emoji moved into the avatar, so skip the empty line.
+            // emoji moved into the avatar.
             if (name.isNotBlank()) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (LocalBolderMainFont.current) {
+                        FontWeight.Medium
+                    } else {
+                        FontWeight.Normal
+                    },
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (subChip.isNotEmpty()) {
-                Row(
-                    modifier = Modifier.padding(top = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SubscriptionChip(subChip)
-                }
-            }
             Row(
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = if (name.isNotBlank()) 4.dp else 0.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (showConnectedDot) {
                     Box(
                         Modifier
                             .padding(end = 6.dp)
-                            .size(8.dp)
+                            .size(6.dp)
                             .clip(CircleShape)
                             .background(colorConnected)
                     )
@@ -831,27 +836,43 @@ private fun NewServerCardContent(
                 Text(
                     text = protocolDesc,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (testResult.isNotEmpty()) {
+                if (subChip.isNotEmpty()) {
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        text = testResult,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = testResultColor,
+                        text = subChip,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.widthIn(max = 110.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
         }
 
+        if (showPingUnavailable) {
+            Spacer(Modifier.width(8.dp))
+            UnsupportedPingPill()
+        } else if (testDelay != 0L) {
+            Spacer(Modifier.width(8.dp))
+            LatencyPill(testDelay)
+        }
+
         if (showMoreButton) {
             Box {
-                IconButton(onClick = { menuExpanded = true }) {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.size(40.dp),
+                ) {
                     Icon(
                         imageVector = Icons.Filled.MoreVert,
                         contentDescription = stringResource(R.string.notification_action_more),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -914,21 +935,72 @@ private fun ServerCardOverflowMenu(
     }
 }
 
+internal enum class LatencyTier { Unknown, Good, Fair, Poor }
+
+internal fun latencyTier(millis: Long): LatencyTier = when {
+    millis < 0L -> LatencyTier.Poor
+    millis == 0L -> LatencyTier.Unknown
+    millis <= 300L -> LatencyTier.Good
+    millis <= 800L -> LatencyTier.Fair
+    else -> LatencyTier.Poor
+}
+
 @Composable
-private fun SubscriptionChip(text: String) {
-    Box(
-        modifier = Modifier
-            .size(24.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.outlineVariant),
-        contentAlignment = Alignment.Center,
+private fun UnsupportedPingPill() {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
     ) {
         Text(
-            text = text,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = stringResource(R.string.main_ping_unavailable),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFeatureSettings = "tnum",
+            ),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             maxLines = 1,
         )
+    }
+}
+
+@Composable
+private fun LatencyPill(millis: Long) {
+    val container = when (latencyTier(millis)) {
+        LatencyTier.Good -> MaterialTheme.colorScheme.tertiaryContainer
+        LatencyTier.Fair -> MaterialTheme.colorScheme.secondaryContainer
+        LatencyTier.Poor -> MaterialTheme.colorScheme.errorContainer
+        LatencyTier.Unknown -> MaterialTheme.colorScheme.surfaceContainerHighest
+    }
+    val content = when (latencyTier(millis)) {
+        LatencyTier.Good -> MaterialTheme.colorScheme.onTertiaryContainer
+        LatencyTier.Fair -> MaterialTheme.colorScheme.onSecondaryContainer
+        LatencyTier.Poor -> MaterialTheme.colorScheme.onErrorContainer
+        LatencyTier.Unknown -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(
+        shape = CircleShape,
+        color = container,
+        contentColor = content,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(content.copy(alpha = 0.85f))
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = if (millis < 0L) "—" else "${millis}ms",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFeatureSettings = "tnum",
+                ),
+                maxLines = 1,
+            )
+        }
     }
 }
 
@@ -1032,12 +1104,16 @@ private fun CardShell(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val bgColor = if (isSelected) {
-        MaterialTheme.colorScheme.surfaceBright
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHigh
-    }
-    val elevation by animateDpAsState(if (isSelected) 4.dp else 0.dp, label = "cardElevation")
+    val bgColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.surfaceContainerHighest
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "cardBackground",
+    )
+    val elevation by animateDpAsState(if (isSelected) 2.dp else 0.dp, label = "cardElevation")
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val haptic = LocalHapticFeedback.current
@@ -1085,8 +1161,8 @@ private fun CardShell(
 }
 
 private fun flatCardCornerShape(index: Int, total: Int, isSelected: Boolean): RoundedCornerShape {
-    val large = 24.dp
-    val small = 5.dp
+    val large = 18.dp
+    val small = 4.dp
     val (top, bottom) = when {
         isSelected -> large to large
         total <= 1 -> large to large
@@ -1098,9 +1174,9 @@ private fun flatCardCornerShape(index: Int, total: Int, isSelected: Boolean): Ro
 }
 
 private fun groupedCardCornerShape(index: Int, total: Int, isSelected: Boolean): RoundedCornerShape {
-    val large = 24.dp
-    val container = 16.dp
-    val inner = 4.dp
+    val large = 18.dp
+    val container = 14.dp
+    val inner = 3.dp
     val top = when {
         isSelected -> large
         index == 0 -> container
@@ -1115,8 +1191,8 @@ private fun groupedCardCornerShape(index: Int, total: Int, isSelected: Boolean):
 }
 
 private fun sectionContainerShape(index: Int, total: Int): RoundedCornerShape {
-    val large = 16.dp
-    val small = 4.dp
+    val large = 14.dp
+    val small = 3.dp
     val top = if (index == 0) large else small
     val bottom = if (index == total - 1) large else small
     return RoundedCornerShape(top, top, bottom, bottom)
@@ -1138,7 +1214,7 @@ private fun getAddress(profile: ProfileItem): String {
 
 private fun subscriptionChipText(profile: ProfileItem): String {
     if (profile.subscriptionId.isEmpty()) return ""
-    return MmkvManager.decodeSubscription(profile.subscriptionId)?.remarks?.firstOrNull()?.toString() ?: ""
+    return MmkvManager.decodeSubscription(profile.subscriptionId)?.remarks.orEmpty()
 }
 
 private fun getProtocolDescription(profile: ProfileItem): String {

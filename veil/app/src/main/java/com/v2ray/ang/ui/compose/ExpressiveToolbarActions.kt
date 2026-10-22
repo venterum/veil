@@ -13,13 +13,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -97,10 +97,11 @@ fun ExpressiveToolbarActions(
     onFilterClick: () -> Unit,
     onImportMenuAction: (Int) -> Unit,
     onOverflowAction: (Int) -> Unit,
+    addMenuExpanded: Boolean,
+    onAddMenuExpandedChange: (Boolean) -> Unit,
     showSearchButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    var addMenuExpanded by remember { mutableStateOf(false) }
     var overflowExpanded by remember { mutableStateOf(false) }
     val addIcon = Icons.Filled.Add
     val filterIcon = Icons.Default.Search
@@ -126,7 +127,7 @@ fun ExpressiveToolbarActions(
                 toolbarIconItem(
                     icon = addIcon,
                     contentDescription = addLabel,
-                    onClick = { addMenuExpanded = true },
+                    onClick = { onAddMenuExpandedChange(true) },
                     isFilled = true,
                     widthMultiplier = 2f,
                 )
@@ -158,9 +159,9 @@ fun ExpressiveToolbarActions(
 
         AddConfigSheet(
             expanded = addMenuExpanded,
-            onDismissRequest = { addMenuExpanded = false },
+            onDismissRequest = { onAddMenuExpandedChange(false) },
             onAction = {
-                addMenuExpanded = false
+                onAddMenuExpandedChange(false)
                 onImportMenuAction(it)
             },
         )
@@ -553,6 +554,7 @@ private fun ConfigListRow(
         }
     }
 }
+
 
 private fun ButtonGroupScope.toolbarIconItem(
     icon: ImageVector,

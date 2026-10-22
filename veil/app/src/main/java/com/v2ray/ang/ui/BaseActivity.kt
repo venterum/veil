@@ -28,6 +28,7 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.CustomDividerItemDecoration
 import com.v2ray.ang.util.MyContextWrapper
+import com.v2ray.ang.util.ThemeUtil
 import com.v2ray.ang.util.Utils
 
 
@@ -57,6 +58,7 @@ abstract class BaseActivity : AppCompatActivity() {
             if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_GOOGLE_SANS, true)) {
                 theme.applyStyle(R.style.ThemeOverlay_App_SystemFont, true)
             }
+            ThemeUtil.applyAmoledIfNeeded(theme, this)
         } catch (_: Exception) {
         }
         return theme

@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="mode_selector" type="id" />
+
+    <!-- Main screen action ids (previously supplied by menu_main.xml) -->
+    <item name="search_view" type="id" />
+    <item name="import_qrcode" type="id" />
+    <item name="import_clipboard" type="id" />
+    <item name="import_local" type="id" />
+    <item name="import_manually_policy_group" type="id" />
+    <item name="import_manually_proxy_chain" type="id" />
+    <item name="import_manually_vmess" type="id" />
+    <item name="import_manually_vless" type="id" />
+    <item name="import_manually_ss" type="id" />
+    <item name="import_manually_socks" type="id" />
+    <item name="import_manually_http" type="id" />
+    <item name="import_manually_trojan" type="id" />
+    <item name="import_manually_wireguard" type="id" />
+    <item name="import_manually_hysteria2" type="id" />
+    <item name="import_manually_olcrtc" type="id" />
+    <item name="import_manually_openflux" type="id" />
+    <item name="service_restart" type="id" />
+    <item name="del_all_config" type="id" />
+    <item name="del_duplicate_config" type="id" />
+    <item name="del_invalid_config" type="id" />
+    <item name="export_all" type="id" />
+    <item name="real_ping_all" type="id" />
+    <item name="sort_by_test_results" type="id" />
+    <item name="locate_selected_config" type="id" />
+    <item name="sub_update" type="id" />
 </resources>

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
@@ -61,7 +63,13 @@ fun ConfirmDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = title?.let { { Text(it) } },
-        text = { Text(message, style = MaterialTheme.typography.bodyMedium) },
+        text = {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+            )
+        },
         confirmButton = {
             TextButton(
                 onClick = { onConfirm(); onDismiss() },

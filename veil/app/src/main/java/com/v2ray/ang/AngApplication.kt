@@ -12,6 +12,7 @@ import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.util.Utils
 import java.util.Collections
 
 class AngApplication : MultiDexApplication() {
@@ -57,8 +58,12 @@ class AngApplication : MultiDexApplication() {
         DynamicColors.applyToActivitiesIfAvailable(
             this,
             DynamicColorsOptions.Builder()
-                .setPrecondition { _, _ ->
-                    MmkvManager.decodeSettingsBool(AppConfig.PREF_DYNAMIC_COLOR, true)
+                .setPrecondition { activity, _ ->
+                    // AMOLED wins over XML dynamic colors so the black overlay is not
+                    // replaced; Compose still derives its accents from the dynamic scheme.
+                    val amoled = SettingsManager.isAmoledThemeEnabled() &&
+                        Utils.getDarkModeStatus(activity)
+                    MmkvManager.decodeSettingsBool(AppConfig.PREF_DYNAMIC_COLOR, true) && !amoled
                 }
                 .build()
         )

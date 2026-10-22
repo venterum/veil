@@ -5,38 +5,27 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
-import android.view.Gravity
-import android.view.View
-import android.graphics.Color
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.graphics.drawable.DrawerArrowDrawable
-import androidx.drawerlayout.widget.DrawerLayout
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.core.view.GravityCompat
-import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
-import com.v2ray.ang.databinding.ActivityMainBinding
+import com.v2ray.ang.dto.GroupMapItem
+import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.enums.PermissionType
-import com.v2ray.ang.extension.finishWithMaterialTransition
 import com.v2ray.ang.extension.launchWithMaterialTransition
-import com.v2ray.ang.extension.performLightHapticFeedback
-import com.v2ray.ang.extension.performMediumHapticFeedback
-import com.v2ray.ang.extension.startActivityForResultWithMaterialTransition
 import com.v2ray.ang.extension.startActivityWithMaterialTransition
+import com.v2ray.ang.extension.toSpeedString
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
-import com.v2ray.ang.extension.toSpeedString
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
@@ -46,17 +35,16 @@ import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.service.CoreTunToggleService
 import com.v2ray.ang.ui.compose.AppTheme
-import com.v2ray.ang.ui.compose.ConnectionInfoSheet
 import com.v2ray.ang.ui.compose.ConnectionInfoSheetState
-import com.v2ray.ang.ui.compose.ExpressiveToolbarActions
-import com.v2ray.ang.ui.compose.ExpressiveBottomBar
-import com.v2ray.ang.ui.compose.ExpressiveBottomBarState
-import com.v2ray.ang.ui.compose.VeilSearchBar
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import com.v2ray.ang.ui.compose.main.ClipboardImportPreview
+import com.v2ray.ang.ui.compose.main.ConnectionUiState
+import com.v2ray.ang.ui.compose.main.MainDisplayFlags
+import com.v2ray.ang.ui.compose.main.MainDrawerDestination
+import com.v2ray.ang.ui.compose.main.MainScreen
+import com.v2ray.ang.ui.compose.main.MainScreenActions
+import com.v2ray.ang.util.IPv6Util
 import com.v2ray.ang.util.LogUtil
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
@@ -67,20 +55,44 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : HelperBaseActivity() {
-    private val binding by lazy {
-        ActivityMainBinding.inflate(layoutInflater)
-    }
+    private val mainViewModel: MainViewModel by viewModels()
 
-    val mainViewModel: MainViewModel by viewModels()
-    private lateinit var groupPagerAdapter: GroupPagerAdapter
-    private var tabMediator: TabLayoutMediator? = null
+    private var groups by mutableStateOf<List<GroupMapItem>>(emptyList())
+    private var selectedGuid by mutableStateOf("")
+    private var currentMode by mutableStateOf(AppConfig.VPN)
+    private var searchButtonEnabled by mutableStateOf(true)
+    private var importing by mutableStateOf(false)
+    private var display by mutableStateOf(MainDisplayFlags())
+    private var connectionState by mutableStateOf(ConnectionUiState())
+    private var infoState by mutableStateOf(ConnectionInfoSheetState())
+    private var clipboardImport by mutableStateOf<ClipboardImportPreview?>(null)
+
     private var connectedAt: Long = 0L
     private var uptimeJob: Job? = null
-    private var searchButtonEnabled by mutableStateOf(true)
-    private var searchVisible by mutableStateOf(false)
-    private var searchQuery by mutableStateOf("")
-    private var bottomBarState by mutableStateOf(ExpressiveBottomBarState())
-    private var connectionInfoState by mutableStateOf(ConnectionInfoSheetState())
+
+    private val mainScreenActions = MainScreenActions(
+        onStartStop = ::handleStartStop,
+        onTunToggle = ::handleTunToggle,
+        onTest = ::handleTestClick,
+        onConnectionInfo = ::showConnectionInfoSheet,
+        onModeSelected = ::selectMode,
+        onFilter = { query -> mainViewModel.filterConfig(query) },
+        onGroupSelected = ::selectGroup,
+        onSelectServer = ::selectServer,
+        onSwapServers = { from, to -> mainViewModel.swapServer(from, to) },
+        onEditServer = ::editServer,
+        onRemoveServer = ::removeServer,
+        onDrawerNavigate = ::handleDrawerNavigation,
+        onImportAction = { actionId -> handleImportMenuAction(actionId) },
+        onOverflowAction = { actionId -> handleOverflowAction(actionId) },
+        onDestructiveAction = ::handleDestructiveAction,
+        onConnectionInfoDismiss = { infoState = infoState.copy(visible = false) },
+        onCopyIp = ::copyConnectionInfoIp,
+        onPingFromInfo = ::pingFromConnectionInfo,
+        onShareFromInfo = ::shareFromConnectionInfo,
+        onClipboardImportConfirm = ::confirmClipboardImport,
+        onClipboardImportDismiss = { clipboardImport = null },
+    )
 
     /**
      * MainActivity is the root of the app's task. The system already moves the
@@ -106,249 +118,109 @@ class MainActivity : HelperBaseActivity() {
         if (SettingsChangeManager.consumeRestartService() && mainViewModel.isRunning.value == true) {
             restartV2Ray()
         }
-        if (SettingsChangeManager.consumeSetupGroupTab()) {
-            setupGroupTab()
-        }
+        SettingsChangeManager.consumeSetupGroupTab()
+        refreshGroups()
+        refreshDisplayFlags()
+        refreshPreferences()
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(binding.root)
-        setupToolbar(binding.toolbar, false, getString(R.string.title_server))
+        enableEdgeToEdge()
 
-        // setup Compose expressive toolbar buttons
-        binding.composeToolbarActions.apply {
-            setViewCompositionStrategy(
-                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-            )
-            setContent {
-                AppTheme {
-                    ExpressiveToolbarActions(
-                        onFilterClick = { toggleSearch() },
-                        onImportMenuAction = { actionId -> handleImportMenuAction(actionId) },
-                        onOverflowAction = { actionId -> handleOverflowAction(actionId) },
-                        showSearchButton = searchButtonEnabled,
-                    )
-                }
+        refreshPreferences()
+        refreshDisplayFlags()
+        refreshGroups()
+        selectedGuid = MmkvManager.getSelectServer().orEmpty()
+        connectionState = ConnectionUiState(
+            serverName = selectedServerRemarks(),
+            tunEnabled = SettingsManager.isTunEnabled(),
+        )
+
+        setContent {
+            AppTheme {
+                MainScreen(
+                    groups = groups,
+                    serversFlow = mainViewModel.serversCacheFlow,
+                    subscriptionIdFlow = mainViewModel.subscriptionIdFlow,
+                    listRevisionFlow = mainViewModel.updateListActionFlow,
+                    connection = connectionState,
+                    selectedGuid = selectedGuid,
+                    display = display,
+                    currentMode = currentMode,
+                    searchButtonEnabled = searchButtonEnabled,
+                    importing = importing,
+                    infoState = infoState,
+                    clipboardImport = clipboardImport,
+                    actions = mainScreenActions,
+                )
             }
         }
 
-        // setup viewpager and tablayout
-        groupPagerAdapter = GroupPagerAdapter(this, emptyList())
-        binding.viewPager.adapter = groupPagerAdapter
-        binding.viewPager.isUserInputEnabled = true
-
-        // setup navigation drawer
-        setupNavigationDrawer()
-
-        // setup search
-        binding.composeSearchBar.apply {
-            setViewCompositionStrategy(
-                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-            )
-            setContent {
-                AppTheme {
-                    VeilSearchBar(
-                        query = searchQuery,
-                        onQueryChange = { query ->
-                            searchQuery = query
-                            mainViewModel.filterConfig(query)
-                        },
-                        visible = searchVisible,
-                        onDismiss = {
-                            searchVisible = false
-                            searchQuery = ""
-                            mainViewModel.filterConfig("")
-                        },
-                    )
-                }
-            }
-        }
-
-        bindBottomBar()
-
-        setupGroupTab()
         setupViewModel()
         SubscriptionUpdater.sync()
         UpdateCheckerManager.checkForUpdateAutomatically()
         mainViewModel.reloadServerList()
 
-        checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
+        checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {}
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshPreferences()
+        refreshDisplayFlags()
+        refreshGroups()
+        selectedGuid = MmkvManager.getSelectServer().orEmpty()
+        mainViewModel.reloadServerList()
+        setSelectedServerName()
+        updateTunToggleState()
+        if (connectionState.isRunning) {
+            connectionState = connectionState.copy(
+                showSpeed = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_TOOLBAR_ENABLED) == true,
+            )
         }
     }
 
-    private fun setupNavigationDrawer() {
-        val drawerArrow = DrawerArrowDrawable(this)
-        binding.toolbar.navigationIcon = drawerArrow
-        binding.toolbar.setNavigationOnClickListener {
-            if (binding.drawerLayout.isDrawerVisible(GravityCompat.START)) {
-                binding.drawerLayout.closeDrawer(GravityCompat.START)
-            } else {
-                binding.drawerLayout.openDrawer(GravityCompat.START)
-            }
-        }
-        setupDrawerMenu()
-
-        val contentView = binding.drawerLayout.getChildAt(0)
-        binding.drawerLayout.setScrimColor(Color.TRANSPARENT)
-        binding.drawerLayout.setDrawerElevation(0f)
-
-        applyAppFont()
-
-        val drawerBackCallback = object : OnBackPressedCallback(false) {
-            override fun handleOnBackPressed() {
-                binding.drawerLayout.closeDrawer(GravityCompat.START)
-            }
-        }
-        onBackPressedDispatcher.addCallback(this, drawerBackCallback)
-
-        binding.drawerLayout.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
-            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-                val direction = if (drawerView.layoutDirection == View.LAYOUT_DIRECTION_RTL) -1f else 1f
-                contentView.translationX = drawerView.width * slideOffset * direction
-                contentView.alpha = 1f - 0.5f * slideOffset
-            }
-
-            override fun onDrawerOpened(drawerView: View) {
-                drawerBackCallback.isEnabled = true
-            }
-
-            override fun onDrawerClosed(drawerView: View) {
-                drawerBackCallback.isEnabled = false
-                contentView.translationX = 0f
-                contentView.alpha = 1f
-            }
-        })
-    }
-
-    private fun setupDrawerMenu() {
-        val entries = listOf(
-            DrawerEntry.Header(R.string.title_drawer_section_main),
-            DrawerEntry.Item(R.id.sub_setting, R.drawable.ic_subscriptions_24dp, R.string.title_sub_setting),
-            DrawerEntry.Item(R.id.per_app_proxy_settings, R.drawable.ic_per_apps_24dp, R.string.per_app_proxy_settings),
-            DrawerEntry.Item(R.id.routing_setting, R.drawable.ic_routing_24dp, R.string.routing_settings_title),
-            DrawerEntry.Item(R.id.mode_selector, R.drawable.ic_tun_off_24dp, R.string.title_mode),
-            DrawerEntry.Item(R.id.settings, R.drawable.ic_settings_24dp, R.string.title_settings),
-            DrawerEntry.Header(R.string.title_drawer_section_more),
-            DrawerEntry.Item(R.id.logcat, R.drawable.ic_logcat_24dp, R.string.title_logcat),
-            DrawerEntry.Item(R.id.backup_restore, R.drawable.ic_restore_24dp, R.string.title_configuration_backup_restore),
-            DrawerEntry.Item(R.id.about, R.drawable.ic_about_24dp, R.string.title_about),
-            DrawerEntry.Item(R.id.kill_app, R.drawable.ic_kill_app_24dp, R.string.title_kill_app),
+    private fun refreshPreferences() {
+        currentMode = MmkvManager.decodeSettingsString(AppConfig.PREF_MODE, AppConfig.VPN) ?: AppConfig.VPN
+        searchButtonEnabled = MmkvManager.decodeSettingsBool(
+            AppConfig.PREF_SERVER_SEARCH_BUTTON_ENABLED,
+            true,
         )
-        binding.navRecycler.layoutManager = LinearLayoutManager(this)
-        binding.navRecycler.adapter = DrawerAdapter(entries) { itemId, view ->
-            view.performLightHapticFeedback()
-            handleDrawerNavigation(itemId)
-        }
     }
 
-    private fun bindBottomBar() {
-        val composeView = androidx.compose.ui.platform.ComposeView(this).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                AppTheme {
-                    ExpressiveBottomBar(
-                        state = bottomBarState,
-                        onStartStop = ::handleFabAction,
-                        onModeSelector = ::showModeSelector,
-                        onTunToggle = ::handleTunToggle,
-                        onTest = ::handleLayoutTestClick,
-                        onConnectionInfo = ::showConnectionInfoSheet,
-                    )
-                    ConnectionInfoSheet(
-                        state = connectionInfoState,
-                        onDismiss = { connectionInfoState = connectionInfoState.copy(visible = false) },
-                        onCopyIp = ::copyConnectionInfoIp,
-                        onPing = ::pingFromConnectionInfo,
-                        onShare = ::shareFromConnectionInfo,
-                    )
-                }
-            }
-        }
-        binding.bottomControlContainer.removeAllViews()
-        binding.bottomControlContainer.addView(composeView)
-        setSelectedServerName()
+    private fun refreshGroups() {
+        groups = mainViewModel.getSubscriptions(this)
     }
 
-    /**
-     * Public hook for the server-list fragments to refresh the pill's server name
-     * immediately after the user picks a different server.
-     */
-    fun onSelectedServerChanged() {
-        setSelectedServerName()
-    }
-
-
-    /**
-     * Applies the app font to the navigation header title and the toolbar title.
-     * When the "use Google Sans" preference is on (default), the bundled
-     * Google Sans Flex typeface is used. Otherwise the device default
-     * typeface is applied.
-     */
-    private fun applyAppFont() {
-        val useGoogleSans = MmkvManager.decodeSettingsBool(AppConfig.PREF_GOOGLE_SANS, true)
-        val typeface = if (useGoogleSans) {
-            androidx.core.content.res.ResourcesCompat.getFont(this, R.font.google_sans_flex)
-        } else {
-            resolveSystemTypeface()
-        }
-        findViewById<android.widget.TextView>(R.id.tv_app_name)?.typeface = typeface
-        findToolbarTitleView(binding.toolbar)?.typeface = typeface
-    }
-
-    /**
-     * Locates the internal title [android.widget.TextView] that a [androidx.appcompat.widget.Toolbar]
-     * lazily creates when a title is set. The view has no public id, so it is resolved by
-     * matching its text against the toolbar's current title.
-     */
-    private fun findToolbarTitleView(toolbar: android.view.ViewGroup): android.widget.TextView? {
-        val title = (toolbar as? androidx.appcompat.widget.Toolbar)?.title?.toString() ?: return null
-        for (i in 0 until toolbar.childCount) {
-            val child = toolbar.getChildAt(i)
-            if (child is android.widget.TextView && child.text?.toString() == title) {
-                return child
-            }
-        }
-        return null
-    }
-
-    /**
-     * Resolves the device's default typeface from the [android.R.style.Theme_DeviceDefault]
-     * theme so that OEM/user-selected system fonts (e.g. Samsung One UI, MIUI) are honored.
-     * Falls back to [android.graphics.Typeface.DEFAULT] (Roboto on stock Android).
-     *
-     * Note: proprietary system-UI fonts such as Google Sans are not exposed to third-party
-     * apps, so on stock devices this resolves to Roboto.
-     */
-    private fun resolveSystemTypeface(): android.graphics.Typeface {
-        val themedContext = android.view.ContextThemeWrapper(this, android.R.style.Theme_DeviceDefault)
-        val typedArray = themedContext.obtainStyledAttributes(intArrayOf(android.R.attr.fontFamily))
-        val fontFamily = try {
-            typedArray.getString(0)
-        } finally {
-            typedArray.recycle()
-        }
-        return if (!fontFamily.isNullOrEmpty()) {
-            android.graphics.Typeface.create(fontFamily, android.graphics.Typeface.NORMAL)
-        } else {
-            android.graphics.Typeface.DEFAULT
-        }
+    private fun refreshDisplayFlags() {
+        display = MainDisplayFlags(
+            grouped = mainViewModel.isAllGroupedMode(),
+            doubleColumn = MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false),
+            cardStyleNew = SettingsManager.getServerCardStyle() == "new",
+            showEmojiAvatar = SettingsManager.getServerEmojiAvatar(),
+            showIcons = mainViewModel.shouldShowAllTabIcons(),
+            showQuickTestAll = MmkvManager.decodeSettingsBool(AppConfig.PREF_QUICK_ACTION_TEST_ALL, true),
+            showQuickSort = MmkvManager.decodeSettingsBool(AppConfig.PREF_QUICK_ACTION_SORT, true),
+            showQuickUpdate = MmkvManager.decodeSettingsBool(AppConfig.PREF_QUICK_ACTION_UPDATE, true),
+            showUnsupportedPingPill = MmkvManager.decodeSettingsBool(AppConfig.PREF_UNSUPPORTED_PING_PILL, true),
+            bolderFont = MmkvManager.decodeSettingsBool(AppConfig.PREF_MAIN_BOLDER_FONT, true),
+        )
     }
 
     private fun setupViewModel() {
         mainViewModel.updateTestResultAction.observe(this) { content ->
             if (!content.isNullOrEmpty()) {
-                setTestStateText(content)
+                connectionState = connectionState.copy(statusDetail = content)
             }
         }
         mainViewModel.isRunning.observe(this) { isRunning ->
             applyRunningState(false, isRunning)
         }
         mainViewModel.netSpeed.observe(this) { (up, down) ->
-            setSpeedText(up.toSpeedString(), down.toSpeedString())
-            if (connectionInfoState.visible) {
-                connectionInfoState = connectionInfoState.copy(
+            setSpeedText(up, down)
+            if (infoState.visible) {
+                infoState = infoState.copy(
                     downloadSpeed = down.toSpeedString(),
                     uploadSpeed = up.toSpeedString(),
                 )
@@ -356,7 +228,7 @@ class MainActivity : HelperBaseActivity() {
         }
         mainViewModel.connectionPing.observe(this) { ping ->
             if (!ping.isNullOrEmpty()) {
-                setTestStateText(ping)
+                connectionState = connectionState.copy(statusDetail = ping)
             }
         }
         mainViewModel.connectionIp.observe(this) { ip ->
@@ -364,7 +236,7 @@ class MainActivity : HelperBaseActivity() {
         }
         mainViewModel.snackbarMessage.observe(this) { message ->
             if (!message.isNullOrEmpty()) {
-                showOrUpdateSnackbar(message)
+                toast(message)
             }
             // A start failure (or a cancelled connection attempt) settles the loading state,
             // otherwise the connect button would stay stuck in its loading spinner.
@@ -374,145 +246,27 @@ class MainActivity : HelperBaseActivity() {
         mainViewModel.initAssets(assets)
     }
 
-    private fun setTestStateText(content: String?) {
-        bottomBarState = bottomBarState.copy(status = content.orEmpty())
+    private fun setSpeedText(up: Long, down: Long) {
+        connectionState = connectionState.copy(
+            uploadSpeed = up.toSpeedString(),
+            downloadSpeed = down.toSpeedString(),
+            uploadRate = up,
+            downloadRate = down,
+        )
     }
 
-    private fun setSpeedText(up: String, down: String) {
-        bottomBarState = bottomBarState.copy(uploadSpeed = up, downloadSpeed = down)
+    private fun setSelectedServerName() {
+        connectionState = connectionState.copy(serverName = selectedServerRemarks())
     }
 
-    /**
-     * Shows the remarks of the currently selected server in whichever main UI mode is
-     * bound (bottom bar pill or panel), so the active server is visible without opening
-     * the list. Hidden when nothing is selected; no-op for a mode that isn't bound.
-     */
-    fun setSelectedServerName() {
+    private fun selectedServerRemarks(): String? {
         val guid = MmkvManager.getSelectServer()
-        val remarks = if (guid.isNullOrEmpty()) null else MmkvManager.decodeServerConfig(guid)?.remarks
-        bottomBarState = bottomBarState.copy(serverName = remarks)
+        return if (guid.isNullOrEmpty()) null else MmkvManager.decodeServerConfig(guid)?.remarks
     }
 
     private fun setConnectionIpText(ip: String?) {
-        val compressedIp = com.v2ray.ang.util.IPv6Util.compressIPv6(ip, maxDisplayLength = 26)
-        bottomBarState = bottomBarState.copy(connectionIp = compressedIp)
-    }
-
-    private fun showOrUpdateSnackbar(message: String) {
-        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
-    }
-
-    private fun setupGroupTab() {
-        val groups = mainViewModel.getSubscriptions(this)
-        groupPagerAdapter.update(groups)
-        binding.viewPager.offscreenPageLimit = groups.size.coerceAtLeast(1)
-
-        tabMediator?.detach()
-        tabMediator = TabLayoutMediator(binding.tabGroup, binding.viewPager) { tab, position ->
-            groupPagerAdapter.groups.getOrNull(position)?.let {
-                tab.text = it.remarks
-                tab.tag = it.id
-            }
-        }.also { it.attach() }
-
-        binding.tabGroup.addOnTabSelectedListener(object :
-            com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
-                tab?.view?.performLightHapticFeedback()
-            }
-
-            override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
-            override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
-        })
-
-        val targetIndex = groups.indexOfFirst { it.id == mainViewModel.subscriptionId }.takeIf { it >= 0 } ?: (groups.size - 1)
-        binding.viewPager.setCurrentItem(targetIndex, false)
-
-        binding.tabGroup.isVisible = groups.size > 1
-        refreshGroupTabTitles(true)
-    }
-
-    fun refreshGroupTabTitles(refreshAll: Boolean = false) {
-        val groupsToRefresh = if (refreshAll || mainViewModel.subscriptionId.isEmpty()) {
-            groupPagerAdapter.groups
-        } else {
-            groupPagerAdapter.groups.filter { it.id == mainViewModel.subscriptionId }
-        }
-
-        groupsToRefresh.forEach { group ->
-            if (group.id.isEmpty()) {
-                return@forEach
-            }
-            val tabIndex = groupPagerAdapter.groups.indexOfFirst { it.id == group.id }
-            if (tabIndex >= 0) {
-                val count = MmkvManager.decodeServerList(group.id).size
-                binding.tabGroup.getTabAt(tabIndex)?.text = "${group.remarks} ($count)"
-            }
-        }
-    }
-
-    private fun handleFabAction() {
-        if (bottomBarState.isLoading) {
-            // The user tapped the button again while connecting — cancel the attempt.
-            CoreServiceManager.cancelVService(this)
-            applyRunningState(isLoading = false, isRunning = false)
-            return
-        }
-
-        applyRunningState(isLoading = true, isRunning = false)
-
-        if (mainViewModel.isRunning.value == true) {
-            CoreServiceManager.stopVService(this)
-        } else if (SettingsManager.isVpnMode()) {
-            val intent = VpnService.prepare(this)
-            if (intent == null) {
-                startV2Ray()
-            } else {
-                requestVpnPermission.launch(intent)
-            }
-        } else {
-            startV2Ray()
-        }
-    }
-
-    private fun handleLayoutTestClick() {
-        if (mainViewModel.isRunning.value == true) {
-            setTestState(getString(R.string.connection_test_testing))
-            mainViewModel.testCurrentServerRealPing()
-        } else {
-            // service not running: keep existing no-op (could show a message if desired)
-        }
-    }
-
-    private fun startV2Ray() {
-        if (MmkvManager.getSelectServer().isNullOrEmpty()) {
-            toast(R.string.title_file_chooser)
-            applyRunningState(isLoading = false, isRunning = false)
-            return
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN
-            && MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING) == true
-        ) {
-            checkAndRequestPermission(PermissionType.ACCESS_LOCAL_NETWORK) {
-                CoreServiceManager.startVService(this)
-            }
-        } else {
-            CoreServiceManager.startVService(this)
-        }
-    }
-
-    fun restartV2Ray() {
-        if (mainViewModel.isRunning.value == true) {
-            CoreServiceManager.stopVService(this)
-        }
-        lifecycleScope.launch {
-            delay(500)
-            startV2Ray()
-        }
-    }
-
-    private fun setTestState(content: String?) {
-        setTestStateText(content)
+        val compressedIp = IPv6Util.compressIPv6(ip, maxDisplayLength = 26)
+        connectionState = connectionState.copy(connectionIp = compressedIp)
     }
 
     private fun startUptimeTimer(running: Boolean) {
@@ -533,28 +287,32 @@ class MainActivity : HelperBaseActivity() {
                 } else {
                     String.format("%02d:%02d", minutes, seconds)
                 }
-                bottomBarState = bottomBarState.copy(uptime = uptimeText)
+                connectionState = connectionState.copy(uptime = uptimeText)
                 delay(1000)
             }
         }
     }
 
     private fun applyRunningState(isLoading: Boolean, isRunning: Boolean) {
-        bottomBarState = bottomBarState.copy(
+        connectionState = connectionState.copy(
             isLoading = isLoading,
             isRunning = isRunning,
+            statusDetail = "",
             showSpeed = isRunning && !isLoading &&
                 MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_TOOLBAR_ENABLED) == true,
-            connectionIp = if (isRunning && !isLoading) bottomBarState.connectionIp else null,
+            connectionIp = if (isRunning && !isLoading) connectionState.connectionIp else null,
+            uptime = if (isRunning) connectionState.uptime else "00:00",
+            uploadRate = if (isRunning) connectionState.uploadRate else 0L,
+            downloadRate = if (isRunning) connectionState.downloadRate else 0L,
+            uploadSpeed = if (isRunning) connectionState.uploadSpeed else "0 B/s",
+            downloadSpeed = if (isRunning) connectionState.downloadSpeed else "0 B/s",
         )
 
         if (isRunning) {
-            setTestState(getString(R.string.connection_connected))
             setTunButtonVisible(SettingsManager.isProxyTunMode())
             updateTunToggleState()
             startUptimeTimer(true)
         } else {
-            setTestState(getString(R.string.connection_not_connected))
             setTunButtonVisible(false)
             startUptimeTimer(false)
             if (SettingsManager.isTunEnabled()) {
@@ -563,9 +321,121 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
+    private fun handleStartStop() {
+        if (connectionState.isLoading) {
+            // The user tapped the button again while connecting — cancel the attempt.
+            CoreServiceManager.cancelVService(this)
+            applyRunningState(isLoading = false, isRunning = false)
+            return
+        }
+
+        applyRunningState(isLoading = true, isRunning = false)
+
+        if (mainViewModel.isRunning.value == true) {
+            CoreServiceManager.stopVService(this)
+        } else {
+            startWithPermission()
+        }
+    }
+
+    private fun startWithPermission() {
+        if (SettingsManager.isVpnMode()) {
+            val intent = VpnService.prepare(this)
+            if (intent == null) {
+                startV2Ray()
+            } else {
+                requestVpnPermission.launch(intent)
+            }
+        } else {
+            startV2Ray()
+        }
+    }
+
+    private fun handleTestClick() {
+        if (mainViewModel.isRunning.value == true) {
+            connectionState = connectionState.copy(statusDetail = getString(R.string.connection_test_testing))
+            mainViewModel.testCurrentServerRealPing()
+        }
+    }
+
+    private fun startV2Ray() {
+        if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+            toast(R.string.title_file_chooser)
+            applyRunningState(isLoading = false, isRunning = false)
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN
+            && MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING) == true
+        ) {
+            checkAndRequestPermission(PermissionType.ACCESS_LOCAL_NETWORK) {
+                CoreServiceManager.startVService(this)
+            }
+        } else {
+            CoreServiceManager.startVService(this)
+        }
+    }
+
+    private fun restartV2Ray() {
+        if (mainViewModel.isRunning.value == true) {
+            CoreServiceManager.stopVService(this)
+        }
+        lifecycleScope.launch {
+            delay(500)
+            startWithPermission()
+        }
+    }
+
+    private fun selectGroup(id: String) {
+        if (mainViewModel.subscriptionId != id) {
+            mainViewModel.subscriptionIdChanged(id)
+        }
+    }
+
+    private fun selectServer(guid: String) {
+        if (guid != MmkvManager.getSelectServer()) {
+            MmkvManager.setSelectServer(guid)
+            selectedGuid = guid
+            setSelectedServerName()
+
+            if (mainViewModel.isRunning.value == true) {
+                restartV2Ray()
+            }
+        }
+    }
+
+    private fun removeServer(guid: String) {
+        mainViewModel.removeServer(guid)
+    }
+
+    private fun editServer(guid: String, profile: ProfileItem) {
+        val activityClass = when (profile.configType) {
+            EConfigType.CUSTOM -> ServerCustomConfigActivity::class.java
+            EConfigType.POLICYGROUP -> ServerGroupActivity::class.java
+            EConfigType.PROXYCHAIN -> ServerProxyChainActivity::class.java
+            else -> ServerActivity::class.java
+        }
+
+        val intent = Intent(this, activityClass)
+            .putExtra("guid", guid)
+            .putExtra("isRunning", mainViewModel.isRunning.value)
+            .putExtra("createConfigType", profile.configType.value)
+            .putExtra("subscriptionId", mainViewModel.subscriptionId)
+
+        requestActivityLauncher.launchWithMaterialTransition(this, intent)
+    }
+
+    private fun selectMode(value: String) {
+        if (currentMode == value) return
+        MmkvManager.encodeSettings(AppConfig.PREF_MODE, value)
+        currentMode = value
+        if (mainViewModel.isRunning.value == true) {
+            restartV2Ray()
+        }
+    }
+
     private fun showConnectionInfoSheet() {
         val speed = mainViewModel.netSpeed.value
-        connectionInfoState = ConnectionInfoSheetState(
+        infoState = ConnectionInfoSheetState(
             visible = true,
             downloadSpeed = speed?.second?.toSpeedString() ?: "0 B/s",
             uploadSpeed = speed?.first?.toSpeedString() ?: "0 B/s",
@@ -575,7 +445,7 @@ class MainActivity : HelperBaseActivity() {
             val detail = withContext(Dispatchers.IO) {
                 SpeedtestManager.getRemoteIPDetail()
             }
-            if (!connectionInfoState.visible) return@launch
+            if (!infoState.visible) return@launch
             val ip = detail?.let { info ->
                 listOf(info.ip, info.clientIp, info.ip_addr, info.query)
                     .firstOrNull { !it.isNullOrBlank() }
@@ -590,12 +460,12 @@ class MainActivity : HelperBaseActivity() {
                 listOf(info.isp, info.organization, info.asn)
                     .firstOrNull { !it.isNullOrBlank() }
             } ?: "-"
-            connectionInfoState = connectionInfoState.copy(ip = ip, location = location, isp = isp)
+            infoState = infoState.copy(ip = ip, location = location, isp = isp)
         }
     }
 
     private fun copyConnectionInfoIp() {
-        val ip = connectionInfoState.ip
+        val ip = infoState.ip
         if (!ip.isNullOrBlank() && ip != "-") {
             Utils.setClipboard(this, ip)
             toast(R.string.connection_info_ip_copied)
@@ -603,9 +473,9 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun pingFromConnectionInfo() {
-        setTestState(getString(R.string.connection_test_testing))
+        connectionState = connectionState.copy(statusDetail = getString(R.string.connection_test_testing))
         mainViewModel.testCurrentServerRealPing()
-        connectionInfoState = connectionInfoState.copy(visible = false)
+        infoState = infoState.copy(visible = false)
     }
 
     private fun shareFromConnectionInfo() {
@@ -617,98 +487,6 @@ class MainActivity : HelperBaseActivity() {
         } else {
             toastError(R.string.toast_failure)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        setSelectedServerName()
-        updateTunToggleState()
-        val enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SERVER_SEARCH_BUTTON_ENABLED, true)
-        if (enabled != searchButtonEnabled) {
-            searchButtonEnabled = enabled
-            if (!enabled && searchVisible) {
-                toggleSearch()
-            }
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        return false
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.search_view -> {
-            toggleSearch()
-            true
-        }
-
-        R.id.import_qrcode,
-        R.id.import_clipboard,
-        R.id.import_local,
-        R.id.import_manually_policy_group,
-        R.id.import_manually_proxy_chain,
-        R.id.import_manually_vmess,
-        R.id.import_manually_vless,
-        R.id.import_manually_ss,
-        R.id.import_manually_socks,
-        R.id.import_manually_http,
-        R.id.import_manually_trojan,
-        R.id.import_manually_wireguard,
-        R.id.import_manually_hysteria2,
-        R.id.import_manually_olcrtc,
-        R.id.import_manually_openflux -> handleImportMenuAction(item.itemId)
-
-        R.id.export_all -> {
-            exportAll()
-            true
-        }
-
-        R.id.real_ping_all -> {
-            toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
-            mainViewModel.testAllRealPing()
-            true
-        }
-
-        R.id.service_restart -> {
-            restartV2Ray()
-            true
-        }
-
-        R.id.del_all_config -> {
-            delAllConfig()
-            true
-        }
-
-        R.id.del_duplicate_config -> {
-            delDuplicateConfig()
-            true
-        }
-
-        R.id.del_invalid_config -> {
-            delInvalidConfig()
-            true
-        }
-
-        R.id.sort_by_test_results -> {
-            sortByTestResults()
-            true
-        }
-
-        R.id.sub_update -> {
-            importConfigViaSub()
-            true
-        }
-
-        R.id.locate_selected_config -> {
-            locateSelectedServer()
-            true
-        }
-
-        else -> super.onOptionsItemSelected(item)
     }
 
     private fun handleImportMenuAction(actionId: Int): Boolean {
@@ -735,58 +513,41 @@ class MainActivity : HelperBaseActivity() {
 
     private fun handleOverflowAction(actionId: Int): Boolean {
         return when (actionId) {
-            R.id.search_view -> {
-                toggleSearch()
-                true
-            }
             R.id.service_restart -> {
                 restartV2Ray()
                 true
             }
-            R.id.del_all_config -> {
-                delAllConfig()
-                true
-            }
-            R.id.del_duplicate_config -> {
-                delDuplicateConfig()
-                true
-            }
-            R.id.del_invalid_config -> {
-                delInvalidConfig()
-                true
-            }
+
             R.id.export_all -> {
                 exportAll()
                 true
             }
+
             R.id.real_ping_all -> {
                 toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
                 mainViewModel.testAllRealPing()
                 true
             }
+
             R.id.sort_by_test_results -> {
                 sortByTestResults()
                 true
             }
-            R.id.locate_selected_config -> {
-                locateSelectedServer()
-                true
-            }
+
             R.id.sub_update -> {
                 importConfigViaSub()
                 true
             }
+
             else -> false
         }
     }
 
-    private fun toggleSearch() {
-        if (searchVisible) {
-            searchVisible = false
-            searchQuery = ""
-            mainViewModel.filterConfig("")
-        } else {
-            searchVisible = true
+    private fun handleDestructiveAction(actionId: Int) {
+        when (actionId) {
+            R.id.del_all_config -> delAllConfig()
+            R.id.del_duplicate_config -> delDuplicateConfig()
+            R.id.del_invalid_config -> delInvalidConfig()
         }
     }
 
@@ -823,8 +584,7 @@ class MainActivity : HelperBaseActivity() {
     /**
      * import config from clipboard
      */
-    private fun importClipboard()
-            : Boolean {
+    private fun importClipboard(): Boolean {
         try {
             val clipboard = Utils.getClipboard(this)
             if (clipboard.isBlank()) {
@@ -834,7 +594,10 @@ class MainActivity : HelperBaseActivity() {
             lifecycleScope.launch(Dispatchers.IO) {
                 val preview = AngConfigManager.previewImport(clipboard)
                 withContext(Dispatchers.Main) {
-                    showImportClipboardDialog(clipboard, preview)
+                    clipboardImport = ClipboardImportPreview(
+                        clipboard,
+                        buildImportClipboardMessage(preview),
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -844,15 +607,10 @@ class MainActivity : HelperBaseActivity() {
         return true
     }
 
-    private fun showImportClipboardDialog(clipboard: String, preview: AngConfigManager.ImportPreview) {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.import_clipboard_title)
-            .setMessage(buildImportClipboardMessage(preview))
-            .setPositiveButton(R.string.action_import) { _, _ ->
-                importBatchConfig(clipboard)
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+    private fun confirmClipboardImport() {
+        val content = clipboardImport?.content ?: return
+        clipboardImport = null
+        importBatchConfig(content)
     }
 
     private fun buildImportClipboardMessage(preview: AngConfigManager.ImportPreview): String {
@@ -882,7 +640,7 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun importBatchConfig(server: String?) {
-        showLoading()
+        updateImportingState(true)
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -893,18 +651,18 @@ class MainActivity : HelperBaseActivity() {
                         count > 0 -> {
                             toast(getString(R.string.title_import_config_count, count))
                             mainViewModel.reloadServerList()
-                            refreshGroupTabTitles()
+                            setSelectedServerName()
                         }
 
-                        countSub > 0 -> setupGroupTab()
+                        countSub > 0 -> refreshGroups()
                         else -> toastError(R.string.toast_failure)
                     }
-                    hideLoading()
+                    updateImportingState(false)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     toastError(R.string.toast_failure)
-                    hideLoading()
+                    updateImportingState(false)
                 }
                 LogUtil.e(AppConfig.TAG, "Failed to import batch config", e)
             }
@@ -924,12 +682,11 @@ class MainActivity : HelperBaseActivity() {
         return true
     }
 
-
     /**
      * import config from sub
      */
-    fun importConfigViaSub(): Boolean {
-        showLoading()
+    private fun importConfigViaSub(): Boolean {
+        updateImportingState(true)
 
         lifecycleScope.launch(Dispatchers.IO) {
             val result = mainViewModel.updateConfigViaSubAll()
@@ -952,16 +709,16 @@ class MainActivity : HelperBaseActivity() {
                 }
                 if (result.configCount > 0) {
                     mainViewModel.reloadServerList()
-                    refreshGroupTabTitles()
+                    setSelectedServerName()
                 }
-                hideLoading()
+                updateImportingState(false)
             }
         }
         return true
     }
 
     private fun exportAll() {
-        showLoading()
+        updateImportingState(true)
         lifecycleScope.launch(Dispatchers.IO) {
             val ret = mainViewModel.exportAllServer()
             launch(Dispatchers.Main) {
@@ -969,80 +726,63 @@ class MainActivity : HelperBaseActivity() {
                     toast(getString(R.string.title_export_config_count, ret))
                 else
                     toastError(R.string.toast_failure)
-                hideLoading()
+                updateImportingState(false)
             }
         }
     }
 
     private fun delAllConfig() {
-        MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                showLoading()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeAllServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        refreshGroupTabTitles()
-                        toast(getString(R.string.title_del_config_count, ret))
-                        hideLoading()
-                    }
-                }
+        updateImportingState(true)
+        lifecycleScope.launch(Dispatchers.IO) {
+            val ret = mainViewModel.removeAllServer()
+            launch(Dispatchers.Main) {
+                mainViewModel.reloadServerList()
+                setSelectedServerName()
+                toast(getString(R.string.title_del_config_count, ret))
+                updateImportingState(false)
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+        }
     }
 
     private fun delDuplicateConfig() {
-        MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                showLoading()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeDuplicateServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        refreshGroupTabTitles()
-                        toast(getString(R.string.title_del_duplicate_config_count, ret))
-                        hideLoading()
-                    }
-                }
+        updateImportingState(true)
+        lifecycleScope.launch(Dispatchers.IO) {
+            val ret = mainViewModel.removeDuplicateServer()
+            launch(Dispatchers.Main) {
+                mainViewModel.reloadServerList()
+                setSelectedServerName()
+                toast(getString(R.string.title_del_duplicate_config_count, ret))
+                updateImportingState(false)
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+        }
     }
 
     private fun delInvalidConfig() {
-        MaterialAlertDialogBuilder(this).setMessage(R.string.del_invalid_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                showLoading()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeInvalidServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        refreshGroupTabTitles()
-                        toast(getString(R.string.title_del_config_count, ret))
-                        hideLoading()
-                    }
-                }
+        updateImportingState(true)
+        lifecycleScope.launch(Dispatchers.IO) {
+            val ret = mainViewModel.removeInvalidServer()
+            launch(Dispatchers.Main) {
+                mainViewModel.reloadServerList()
+                setSelectedServerName()
+                toast(getString(R.string.title_del_config_count, ret))
+                updateImportingState(false)
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+        }
     }
 
     private fun sortByTestResults() {
-        showLoading()
+        updateImportingState(true)
         lifecycleScope.launch(Dispatchers.IO) {
             mainViewModel.sortByTestResults()
             launch(Dispatchers.Main) {
                 mainViewModel.reloadServerList()
-                hideLoading()
+                updateImportingState(false)
             }
         }
+    }
+
+    private fun updateImportingState(value: Boolean) {
+        runOnUiThread { importing = value }
     }
 
     /**
@@ -1071,102 +811,51 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    /**
-     * Locates and scrolls to the currently selected server.
-     * If the selected server is in a different group, automatically switches to that group first.
-     */
-    private fun locateSelectedServer() {
-        val targetSubscriptionId = mainViewModel.findSubscriptionIdBySelect()
-        if (targetSubscriptionId.isNullOrEmpty()) {
-            toast(R.string.title_file_chooser)
-            return
-        }
+    private fun handleDrawerNavigation(destination: MainDrawerDestination) {
+        when (destination) {
+            MainDrawerDestination.SUBSCRIPTIONS -> requestActivityLauncher.launchWithMaterialTransition(
+                this,
+                Intent(this, SubSettingActivity::class.java),
+            )
 
-        val targetGroupIndex = groupPagerAdapter.groups.indexOfFirst { it.id == targetSubscriptionId }
-        if (targetGroupIndex < 0) {
-            toast(R.string.toast_server_not_found_in_group)
-            return
-        }
+            MainDrawerDestination.PER_APP_PROXY -> startActivityWithMaterialTransition(
+                Intent(this, PerAppProxyActivity::class.java),
+            )
 
-        // Switch to target group if needed, then scroll to the server
-        if (binding.viewPager.currentItem != targetGroupIndex) {
-            binding.viewPager.setCurrentItem(targetGroupIndex, true)
-            binding.viewPager.postDelayed({ scrollToSelectedServer(targetGroupIndex) }, 1000)
-        } else {
-            scrollToSelectedServer(targetGroupIndex)
-        }
-    }
+            MainDrawerDestination.ROUTING -> startActivityWithMaterialTransition(
+                Intent(this, RoutingSettingActivity::class.java),
+            )
 
-    /**
-     * Scrolls to the selected server in the specified fragment.
-     * @param groupIndex The index of the group/fragment to scroll in
-     */
-    private fun scrollToSelectedServer(groupIndex: Int) {
-        val itemId = groupPagerAdapter.getItemId(groupIndex)
-        val tag = "f$itemId"
-        val fragment = supportFragmentManager.findFragmentByTag(tag)
+            MainDrawerDestination.SETTINGS -> requestActivityLauncher.launchWithMaterialTransition(
+                this,
+                Intent(this, SettingsActivity::class.java),
+            )
 
-        if (fragment?.isAdded == true && fragment.view != null) {
-            when (fragment) {
-                is AllServerFragment -> fragment.scrollToSelectedServer()
-                is GroupServerFragment -> fragment.scrollToSelectedServer()
-                else -> toast(R.string.toast_fragment_not_available)
-            }
-        } else {
-            toast(R.string.toast_fragment_not_available)
-        }
-    }
+            MainDrawerDestination.LOGCAT -> startActivityWithMaterialTransition(
+                Intent(this, LogcatActivity::class.java),
+            )
 
-    private fun handleDrawerNavigation(itemId: Int) {
-        if (itemId == R.id.mode_selector) {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            showModeSelector()
-            return
-        }
-        val intent = when (itemId) {
-            R.id.sub_setting -> Intent(this, SubSettingActivity::class.java)
-            R.id.per_app_proxy_settings -> Intent(this, PerAppProxyActivity::class.java)
-            R.id.routing_setting -> Intent(this, RoutingSettingActivity::class.java)
-            R.id.settings -> Intent(this, SettingsActivity::class.java)
-            R.id.logcat -> Intent(this, LogcatActivity::class.java)
-            R.id.backup_restore -> Intent(this, BackupActivity::class.java)
-            R.id.about -> Intent(this, AboutActivity::class.java)
-            R.id.kill_app -> {
-                binding.drawerLayout.closeDrawer(GravityCompat.START)
-                CoreServiceManager.stopVService(this)
-                finishAffinity()
-                android.os.Process.killProcess(android.os.Process.myPid())
-                return
-            }
-            else -> null
-        }
+            MainDrawerDestination.BACKUP -> requestActivityLauncher.launchWithMaterialTransition(
+                this,
+                Intent(this, BackupActivity::class.java),
+            )
 
-        binding.drawerLayout.closeDrawer(GravityCompat.START)
+            MainDrawerDestination.ABOUT -> startActivityWithMaterialTransition(
+                Intent(this, AboutActivity::class.java),
+            )
 
-        intent?.let {
-            if (itemId == R.id.sub_setting || itemId == R.id.settings || itemId == R.id.backup_restore) {
-                requestActivityLauncher.launchWithMaterialTransition(this, it)
-            } else {
-                startActivityWithMaterialTransition(it)
+            MainDrawerDestination.KILL_APP -> {
+                // The VPN/TUN services live in the daemon process, so kill only after it has
+                // received the stop and torn the interface down.
+                if (SettingsManager.isTunEnabled()) {
+                    stopTunService()
+                }
+                MessageUtil.sendMsg2ServiceForResult(this, AppConfig.MSG_STATE_STOP, "") {
+                    finishAffinity()
+                    android.os.Process.killProcess(android.os.Process.myPid())
+                }
             }
         }
-    }
-
-    private fun showModeSelector() {
-        val entries = resources.getStringArray(R.array.mode_entries)
-        val values = resources.getStringArray(R.array.mode_value)
-        val current = MmkvManager.decodeSettingsString(AppConfig.PREF_MODE, AppConfig.VPN)
-        val checked = values.indexOf(current).coerceAtLeast(0)
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.title_mode)
-            .setSingleChoiceItems(entries, checked) { dialog, which ->
-                val newValue = values[which]
-                MmkvManager.encodeSettings(AppConfig.PREF_MODE, newValue)
-                SettingsChangeManager.makeRestartService()
-                dialog.dismiss()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
     }
 
     private fun handleTunToggle() {
@@ -1200,15 +889,14 @@ class MainActivity : HelperBaseActivity() {
 
     private fun updateTunToggleState() {
         val tunOn = SettingsManager.isTunEnabled()
-        bottomBarState = bottomBarState.copy(tunEnabled = tunOn)
+        connectionState = connectionState.copy(tunEnabled = tunOn)
     }
 
     private fun setTunButtonVisible(visible: Boolean) {
-        bottomBarState = bottomBarState.copy(showTun = visible)
+        connectionState = connectionState.copy(showTun = visible)
     }
 
     override fun onDestroy() {
-        tabMediator?.detach()
         uptimeJob?.cancel()
         super.onDestroy()
     }

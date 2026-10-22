@@ -26,8 +26,8 @@ android {
         applicationId = "com.vntrum.veil"
         minSdk = 26
         targetSdk = 37
-        versionCode = 15
-        versionName = "0.8.1"
+        versionCode = 16
+        versionName = "1.0.0"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -137,7 +137,6 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.recyclerview)
     implementation(libs.androidx.swiperefreshlayout)
-    implementation(libs.androidx.viewpager2)
     implementation(libs.androidx.fragment)
 
     // UI Libraries
