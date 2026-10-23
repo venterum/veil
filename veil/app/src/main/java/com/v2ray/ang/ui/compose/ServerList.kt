@@ -1237,6 +1237,15 @@ private fun getProtocolDescription(profile: ProfileItem): String {
         return parts.joinToString(" / ")
     }
 
+    if (profile.configType == EConfigType.AMNEZIAWG) {
+        val obfuscated = profile.awgJc != null ||
+                profile.awgS1 != null ||
+                profile.awgH1 != null ||
+                profile.awgI1 != null ||
+                profile.awgHeaderProtectionKey != null
+        return if (obfuscated) "AmneziaWG / obfuscated" else "AmneziaWG"
+    }
+
     val parts = mutableListOf<String>()
     parts.add(profile.configType.name)
 

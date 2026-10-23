@@ -44,57 +44,7 @@ object WireguardFmt : FmtBase() {
      * @return the parsed ProfileItem object, or null if parsing fails
      */
     fun parseWireguardConfFile(str: String): ProfileItem {
-        val config = ProfileItem.create(EConfigType.WIREGUARD)
-
-        val interfaceParams: MutableMap<String, String> = mutableMapOf()
-        val peerParams: MutableMap<String, String> = mutableMapOf()
-
-        var currentSection: String? = null
-
-        str.lines().forEach { line ->
-            val trimmedLine = line.trim()
-
-            if (trimmedLine.isEmpty() || trimmedLine.startsWith("#")) {
-                return@forEach
-            }
-
-            when {
-                trimmedLine.startsWith("[Interface]", ignoreCase = true) -> currentSection = "Interface"
-                trimmedLine.startsWith("[Peer]", ignoreCase = true) -> currentSection = "Peer"
-                else -> {
-                    if (currentSection != null) {
-                        val parts = trimmedLine.split("=", limit = 2).map { it.trim() }
-                        if (parts.size == 2) {
-                            val key = parts[0].lowercase()
-                            val value = parts[1]
-                            when (currentSection) {
-                                "Interface" -> interfaceParams[key] = value
-                                "Peer" -> peerParams[key] = value
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        config.secretKey = interfaceParams["privatekey"].orEmpty()
-        config.remarks = System.currentTimeMillis().toString()
-        config.localAddress = interfaceParams["address"] ?: AppConfig.WIREGUARD_LOCAL_ADDRESS_V4
-        config.mtu = Utils.parseInt(interfaceParams["mtu"] ?: AppConfig.WIREGUARD_LOCAL_MTU)
-        config.publicKey = peerParams["publickey"].orEmpty()
-        config.preSharedKey = peerParams["presharedkey"]?.nullIfBlank()
-        val endpoint = peerParams["endpoint"].orEmpty()
-        val endpointParts = endpoint.split(":", limit = 2)
-        if (endpointParts.size == 2) {
-            config.server = endpointParts[0]
-            config.serverPort = endpointParts[1]
-        } else {
-            config.server = endpoint
-            config.serverPort = ""
-        }
-        config.reserved = peerParams["reserved"] ?: "0,0,0"
-
-        return config
+        return WgConfParser.parse(str, EConfigType.WIREGUARD) ?: ProfileItem.create(EConfigType.WIREGUARD)
     }
 
 

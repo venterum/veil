@@ -262,6 +262,8 @@ object CoreServiceManager {
         } catch (e: Exception) {
             val message = e.message?.takeUnless { it.isBlank() } ?: e.javaClass.simpleName
             LogUtil.e(AppConfig.TAG, "StartCore-Manager: $message", e)
+            AmneziaWgManager.stop()
+            AmneziaWgManager.socketProtector = null
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, message)
             NotificationManager.cancelNotification()
             return false
@@ -298,6 +300,20 @@ object CoreServiceManager {
             )
             if (!OpenFluxManager.start(service, config)) {
                 error("Failed to start OpenFlux")
+            }
+            MmkvManager.encodeServerConfig(guid, config)
+        }
+
+        if (config.configType == EConfigType.AMNEZIAWG) {
+            LogUtil.w(
+                AppConfig.TAG,
+                "StartCore-Manager: AMNEZIAWG config detected, starting AmneziaWG endpoint=${config.server}:${config.serverPort}"
+            )
+            AmneziaWgManager.socketProtector = serviceControl?.get()?.let { sc ->
+                { fd -> sc.vpnProtect(fd) }
+            }
+            if (!AmneziaWgManager.start(service, config)) {
+                error("Failed to start AmneziaWG")
             }
             MmkvManager.encodeServerConfig(guid, config)
         }
@@ -407,6 +423,11 @@ object CoreServiceManager {
 
         if (currentConfig?.configType == EConfigType.OPENFLUX) {
             OpenFluxManager.stop()
+        }
+
+        if (currentConfig?.configType == EConfigType.AMNEZIAWG) {
+            AmneziaWgManager.stop()
+            AmneziaWgManager.socketProtector = null
         }
 
         if (!keepServiceAlive) {

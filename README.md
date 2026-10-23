@@ -56,7 +56,7 @@ An Xray client for Android with the standard V2Ray/Xray protocols plus two plugg
 
 ## Features
 
-- **Protocols:** VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, Hysteria2
+- **Protocols:** VMess, VLESS, Shadowsocks, Trojan, SOCKS, WireGuard, AmneziaWG, Hysteria2
 - **olcRTC:** Jitsi / Telemost / WbStream carriers; DataChannel / VP8 / SEI transports
 - **OpenFlux:** Yandex Docs / Volga / Board / MAX / Cups.online / Mail.ru / Avito transports; runs the upstream OpenFlux mobile bridge (Session profiles with a classic fallback), requires a self-hosted exit node
 - **Modes:** VPN (TUN), proxy-only (SOCKS5), hybrid (SOCKS5 with an in-app TUN toggle), root
@@ -68,7 +68,7 @@ An Xray client for Android with the standard V2Ray/Xray protocols plus two plugg
 
 ## Documentation
 
-[Architecture](docs/en/architecture.md) · [Building](docs/en/build.md) · [olcRTC](docs/en/olcrtc.md) — **EN** / **RU** in [docs](docs/index.md).
+[Architecture](docs/en/architecture.md) · [Building](docs/en/build.md) · [olcRTC](docs/en/olcrtc.md) · [AmneziaWG](docs/en/amneziawg.md) — **EN** / **RU** in [docs](docs/index.md).
 
 ---
 

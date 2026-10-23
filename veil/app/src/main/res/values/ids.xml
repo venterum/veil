@@ -16,6 +16,7 @@
     <item name="import_manually_http" type="id" />
     <item name="import_manually_trojan" type="id" />
     <item name="import_manually_wireguard" type="id" />
+    <item name="import_manually_amneziawg" type="id" />
     <item name="import_manually_hysteria2" type="id" />
     <item name="import_manually_olcrtc" type="id" />
     <item name="import_manually_openflux" type="id" />

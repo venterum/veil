@@ -17,6 +17,7 @@ enum class EConfigType(val value: Int, val protocolScheme: String) {
     HTTP(10, AppConfig.HTTP),
     OLCRTC(11, AppConfig.OLCRTC),
     OPENFLUX(12, AppConfig.OPENFLUX),
+    AMNEZIAWG(13, AppConfig.AMNEZIAWG),
     POLICYGROUP(101, AppConfig.CUSTOM),
     PROXYCHAIN(102, AppConfig.CUSTOM);
 

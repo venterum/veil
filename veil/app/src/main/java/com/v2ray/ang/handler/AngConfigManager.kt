@@ -14,6 +14,8 @@ import com.v2ray.ang.dto.entities.SubscriptionCache
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isNotNullEmpty
+import com.v2ray.ang.fmt.AmneziaVpnKeyParser
+import com.v2ray.ang.fmt.AmneziaWgFmt
 import com.v2ray.ang.fmt.CustomFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
 import com.v2ray.ang.fmt.OlcrtcFmt
@@ -23,6 +25,7 @@ import com.v2ray.ang.fmt.SocksFmt
 import com.v2ray.ang.fmt.TrojanFmt
 import com.v2ray.ang.fmt.VlessFmt
 import com.v2ray.ang.fmt.VmessFmt
+import com.v2ray.ang.fmt.WgConfParser
 import com.v2ray.ang.fmt.WireguardFmt
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
@@ -44,6 +47,7 @@ object AngConfigManager {
             EConfigType.TROJAN.protocolScheme to TrojanFmt::parse,
             EConfigType.VLESS.protocolScheme to VlessFmt::parse,
             EConfigType.WIREGUARD.protocolScheme to WireguardFmt::parse,
+            EConfigType.AMNEZIAWG.protocolScheme to AmneziaWgFmt::parse,
             EConfigType.HYSTERIA2.protocolScheme to Hysteria2Fmt::parse,
             AppConfig.HY2 to Hysteria2Fmt::parse,
             EConfigType.OLCRTC.protocolScheme to OlcrtcFmt::parse,
@@ -162,6 +166,7 @@ object AngConfigManager {
                 EConfigType.VLESS -> VlessFmt.toUri(config)
                 EConfigType.TROJAN -> TrojanFmt.toUri(config)
                 EConfigType.WIREGUARD -> WireguardFmt.toUri(config)
+                EConfigType.AMNEZIAWG -> AmneziaWgFmt.toUri(config)
                 EConfigType.HYSTERIA2 -> Hysteria2Fmt.toUri(config)
                 EConfigType.OLCRTC -> OlcrtcFmt.toUri(config)
                 EConfigType.OPENFLUX -> OpenFluxFmt.toUri(config)
@@ -257,8 +262,8 @@ object AngConfigManager {
             val isCustom = trimmed.contains("inbounds") &&
                     trimmed.contains("outbounds") &&
                     trimmed.contains("routing")
-            val isWireguard = trimmed.startsWith("[Interface]") && trimmed.contains("[Peer]")
-            if (isCustom || isWireguard) {
+            val isWgConf = trimmed.startsWith("[Interface]") && trimmed.contains("[Peer]")
+            if (isCustom || isWgConf) {
                 configCount = 1
             }
         }
@@ -515,9 +520,9 @@ object AngConfigManager {
                 LogUtil.e(AppConfig.TAG, "Failed to parse custom config server as single config", e)
             }
             return 0
-        } else if (server.startsWith("[Interface]") && server.contains("[Peer]")) {
+        } else if (server.trimStart().startsWith("[Interface]") && server.contains("[Peer]")) {
             try {
-                val config = WireguardFmt.parseWireguardConfFile(server) ?: return R.string.toast_incorrect_protocol
+                val config = WgConfParser.parse(server) ?: return R.string.toast_incorrect_protocol
                 config.description = generateDescription(config)
                 if (!append) {
                     MmkvManager.removeServerViaSubid(subid)
@@ -526,7 +531,7 @@ object AngConfigManager {
                 MmkvManager.encodeServerRaw(key, server)
                 return 1
             } catch (e: Exception) {
-                LogUtil.e(AppConfig.TAG, "Failed to parse WireGuard config file", e)
+                LogUtil.e(AppConfig.TAG, "Failed to parse WireGuard/AmneziaWG config file", e)
             }
             return 0
         } else {
@@ -553,8 +558,13 @@ object AngConfigManager {
                 return null
             }
 
-            val config = configFmtParsers.firstNotNullOfOrNull { (scheme, parser) ->
-                if (str.startsWith(scheme)) parser(str) else null
+            val value = str.trim()
+            val config = if (AmneziaVpnKeyParser.isVpnKey(value)) {
+                AmneziaVpnKeyParser.parse(value)
+            } else {
+                configFmtParsers.firstNotNullOfOrNull { (scheme, parser) ->
+                    if (value.startsWith(scheme)) parser(value) else null
+                }
             }
 
             if (config == null) {

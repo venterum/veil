@@ -55,6 +55,37 @@ data class ProfileItem(
     var localAddress: String? = null,
     var reserved: String? = null,
     var mtu: Int? = null,
+    var dns: String? = null,
+    var allowedIps: String? = null,
+    var persistentKeepalive: String? = null,
+    /** Runtime loopback SOCKS port for the AmneziaWG bridge. */
+    var localSocksPort: Int? = null,
+
+    var awgJc: Int? = null,
+    var awgJmin: Int? = null,
+    var awgJmax: Int? = null,
+    var awgS1: Int? = null,
+    var awgS2: Int? = null,
+    var awgS3: Int? = null,
+    var awgS4: Int? = null,
+    var awgH1: String? = null,
+    var awgH2: String? = null,
+    var awgH3: String? = null,
+    var awgH4: String? = null,
+    var awgI1: String? = null,
+    var awgI2: String? = null,
+    var awgI3: String? = null,
+    var awgI4: String? = null,
+    var awgI5: String? = null,
+    var awgHeaderProtectionKey: String? = null,
+    var awgContentPaddingAddition: String? = null,
+    var awgRekeyAfterTime: String? = null,
+    var awgRekeyTimeout: String? = null,
+    var awgRejectAfterTime: String? = null,
+    var awgKeepaliveTimeout: String? = null,
+    var awgMaxHandshakeAttempts: String? = null,
+    var awgRandomTrailers: Boolean? = null,
+    var awgDisableCookies: Boolean? = null,
 
     var obfsPassword: String? = null,
     var portHopping: String? = null,
@@ -131,9 +162,39 @@ data class ProfileItem(
                 && this.shortId == obj.shortId
 
                 && this.secretKey == obj.secretKey
+                && this.preSharedKey == obj.preSharedKey
                 && this.localAddress == obj.localAddress
                 && this.reserved == obj.reserved
                 && this.mtu == obj.mtu
+                && this.dns == obj.dns
+                && this.allowedIps == obj.allowedIps
+                && this.persistentKeepalive == obj.persistentKeepalive
+
+                && this.awgJc == obj.awgJc
+                && this.awgJmin == obj.awgJmin
+                && this.awgJmax == obj.awgJmax
+                && this.awgS1 == obj.awgS1
+                && this.awgS2 == obj.awgS2
+                && this.awgS3 == obj.awgS3
+                && this.awgS4 == obj.awgS4
+                && this.awgH1 == obj.awgH1
+                && this.awgH2 == obj.awgH2
+                && this.awgH3 == obj.awgH3
+                && this.awgH4 == obj.awgH4
+                && this.awgI1 == obj.awgI1
+                && this.awgI2 == obj.awgI2
+                && this.awgI3 == obj.awgI3
+                && this.awgI4 == obj.awgI4
+                && this.awgI5 == obj.awgI5
+                && this.awgHeaderProtectionKey == obj.awgHeaderProtectionKey
+                && this.awgContentPaddingAddition == obj.awgContentPaddingAddition
+                && this.awgRekeyAfterTime == obj.awgRekeyAfterTime
+                && this.awgRekeyTimeout == obj.awgRekeyTimeout
+                && this.awgRejectAfterTime == obj.awgRejectAfterTime
+                && this.awgKeepaliveTimeout == obj.awgKeepaliveTimeout
+                && this.awgMaxHandshakeAttempts == obj.awgMaxHandshakeAttempts
+                && this.awgRandomTrailers == obj.awgRandomTrailers
+                && this.awgDisableCookies == obj.awgDisableCookies
 
                 && this.obfsPassword == obj.obfsPassword
                 && this.portHopping == obj.portHopping

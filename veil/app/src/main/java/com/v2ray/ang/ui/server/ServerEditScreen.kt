@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.EnhancedEncryption
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.RocketLaunch
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Videocam
@@ -51,6 +52,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -357,6 +359,7 @@ private fun protocolDocsUrl(configType: EConfigType): String? = when (configType
     EConfigType.SOCKS -> "https://datatracker.ietf.org/doc/html/rfc1928"
     EConfigType.HTTP -> "https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling"
     EConfigType.WIREGUARD -> "https://www.wireguard.com/quickstart/"
+    EConfigType.AMNEZIAWG -> "https://docs.amnezia.org/documentation/amnezia-wg/"
     EConfigType.HYSTERIA2 -> "https://v2.hysteria.network/docs/"
     EConfigType.OLCRTC -> "https://github.com/openlibrecommunity/olcrtc#readme"
     EConfigType.OPENFLUX -> "https://github.com/p1neappleXpress/OpenFlux#readme"
@@ -371,6 +374,7 @@ private fun protocolDescriptionRes(configType: EConfigType): Int = when (configT
     EConfigType.SOCKS -> R.string.server_help_desc_socks
     EConfigType.HTTP -> R.string.server_help_desc_http
     EConfigType.WIREGUARD -> R.string.server_help_desc_wireguard
+    EConfigType.AMNEZIAWG -> R.string.server_help_desc_amneziawg
     EConfigType.HYSTERIA2 -> R.string.server_help_desc_hysteria2
     EConfigType.OLCRTC -> R.string.server_help_desc_olcrtc
     EConfigType.OPENFLUX -> R.string.server_help_desc_openflux
@@ -384,6 +388,7 @@ private fun protocolIcon(configType: EConfigType): ImageVector = when (configTyp
     EConfigType.SHADOWSOCKS -> Icons.Outlined.EnhancedEncryption
     EConfigType.SOCKS, EConfigType.HTTP -> Icons.Outlined.SwapHoriz
     EConfigType.WIREGUARD -> Icons.Outlined.VpnLock
+    EConfigType.AMNEZIAWG -> Icons.Outlined.Security
     EConfigType.HYSTERIA2 -> Icons.Outlined.RocketLaunch
     EConfigType.OLCRTC -> Icons.Outlined.Videocam
     EConfigType.OPENFLUX -> Icons.Outlined.Cloud
@@ -479,7 +484,15 @@ private fun SectionContent(
     }
 
     if (uiState.showWireguardSection) {
-        SectionHeader(title = stringResource(R.string.server_section_wireguard))
+        SectionHeader(
+            title = stringResource(
+                if (uiState.configType == EConfigType.AMNEZIAWG) {
+                    R.string.server_section_amneziawg
+                } else {
+                    R.string.server_section_wireguard
+                }
+            )
+        )
         FormCard {
             EditTextField(
                 label = stringResource(R.string.server_lab_secret_key),
@@ -498,15 +511,35 @@ private fun SectionContent(
                 value = uiState.wireguardPreSharedKey,
                 onValueChange = { uiState.wireguardPreSharedKey = it }
             )
-            EditTextField(
-                label = stringResource(R.string.server_lab_reserved),
-                value = uiState.wireguardReserved,
-                onValueChange = { uiState.wireguardReserved = it }
-            )
+            if (uiState.configType == EConfigType.WIREGUARD) {
+                EditTextField(
+                    label = stringResource(R.string.server_lab_reserved),
+                    value = uiState.wireguardReserved,
+                    onValueChange = { uiState.wireguardReserved = it }
+                )
+            }
             EditTextField(
                 label = stringResource(R.string.server_lab_local_address),
                 value = uiState.wireguardLocalAddress,
                 onValueChange = { uiState.wireguardLocalAddress = it }
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_dns),
+                value = uiState.wireguardDns,
+                onValueChange = { uiState.wireguardDns = it },
+                placeholder = "1.1.1.1, 8.8.8.8"
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_allowed_ips),
+                value = uiState.wireguardAllowedIps,
+                onValueChange = { uiState.wireguardAllowedIps = it },
+                placeholder = "0.0.0.0/0, ::/0"
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_keepalive),
+                value = uiState.wireguardKeepalive,
+                onValueChange = { uiState.wireguardKeepalive = it },
+                placeholder = "25"
             )
             EditTextField(
                 label = stringResource(R.string.server_lab_local_mtu),
@@ -514,6 +547,169 @@ private fun SectionContent(
                 onValueChange = { uiState.wireguardMtu = it.filter(Char::isDigit) },
                 keyboardType = KeyboardType.Number
             )
+        }
+    }
+
+    if (uiState.showAmneziawgSection) {
+        SectionHeader(title = stringResource(R.string.server_section_amneziawg_obfuscation))
+        FormCard {
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_jc),
+                value = uiState.awgJc,
+                onValueChange = { uiState.awgJc = it.filter(Char::isDigit) },
+                keyboardType = KeyboardType.Number
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_jmin),
+                value = uiState.awgJmin,
+                onValueChange = { uiState.awgJmin = it.filter(Char::isDigit) },
+                keyboardType = KeyboardType.Number
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_jmax),
+                value = uiState.awgJmax,
+                onValueChange = { uiState.awgJmax = it.filter(Char::isDigit) },
+                keyboardType = KeyboardType.Number
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_s1),
+                value = uiState.awgS1,
+                onValueChange = { uiState.awgS1 = it.filter(Char::isDigit) },
+                keyboardType = KeyboardType.Number
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_s2),
+                value = uiState.awgS2,
+                onValueChange = { uiState.awgS2 = it.filter(Char::isDigit) },
+                keyboardType = KeyboardType.Number
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_h1),
+                value = uiState.awgH1,
+                onValueChange = { uiState.awgH1 = it },
+                placeholder = "1 or 100-200"
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_h2),
+                value = uiState.awgH2,
+                onValueChange = { uiState.awgH2 = it },
+                placeholder = "2 or 300-400"
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_h3),
+                value = uiState.awgH3,
+                onValueChange = { uiState.awgH3 = it },
+                placeholder = "3 or 500-600"
+            )
+            EditTextField(
+                label = stringResource(R.string.server_lab_awg_h4),
+                value = uiState.awgH4,
+                onValueChange = { uiState.awgH4 = it },
+                placeholder = "4 or 700-800"
+            )
+            TextButton(onClick = { uiState.awgAdvancedExpanded = !uiState.awgAdvancedExpanded }) {
+                Text(
+                    stringResource(
+                        if (uiState.awgAdvancedExpanded) {
+                            R.string.server_lab_awg_advanced_hide
+                        } else {
+                            R.string.server_lab_awg_advanced_show
+                        }
+                    )
+                )
+            }
+            AnimatedField(visible = uiState.awgAdvancedExpanded) {
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_s3),
+                    value = uiState.awgS3,
+                    onValueChange = { uiState.awgS3 = it.filter(Char::isDigit) },
+                    keyboardType = KeyboardType.Number
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_s4),
+                    value = uiState.awgS4,
+                    onValueChange = { uiState.awgS4 = it.filter(Char::isDigit) },
+                    keyboardType = KeyboardType.Number
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_i1),
+                    value = uiState.awgI1,
+                    onValueChange = { uiState.awgI1 = it },
+                    placeholder = "<b 0x...><r 20>"
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_i2),
+                    value = uiState.awgI2,
+                    onValueChange = { uiState.awgI2 = it }
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_i3),
+                    value = uiState.awgI3,
+                    onValueChange = { uiState.awgI3 = it }
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_i4),
+                    value = uiState.awgI4,
+                    onValueChange = { uiState.awgI4 = it }
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_i5),
+                    value = uiState.awgI5,
+                    onValueChange = { uiState.awgI5 = it }
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_header_protection_key),
+                    value = uiState.awgHeaderProtectionKey,
+                    onValueChange = { uiState.awgHeaderProtectionKey = it },
+                    trailingIcon = { CopyToClipboardButton(value = uiState.awgHeaderProtectionKey) }
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_content_padding),
+                    value = uiState.awgContentPaddingAddition,
+                    onValueChange = { uiState.awgContentPaddingAddition = it },
+                    placeholder = "0-10"
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_rekey_after),
+                    value = uiState.awgRekeyAfterTime,
+                    onValueChange = { uiState.awgRekeyAfterTime = it },
+                    placeholder = "100-120"
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_rekey_timeout),
+                    value = uiState.awgRekeyTimeout,
+                    onValueChange = { uiState.awgRekeyTimeout = it },
+                    placeholder = "5"
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_reject_after),
+                    value = uiState.awgRejectAfterTime,
+                    onValueChange = { uiState.awgRejectAfterTime = it },
+                    placeholder = "180"
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_keepalive_timeout),
+                    value = uiState.awgKeepaliveTimeout,
+                    onValueChange = { uiState.awgKeepaliveTimeout = it },
+                    placeholder = "10"
+                )
+                EditTextField(
+                    label = stringResource(R.string.server_lab_awg_max_handshakes),
+                    value = uiState.awgMaxHandshakeAttempts,
+                    onValueChange = { uiState.awgMaxHandshakeAttempts = it },
+                    placeholder = "5"
+                )
+                LabeledSwitch(
+                    label = stringResource(R.string.server_lab_awg_random_trailers),
+                    checked = uiState.awgRandomTrailers,
+                    onCheckedChange = { uiState.awgRandomTrailers = it }
+                )
+                LabeledSwitch(
+                    label = stringResource(R.string.server_lab_awg_disable_cookies),
+                    checked = uiState.awgDisableCookies,
+                    onCheckedChange = { uiState.awgDisableCookies = it }
+                )
+            }
         }
     }
 
@@ -828,6 +1024,25 @@ private fun FormCard(content: @Composable () -> Unit) {
         ) {
             content()
         }
+    }
+}
+
+@Composable
+private fun LabeledSwitch(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

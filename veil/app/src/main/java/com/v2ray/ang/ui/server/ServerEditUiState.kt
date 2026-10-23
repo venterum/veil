@@ -43,7 +43,8 @@ class ServerEditUiState(
 
     val showAddressPort = configType != EConfigType.OLCRTC && configType != EConfigType.OPENFLUX
     val showCredential = configType !in setOf(
-        EConfigType.SOCKS, EConfigType.HTTP, EConfigType.WIREGUARD, EConfigType.OLCRTC, EConfigType.OPENFLUX
+        EConfigType.SOCKS, EConfigType.HTTP, EConfigType.WIREGUARD, EConfigType.AMNEZIAWG,
+        EConfigType.OLCRTC, EConfigType.OPENFLUX
     )
     val showSocksAuth = configType == EConfigType.SOCKS || configType == EConfigType.HTTP
     val showVlessExtras = configType == EConfigType.VLESS
@@ -51,7 +52,8 @@ class ServerEditUiState(
     val showTransport = configType in TRANSPORT_TYPES
     val showFullTlsSection = configType in TRANSPORT_TYPES
     val showHysteriaTlsSection = configType == EConfigType.HYSTERIA2
-    val showWireguardSection = configType == EConfigType.WIREGUARD
+    val showWireguardSection = configType == EConfigType.WIREGUARD || configType == EConfigType.AMNEZIAWG
+    val showAmneziawgSection = configType == EConfigType.AMNEZIAWG
     val showHysteriaSection = configType == EConfigType.HYSTERIA2
     val showOlcrtcSection = configType == EConfigType.OLCRTC
     val showOpenfluxSection = configType == EConfigType.OPENFLUX
@@ -96,6 +98,36 @@ class ServerEditUiState(
     var wireguardReserved by mutableStateOf("0,0,0")
     var wireguardLocalAddress by mutableStateOf(AppConfig.WIREGUARD_LOCAL_ADDRESS_V4)
     var wireguardMtu by mutableStateOf(AppConfig.WIREGUARD_LOCAL_MTU)
+    var wireguardDns by mutableStateOf("")
+    var wireguardAllowedIps by mutableStateOf("")
+    var wireguardKeepalive by mutableStateOf("")
+
+    var awgJc by mutableStateOf("")
+    var awgJmin by mutableStateOf("")
+    var awgJmax by mutableStateOf("")
+    var awgS1 by mutableStateOf("")
+    var awgS2 by mutableStateOf("")
+    var awgS3 by mutableStateOf("")
+    var awgS4 by mutableStateOf("")
+    var awgH1 by mutableStateOf("")
+    var awgH2 by mutableStateOf("")
+    var awgH3 by mutableStateOf("")
+    var awgH4 by mutableStateOf("")
+    var awgI1 by mutableStateOf("")
+    var awgI2 by mutableStateOf("")
+    var awgI3 by mutableStateOf("")
+    var awgI4 by mutableStateOf("")
+    var awgI5 by mutableStateOf("")
+    var awgHeaderProtectionKey by mutableStateOf("")
+    var awgContentPaddingAddition by mutableStateOf("")
+    var awgRekeyAfterTime by mutableStateOf("")
+    var awgRekeyTimeout by mutableStateOf("")
+    var awgRejectAfterTime by mutableStateOf("")
+    var awgKeepaliveTimeout by mutableStateOf("")
+    var awgMaxHandshakeAttempts by mutableStateOf("")
+    var awgRandomTrailers by mutableStateOf(false)
+    var awgDisableCookies by mutableStateOf(false)
+    var awgAdvancedExpanded by mutableStateOf(false)
 
     var obfsPassword by mutableStateOf("")
     var portHopping by mutableStateOf("")
@@ -142,6 +174,35 @@ class ServerEditUiState(
         wireguardReserved = "0,0,0"
         wireguardLocalAddress = AppConfig.WIREGUARD_LOCAL_ADDRESS_V4
         wireguardMtu = AppConfig.WIREGUARD_LOCAL_MTU
+        wireguardDns = ""
+        wireguardAllowedIps = ""
+        wireguardKeepalive = ""
+        awgJc = ""
+        awgJmin = ""
+        awgJmax = ""
+        awgS1 = ""
+        awgS2 = ""
+        awgS3 = ""
+        awgS4 = ""
+        awgH1 = ""
+        awgH2 = ""
+        awgH3 = ""
+        awgH4 = ""
+        awgI1 = ""
+        awgI2 = ""
+        awgI3 = ""
+        awgI4 = ""
+        awgI5 = ""
+        awgHeaderProtectionKey = ""
+        awgContentPaddingAddition = ""
+        awgRekeyAfterTime = ""
+        awgRekeyTimeout = ""
+        awgRejectAfterTime = ""
+        awgKeepaliveTimeout = ""
+        awgMaxHandshakeAttempts = ""
+        awgRandomTrailers = false
+        awgDisableCookies = false
+        awgAdvancedExpanded = false
         onNetworkChanged()
     }
 
@@ -160,13 +221,49 @@ class ServerEditUiState(
                 if (idx >= 0) flowIndex = idx
             }
 
-            EConfigType.WIREGUARD -> {
+            EConfigType.WIREGUARD, EConfigType.AMNEZIAWG -> {
                 wireguardSecretKey = config.secretKey.orEmpty()
                 wireguardPublicKey = config.publicKey.orEmpty()
                 wireguardPreSharedKey = config.preSharedKey.orEmpty()
                 wireguardReserved = config.reserved ?: "0,0,0"
                 wireguardLocalAddress = config.localAddress ?: AppConfig.WIREGUARD_LOCAL_ADDRESS_V4
                 wireguardMtu = config.mtu?.toString() ?: AppConfig.WIREGUARD_LOCAL_MTU
+                wireguardDns = config.dns.orEmpty()
+                wireguardAllowedIps = config.allowedIps.orEmpty()
+                wireguardKeepalive = config.persistentKeepalive.orEmpty()
+                if (config.configType == EConfigType.AMNEZIAWG) {
+                    awgJc = config.awgJc?.toString().orEmpty()
+                    awgJmin = config.awgJmin?.toString().orEmpty()
+                    awgJmax = config.awgJmax?.toString().orEmpty()
+                    awgS1 = config.awgS1?.toString().orEmpty()
+                    awgS2 = config.awgS2?.toString().orEmpty()
+                    awgS3 = config.awgS3?.toString().orEmpty()
+                    awgS4 = config.awgS4?.toString().orEmpty()
+                    awgH1 = config.awgH1.orEmpty()
+                    awgH2 = config.awgH2.orEmpty()
+                    awgH3 = config.awgH3.orEmpty()
+                    awgH4 = config.awgH4.orEmpty()
+                    awgI1 = config.awgI1.orEmpty()
+                    awgI2 = config.awgI2.orEmpty()
+                    awgI3 = config.awgI3.orEmpty()
+                    awgI4 = config.awgI4.orEmpty()
+                    awgI5 = config.awgI5.orEmpty()
+                    awgHeaderProtectionKey = config.awgHeaderProtectionKey.orEmpty()
+                    awgContentPaddingAddition = config.awgContentPaddingAddition.orEmpty()
+                    awgRekeyAfterTime = config.awgRekeyAfterTime.orEmpty()
+                    awgRekeyTimeout = config.awgRekeyTimeout.orEmpty()
+                    awgRejectAfterTime = config.awgRejectAfterTime.orEmpty()
+                    awgKeepaliveTimeout = config.awgKeepaliveTimeout.orEmpty()
+                    awgMaxHandshakeAttempts = config.awgMaxHandshakeAttempts.orEmpty()
+                    awgRandomTrailers = config.awgRandomTrailers == true
+                    awgDisableCookies = config.awgDisableCookies == true
+                    awgAdvancedExpanded = listOf(
+                        awgI1, awgI2, awgI3, awgI4, awgI5,
+                        awgHeaderProtectionKey, awgContentPaddingAddition,
+                        awgRekeyAfterTime, awgRekeyTimeout, awgRejectAfterTime,
+                        awgKeepaliveTimeout, awgMaxHandshakeAttempts, awgS3, awgS4
+                    ).any { it.isNotBlank() } || awgRandomTrailers || awgDisableCookies
+                }
             }
 
             EConfigType.HYSTERIA2 -> {
@@ -364,6 +461,48 @@ class ServerEditUiState(
                 return R.string.openflux_lab_max_token
             }
         }
+        if (configType == EConfigType.AMNEZIAWG) {
+            if (wireguardSecretKey.isBlank()) return R.string.server_lab_secret_key
+            if (wireguardPublicKey.isBlank()) return R.string.server_lab_public_key
+            if (wireguardLocalAddress.isBlank()) return R.string.server_lab_local_address
+            val integerFields = listOf(awgJc, awgJmin, awgJmax, awgS1, awgS2, awgS3, awgS4)
+            if (integerFields.any {
+                    it.isNotBlank() && (it.toIntOrNull() == null || it.toInt() !in 0..65535)
+                }) {
+                return R.string.server_lab_awg_number
+            }
+            val jmin = awgJmin.toIntOrNull()
+            val jmax = awgJmax.toIntOrNull()
+            if (jmin != null && jmax != null && jmin > jmax) {
+                return R.string.server_lab_awg_junk_range
+            }
+            listOf(awgH1, awgH2, awgH3, awgH4).forEach {
+                if (!isValidRange(it, 0xFFFFFFFFL)) return R.string.server_lab_awg_range
+            }
+            listOf(
+                awgContentPaddingAddition, awgRekeyAfterTime, awgRekeyTimeout,
+                awgRejectAfterTime, awgKeepaliveTimeout, awgMaxHandshakeAttempts
+            ).forEach {
+                if (!isValidRange(it, 0xFFFFL)) return R.string.server_lab_awg_range
+            }
+            if (awgHeaderProtectionKey.isNotBlank()) {
+                if (!isValidWireGuardKey(awgHeaderProtectionKey)) {
+                    return R.string.server_lab_awg_header_key
+                }
+                val paddings = listOf(awgS1, awgS2, awgS3, awgS4).map { it.toIntOrNull() ?: 0 }
+                if (paddings.any { it < 12 }) {
+                    return R.string.server_lab_awg_header_padding
+                }
+            }
+            val headerRanges = listOf(awgH1, awgH2, awgH3, awgH4).mapNotNull { parseRange(it) }
+            for (i in headerRanges.indices) {
+                for (j in i + 1 until headerRanges.size) {
+                    if (!(headerRanges[i].last < headerRanges[j].first || headerRanges[j].last < headerRanges[i].first)) {
+                        return R.string.server_lab_awg_h_overlap
+                    }
+                }
+            }
+        }
         if (configType == EConfigType.TROJAN && streamSecurity.isBlank()) {
             return R.string.server_lab_stream_security
         }
@@ -374,6 +513,33 @@ class ServerEditUiState(
             return R.string.server_lab_final_mask
         }
         return null
+    }
+
+    private fun isValidRange(value: String, max: Long): Boolean {
+        return parseRange(value, max) != null || value.isBlank() || value.equals("off", ignoreCase = true)
+    }
+
+    private fun parseRange(value: String, max: Long = 0xFFFFFFFFL): LongRange? {
+        if (value.isBlank() || value.equals("off", ignoreCase = true)) return null
+        val parts = value.trim().split("-")
+        if (parts.size !in 1..2) return null
+        val numbers = parts.map { it.trim().toLongOrNull() ?: return null }
+        if (numbers.any { it < 0 || it > max }) return null
+        val first = numbers.first()
+        val last = numbers.last()
+        if (first > last) return null
+        return first..last
+    }
+
+    private fun isValidWireGuardKey(value: String): Boolean {
+        val trimmed = value.trim()
+        val decoders = listOf(
+            runCatching { java.util.Base64.getDecoder() }.getOrNull(),
+            runCatching { java.util.Base64.getUrlDecoder() }.getOrNull()
+        )
+        return decoders.filterNotNull().any { decoder ->
+            runCatching { decoder.decode(trimmed).size == 32 }.getOrDefault(false)
+        }
     }
 
     fun applyTo(config: ProfileItem) {
@@ -402,13 +568,43 @@ class ServerEditUiState(
                 }
             }
 
-            EConfigType.WIREGUARD -> {
+            EConfigType.WIREGUARD, EConfigType.AMNEZIAWG -> {
                 config.secretKey = wireguardSecretKey.trim()
                 config.publicKey = wireguardPublicKey.trim()
                 config.preSharedKey = wireguardPreSharedKey.trim()
                 config.reserved = wireguardReserved.trim()
                 config.localAddress = wireguardLocalAddress.trim()
                 config.mtu = Utils.parseInt(wireguardMtu)
+                config.dns = wireguardDns.trim().ifBlank { null }
+                config.allowedIps = wireguardAllowedIps.trim().ifBlank { null }
+                config.persistentKeepalive = wireguardKeepalive.trim().ifBlank { null }
+                if (config.configType == EConfigType.AMNEZIAWG) {
+                    config.awgJc = awgJc.toIntOrNull()
+                    config.awgJmin = awgJmin.toIntOrNull()
+                    config.awgJmax = awgJmax.toIntOrNull()
+                    config.awgS1 = awgS1.toIntOrNull()
+                    config.awgS2 = awgS2.toIntOrNull()
+                    config.awgS3 = awgS3.toIntOrNull()
+                    config.awgS4 = awgS4.toIntOrNull()
+                    config.awgH1 = awgH1.trim().ifBlank { null }
+                    config.awgH2 = awgH2.trim().ifBlank { null }
+                    config.awgH3 = awgH3.trim().ifBlank { null }
+                    config.awgH4 = awgH4.trim().ifBlank { null }
+                    config.awgI1 = awgI1.trim().ifBlank { null }
+                    config.awgI2 = awgI2.trim().ifBlank { null }
+                    config.awgI3 = awgI3.trim().ifBlank { null }
+                    config.awgI4 = awgI4.trim().ifBlank { null }
+                    config.awgI5 = awgI5.trim().ifBlank { null }
+                    config.awgHeaderProtectionKey = awgHeaderProtectionKey.trim().ifBlank { null }
+                    config.awgContentPaddingAddition = awgContentPaddingAddition.trim().ifBlank { null }
+                    config.awgRekeyAfterTime = awgRekeyAfterTime.trim().ifBlank { null }
+                    config.awgRekeyTimeout = awgRekeyTimeout.trim().ifBlank { null }
+                    config.awgRejectAfterTime = awgRejectAfterTime.trim().ifBlank { null }
+                    config.awgKeepaliveTimeout = awgKeepaliveTimeout.trim().ifBlank { null }
+                    config.awgMaxHandshakeAttempts = awgMaxHandshakeAttempts.trim().ifBlank { null }
+                    config.awgRandomTrailers = awgRandomTrailers
+                    config.awgDisableCookies = awgDisableCookies
+                }
             }
 
             EConfigType.HYSTERIA2 -> {

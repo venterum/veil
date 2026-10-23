@@ -76,6 +76,7 @@
     <string name="add_config_http" translatable="false">HTTP</string>
     <string name="add_config_trojan" translatable="false">Trojan</string>
     <string name="add_config_wireguard" translatable="false">WireGuard</string>
+    <string name="add_config_amneziawg" translatable="false">AmneziaWG</string>
     <string name="add_config_hysteria2" translatable="false">Hysteria2</string>
     <string name="add_config_olcrtc" translatable="false">olcRTC</string>
     <string name="add_config_openflux" translatable="false">OpenFlux</string>
@@ -110,6 +111,9 @@
         name="menu_item_import_config_manually_wireguard"
     >Add [Wireguard]</string>
     <string
+        name="menu_item_import_config_manually_amneziawg"
+    >Add [AmneziaWG]</string>
+    <string
         name="menu_item_import_config_manually_hysteria2"
     >Add [Hysteria2]</string>
     <string name="menu_item_import_config_manually_olcrtc">Add [olcRTC]</string>
@@ -121,6 +125,8 @@
     <string name="server_lab_remarks">remarks</string>
     <string name="server_section_general">Server</string>
     <string name="server_section_wireguard">WireGuard</string>
+    <string name="server_section_amneziawg">AmneziaWG</string>
+    <string name="server_section_amneziawg_obfuscation">Obfuscation</string>
     <string name="server_section_hysteria2">Bandwidth &amp; Port Hopping</string>
     <string name="server_section_olcrtc">Session</string>
     <string name="server_section_openflux">OpenFlux</string>
@@ -139,6 +145,7 @@
     <string name="server_help_desc_socks">Plain SOCKS5 proxy without extra encryption. Best for trusted local networks.</string>
     <string name="server_help_desc_http">Plain HTTP proxy without extra encryption. Best for trusted local networks.</string>
     <string name="server_help_desc_wireguard">WireGuard is a fast, modern VPN tunnel with strong cryptography.</string>
+    <string name="server_help_desc_amneziawg">AmneziaWG is a WireGuard fork with DPI-resistant obfuscation (junk packets, header ranges, custom signatures and padding).</string>
     <string name="server_help_desc_hysteria2">Hysteria2 is a high-performance QUIC-based proxy tuned for lossy networks.</string>
     <string name="server_help_desc_olcrtc">olcRTC is an encrypted TCP-over-WebRTC tunnel disguised as an ordinary video call.</string>
     <string name="server_help_desc_openflux">OpenFlux is a TCP tunnel with pluggable transports (Yandex Docs, Volga, Board, MAX, Cups.online, Mail.ru). The client runs a local SOCKS5 proxy; you must run an OpenFlux exit node on a VPS.</string>
@@ -193,6 +200,42 @@
         name="server_lab_local_address"
     >Local address (optional IPv4/IPv6, separated by commas)</string>
     <string name="server_lab_local_mtu">Mtu(optional, default 1420)</string>
+    <string name="server_lab_dns">DNS (optional, separated by commas)</string>
+    <string name="server_lab_allowed_ips">AllowedIPs (optional, default all traffic)</string>
+    <string name="server_lab_keepalive">PersistentKeepalive (optional)</string>
+    <string name="server_lab_awg_jc">Jc — junk packets</string>
+    <string name="server_lab_awg_jmin">Jmin — min junk size</string>
+    <string name="server_lab_awg_jmax">Jmax — max junk size</string>
+    <string name="server_lab_awg_s1">S1 — init padding</string>
+    <string name="server_lab_awg_s2">S2 — response padding</string>
+    <string name="server_lab_awg_s3">S3 — cookie padding</string>
+    <string name="server_lab_awg_s4">S4 — transport padding</string>
+    <string name="server_lab_awg_h1">H1 — init header</string>
+    <string name="server_lab_awg_h2">H2 — response header</string>
+    <string name="server_lab_awg_h3">H3 — cookie header</string>
+    <string name="server_lab_awg_h4">H4 — transport header</string>
+    <string name="server_lab_awg_i1">I1 — signature packet</string>
+    <string name="server_lab_awg_i2">I2 — signature packet</string>
+    <string name="server_lab_awg_i3">I3 — signature packet</string>
+    <string name="server_lab_awg_i4">I4 — signature packet</string>
+    <string name="server_lab_awg_i5">I5 — signature packet</string>
+    <string name="server_lab_awg_header_protection_key">HeaderProtectionKey</string>
+    <string name="server_lab_awg_content_padding">ContentPaddingAddition</string>
+    <string name="server_lab_awg_rekey_after">RekeyAfterTime</string>
+    <string name="server_lab_awg_rekey_timeout">RekeyTimeout</string>
+    <string name="server_lab_awg_reject_after">RejectAfterTime</string>
+    <string name="server_lab_awg_keepalive_timeout">KeepaliveTimeout</string>
+    <string name="server_lab_awg_max_handshakes">MaxHandshakeAttempts</string>
+    <string name="server_lab_awg_random_trailers">RandomTrailers</string>
+    <string name="server_lab_awg_disable_cookies">DisableCookies</string>
+    <string name="server_lab_awg_advanced_show">Show advanced obfuscation (AWG 2.0/3.x)</string>
+    <string name="server_lab_awg_advanced_hide">Hide advanced obfuscation</string>
+    <string name="server_lab_awg_number">AmneziaWG numbers must be between 0 and 65535</string>
+    <string name="server_lab_awg_junk_range">Jmin must not be greater than Jmax</string>
+    <string name="server_lab_awg_range">Invalid AmneziaWG range</string>
+    <string name="server_lab_awg_header_key">HeaderProtectionKey must be a 32-byte base64 key</string>
+    <string name="server_lab_awg_header_padding">S1–S4 must be at least 12 when HeaderProtectionKey is set</string>
+    <string name="server_lab_awg_h_overlap">H1–H4 ranges must not overlap</string>
     <string
         name="server_lab_kcp_mtu"
     >mKCP MTU (Optional, core default 1350)</string>

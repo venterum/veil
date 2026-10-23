@@ -30,6 +30,7 @@ object CoreOutboundBuilder {
             EConfigType.VLESS -> toOutboundVless(profileItem)
             EConfigType.TROJAN -> toOutboundTrojan(profileItem)
             EConfigType.WIREGUARD -> toOutboundWireguard(profileItem)
+            EConfigType.AMNEZIAWG -> toOutboundAmneziawg(profileItem)
             EConfigType.HYSTERIA2 -> toOutboundHysteria2(profileItem)
             EConfigType.HTTP -> toOutboundHttp(profileItem)
             EConfigType.OLCRTC -> toOutboundOlcrtc(profileItem)
@@ -273,6 +274,19 @@ object CoreOutboundBuilder {
             server.port = (profileItem.serverPort ?: AppConfig.PORT_OPENFLUX_SOCKS).toInt()
         }
 
+        return outboundBean
+    }
+
+    private fun toOutboundAmneziawg(profileItem: ProfileItem): OutboundBean? {
+        val outboundBean = createInitOutbound(EConfigType.SOCKS) ?: return null
+        outboundBean.settings?.servers?.first()?.let { server ->
+            server.address = AppConfig.LOOPBACK
+            server.port = profileItem.localSocksPort ?: AppConfig.PORT_AMNEZIAWG_SOCKS.toInt()
+            LogUtil.w(
+                AppConfig.TAG,
+                "AmneziaWG outbound -> ${server.address}:${server.port} for ${profileItem.remarks}"
+            )
+        }
         return outboundBean
     }
 

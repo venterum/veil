@@ -42,6 +42,7 @@ require (
 	github.com/p1neappleXpress/OpenFlux v0.0.0
 	openflux-mobile v0.0.0
 	openfluxmobile v0.0.0
+	amneziawgmobile v0.0.0
 	golang.org/x/mobile v0.0.0-20260520154334-0e4426e1883d
 )
 
@@ -54,6 +55,8 @@ replace github.com/p1neappleXpress/OpenFlux => $__dir/OpenFlux
 replace openflux-mobile => $__dir/OpenFlux/mobile
 
 replace openfluxmobile => $__dir/openfluxmobile
+
+replace amneziawgmobile => $__dir/amneziawgmobile
 
 // olcrtc implements pion's transport/v4 interfaces, while OpenFlux's telemost
 // carrier pins the transport/v5 family. Keep the whole pion stack at the
@@ -95,6 +98,7 @@ import (
 	_ "github.com/2dust/AndroidLibXrayLite"
 	_ "github.com/openlibrecommunity/olcrtc/mobile"
 	_ "openfluxmobile"
+	_ "amneziawgmobile"
 )
 EOF
 
@@ -112,4 +116,5 @@ gomobile bind \
   -o "$__dir/veil/app/libs/libv2ray.aar" \
   github.com/2dust/AndroidLibXrayLite \
   github.com/openlibrecommunity/olcrtc/mobile \
-  openfluxmobile
+  openfluxmobile \
+  amneziawgmobile

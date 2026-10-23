@@ -1,6 +1,6 @@
 # Architecture
 
-veil uses **three independent Go modules** compiled into a single AAR via gomobile.
+veil uses **four independent Go modules** compiled into a single AAR via gomobile.
 
 ## Flow
 
@@ -17,42 +17,44 @@ App (Android)
                                                                 │
                                ┌────────────────────────────────┼──────────────────────────────┐
                                │                                │                              │
-                     Standard protocol                     olcRTC profile                OpenFlux profile
-                     (VMess, VLESS, ...)                   (EConfigType.OLCRTC)          (EConfigType.OPENFLUX)
-                               │                                │                              │
-                          internet                     SOCKS5 → 127.0.0.1:10809      SOCKS5 → 127.0.0.1:10811
-                                                                │                              │
-                                                          olcRTC transport              OpenFlux transport
-                                                          (gomobile AAR)                (gomobile AAR)
-                                                                │                              │
-                                                    WebRTC/SFU server          Yandex Docs / Volga / Board / MAX / Cups / Mail.ru / Avito
-                                                                │                              │
-                                                     remote olcRTC server        remote OpenFlux exit node
-                                                                │                              │
-                                                            internet                       internet
+                     Standard protocol                     olcRTC profile                OpenFlux profile              AmneziaWG profile
+                     (VMess, VLESS, ...)                   (EConfigType.OLCRTC)          (EConfigType.OPENFLUX)        (EConfigType.AMNEZIAWG)
+                               │                                │                              │                              │
+                          internet                     SOCKS5 → 127.0.0.1:10809      SOCKS5 → 127.0.0.1:10811      SOCKS5 → 127.0.0.1:10812
+                                                                │                              │                              │
+                                                          olcRTC transport              OpenFlux transport            amneziawg-go device
+                                                          (gomobile AAR)                (gomobile AAR)                + gVisor netstack
+                                                                │                              │                              │
+                                                    WebRTC/SFU server          Yandex Docs / Volga / Board / MAX / Cups / Mail.ru / Avito   UDP → AWG endpoint
+                                                                │                              │                              │
+                                                     remote olcRTC server        remote OpenFlux exit node          AmneziaWG server
+                                                                │                              │                              │
+                                                            internet                       internet                       internet
 ```
 
-## Three modules, one AAR
+## Four modules, one AAR
 
-`libv2ray.aar` is a custom build combining three Go modules:
+`libv2ray.aar` is a custom build combining four Go modules:
 
 | Module | Java package | Role |
 |---|---|---|
 | `github.com/2dust/AndroidLibXrayLite` | `libv2ray.*` | Xray core: routing, protocols, DNS, stats |
 | `olcrtc/mobile` | `mobile.*` | olcRTC transport: WebRTC tunnel, SOCKS5 server |
 | `openfluxmobile` | `openflux.*` | OpenFlux transport: a facade over the upstream `openflux-mobile` bridge (Session profiles with a classic fallback, codec negotiation, captcha cookies), exposing a local SOCKS5 server |
+| `amneziawgmobile` | `amneziawg.*` | AmneziaWG: `amneziawg-go` device over a gVisor netstack, exposing a local SOCKS5 server |
 
 No module's source code is modified. They are compiled together into a single `libgojni.so` + `classes.jar`.
 
 ## Shared process
 
-All Xray, olcRTC and OpenFlux components run in the same Android process:
+All Xray, olcRTC, OpenFlux and AmneziaWG components run in the same Android process:
 
 ```
 :RunSoLibV2RayDaemon
   ├── CoreVpnService / CoreProxyOnlyService   — entry point
   ├── OlcrtcProxyService                       — olcRTC lifecycle
   ├── OpenFluxProxyService                     — OpenFlux lifecycle
+  ├── AmneziaWgManager                         — AWG lifecycle (no separate service)
   ├── CoreTestService                          — testing
   └── ...                                       — other services
 ```
@@ -77,6 +79,19 @@ All Xray, olcRTC and OpenFlux components run in the same Android process:
 4. `CoreOutboundBuilder.toOutboundOpenflux()` creates a SOCKS5 outbound to `127.0.0.1:{port}`
 5. Traffic flows: Xray → SOCKS5 → OpenFlux → pluggable transport → exit node → internet
 
-## Standard protocols (no olcRTC / OpenFlux)
+## AmneziaWG startup
 
-Xray works normally — `CoreConfigManager` builds the config, outbound points directly to the remote server. Neither transport is started.
+1. `CoreServiceManager.doStartCoreLoop()` detects `EConfigType.AMNEZIAWG`
+2. `AmneziaWgManager.start(config)` is called:
+   - Builds the native JSON config (keys, addresses, DNS, MTU, peer, AWG parameters)
+   - Starts the `amneziawg-go` device over a gVisor netstack
+   - Opens a SOCKS5 server on `127.0.0.1:{port}` (default `10812`) and stores the port in `localSocksPort`
+3. Xray core starts with a standard config
+4. `CoreOutboundBuilder.toOutboundAmneziawg()` creates a SOCKS5 outbound to `127.0.0.1:{port}`
+5. Traffic flows: Xray → SOCKS5 → amneziawg-go → UDP → AWG server
+
+The native client also exposes `Ping`, so the “real ping” action measures latency through the tunnel.
+
+## Standard protocols (no transport sidecar)
+
+Xray works normally — `CoreConfigManager` builds the config, outbound points directly to the remote server. No transport sidecar is started.

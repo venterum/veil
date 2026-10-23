@@ -239,6 +239,7 @@ private fun AddConfigSheet(
         AddConfigAction(R.id.import_manually_hysteria2, R.string.add_config_hysteria2, Icons.Filled.Speed, MaterialShapes.SoftBurst.toShape()),
         AddConfigAction(R.id.import_manually_ss, R.string.add_config_shadowsocks, Icons.Filled.Security, MaterialShapes.Ghostish.toShape()),
         AddConfigAction(R.id.import_manually_wireguard, R.string.add_config_wireguard, Icons.Filled.VpnKey, MaterialShapes.Cookie6Sided.toShape()),
+        AddConfigAction(R.id.import_manually_amneziawg, R.string.add_config_amneziawg, Icons.Filled.Security, MaterialShapes.Clover4Leaf.toShape()),
         AddConfigAction(R.id.import_manually_socks, R.string.add_config_socks, Icons.Filled.Password, MaterialShapes.Oval.toShape()),
         AddConfigAction(R.id.import_manually_http, R.string.add_config_http, Icons.Filled.Language, MaterialShapes.Circle.toShape()),
         AddConfigAction(R.id.import_manually_olcrtc, R.string.add_config_olcrtc, Icons.Filled.Videocam, MaterialShapes.Clover4Leaf.toShape()),

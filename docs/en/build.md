@@ -22,9 +22,9 @@ bash compile-hevtun.sh
 cp -r libs veil/app/
 ```
 
-## Step 2: libv2ray.aar (Xray + olcRTC + OpenFlux combined)
+## Step 2: libv2ray.aar (Xray + olcRTC + OpenFlux + AmneziaWG combined)
 
-Build the combined AAR from three Go modules with ELF segments aligned to 16 KB:
+Build the combined AAR from four Go modules with ELF segments aligned to 16 KB:
 
 ```bash
 export ANDROID_HOME=/path/to/android-sdk
@@ -34,7 +34,7 @@ bash compile-libv2ray.sh
 
 The script uses `gomobile bind` with `-Wl,-z,max-page-size=16384`, so the resulting `libgojni.so` is compatible with 16 KB page-size devices.
 
-Alternatively, download the standard `libv2ray.aar` from [AndroidLibXrayLite releases](https://github.com/2dust/AndroidLibXrayLite/releases) — olcRTC and OpenFlux will **not work** because the standard AAR does not contain the `mobile.*` / `openflux.*` packages.
+Alternatively, download the standard `libv2ray.aar` from [AndroidLibXrayLite releases](https://github.com/2dust/AndroidLibXrayLite/releases) — olcRTC, OpenFlux and AmneziaWG will **not work** because the standard AAR does not contain the `mobile.*` / `openflux.*` / `amneziawg.*` packages.
 
 ## Step 3: APK
 
@@ -50,7 +50,7 @@ APKs are at `veil/app/build/outputs/apk/debug/`.
 
 ```
 veil/app/libs/
-  ├── libv2ray.aar          # Xray core + olcRTC + OpenFlux (gomobile)
+  ├── libv2ray.aar          # Xray core + olcRTC + OpenFlux + AmneziaWG (gomobile)
   ├── arm64-v8a/libhev-socks5-tunnel.so
   ├── armeabi-v7a/libhev-socks5-tunnel.so
   ├── x86/libhev-socks5-tunnel.so
@@ -59,5 +59,5 @@ veil/app/libs/
 
 ## Note
 
-- The standard upstream AAR from 2dust **does not contain** `mobile.*` / `openflux.*` — olcRTC and OpenFlux will not work without the custom build.
+- The standard upstream AAR from 2dust **does not contain** `mobile.*` / `openflux.*` / `amneziawg.*` — olcRTC, OpenFlux and AmneziaWG will not work without the custom build.
 - `olcrtc/` and `OpenFlux/` are git submodules with their own history; the `openfluxmobile/` gomobile binding lives in this repository.

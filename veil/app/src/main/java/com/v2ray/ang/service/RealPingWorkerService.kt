@@ -1,6 +1,7 @@
 package com.v2ray.ang.service
 
 import android.content.Context
+import com.v2ray.ang.core.AmneziaWgManager
 import com.v2ray.ang.core.CoreConfigManager
 import com.v2ray.ang.core.CoreNativeManager
 import com.v2ray.ang.core.OpenFluxManager
@@ -89,8 +90,13 @@ class RealPingWorkerService(
             return OpenFluxManager.ping(config, SettingsManager.getDelayTestUrl())
         }
 
+        if (config.configType == EConfigType.AMNEZIAWG) {
+            return AmneziaWgManager.ping(config, SettingsManager.getDelayTestUrl())
+        }
+
         if (!config.configType.isComplexType()
             && config.configType != EConfigType.HYSTERIA2
+            && config.configType != EConfigType.AMNEZIAWG
             && config.server.isNotNullEmpty()
             && config.serverPort?.toIntOrNull() != null
         ) {
