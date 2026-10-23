@@ -12,18 +12,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amnezia-vpn/amneziawg-go/v3/conn"
 	"github.com/amnezia-vpn/amneziawg-go/v3/device"
 	"github.com/amnezia-vpn/amneziawg-go/v3/tun"
-	"github.com/amnezia-vpn/amneziawg-go/v3/tun/netstack"
 	"github.com/txthinking/socks5"
+
+	"amneziawgmobile/internal/netstack"
 )
 
 const (
 	// Version is the embedded AmneziaWG implementation generation.
 	Version = "3.1"
 
+	// buildID makes native startup logs distinguish fresh APK builds from
+	// stale installations during field diagnostics.
+	buildID = "2026-10-23-r3"
+
 	defaultSOCKSHost = "127.0.0.1"
+	defaultSOCKSPort = 1080
 	readyTimeout     = 5 * time.Second
 	udpIdleTimeout   = 2 * time.Minute
 )
@@ -54,10 +59,23 @@ type Client struct {
 }
 
 func New() *Client {
-	return &Client{
-		socksHost: defaultSOCKSHost,
-		socksPort: 1080,
-		logs:      newLogBuffer(),
+	client := &Client{}
+	client.initLocked()
+	return client
+}
+
+// initLocked supplies defaults for clients created as Go zero values. gomobile's
+// Java/Kotlin constructor Client() does not call New(), so every entry point
+// must tolerate a Client whose fields were never initialized.
+func (c *Client) initLocked() {
+	if c.logs == nil {
+		c.logs = newLogBuffer()
+	}
+	if c.socksHost == "" {
+		c.socksHost = defaultSOCKSHost
+	}
+	if c.socksPort == 0 {
+		c.socksPort = defaultSOCKSPort
 	}
 }
 
@@ -68,6 +86,7 @@ func (c *Client) SetConfigJSON(raw string) error {
 		return err
 	}
 	c.mu.Lock()
+	c.initLocked()
 	c.rawConfig = raw
 	c.config = cfg
 	c.mu.Unlock()
@@ -77,6 +96,7 @@ func (c *Client) SetConfigJSON(raw string) error {
 // SetProtector installs the Android VpnService.protect callback.
 func (c *Client) SetProtector(protector SocketProtector) {
 	c.mu.Lock()
+	c.initLocked()
 	c.protector = protector
 	c.mu.Unlock()
 }
@@ -88,6 +108,7 @@ func (c *Client) SetSocks(host string, port int) error {
 		return errors.New("invalid socks address")
 	}
 	c.mu.Lock()
+	c.initLocked()
 	c.socksHost = host
 	c.socksPort = port
 	c.mu.Unlock()
@@ -99,6 +120,7 @@ const startTimeout = 20 * time.Second
 // Start brings the device up and begins serving SOCKS5 on the configured port.
 func (c *Client) Start() error {
 	c.mu.Lock()
+	c.initLocked()
 	if c.running {
 		c.mu.Unlock()
 		return nil
@@ -158,6 +180,7 @@ func (c *Client) WaitReady(timeoutMillis int) error {
 		timeoutMillis = int(readyTimeout / time.Millisecond)
 	}
 	c.mu.Lock()
+	c.initLocked()
 	host := c.socksHost
 	port := c.socksPort
 	running := c.running
@@ -171,6 +194,7 @@ func (c *Client) WaitReady(timeoutMillis int) error {
 // Stop tears down the SOCKS listener and the device.
 func (c *Client) Stop() {
 	c.mu.Lock()
+	c.initLocked()
 	server := c.server
 	handler := c.handler
 	bundle := c.bundle
@@ -204,6 +228,7 @@ func (c *Client) IsRunning() bool {
 // a temporary one. Returns -1 on failure.
 func (c *Client) Ping(url string, timeoutMillis int) int64 {
 	c.mu.Lock()
+	c.initLocked()
 	config := c.config
 	protector := c.protector
 	running := c.running
@@ -238,7 +263,11 @@ func (c *Client) Ping(url string, timeoutMillis int) int64 {
 
 // ReadLog drains the in-memory native log buffer.
 func (c *Client) ReadLog() string {
-	return c.logs.Read()
+	c.mu.Lock()
+	c.initLocked()
+	logs := c.logs
+	c.mu.Unlock()
+	return logs.Read()
 }
 
 // Stats returns the peer traffic counters and last handshake time. It never
@@ -287,6 +316,14 @@ type deviceResult struct {
 func startDeviceWithTimeout(config *Config, protector SocketProtector, logs *logBuffer) (*deviceBundle, error) {
 	result := make(chan deviceResult, 1)
 	go func() {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				buffer := make([]byte, 1<<20)
+				n := runtime.Stack(buffer, true)
+				logs.Printf("device start panic: %v\n%s", recovered, buffer[:n])
+				result <- deviceResult{err: fmt.Errorf("amneziawg device start panic: %v", recovered)}
+			}
+		}()
 		bundle, err := startDevice(config, protector, logs)
 		result <- deviceResult{bundle: bundle, err: err}
 	}()
@@ -307,7 +344,7 @@ func startDevice(config *Config, protector SocketProtector, logs *logBuffer) (*d
 	if err != nil {
 		return nil, err
 	}
-	logs.Printf("starting device addresses=%v mtu=%d endpoint=%s", addresses, config.MTU, config.Peer.Endpoint)
+	logs.Printf("starting device build=%s addresses=%v mtu=%d endpoint=%s", buildID, addresses, config.MTU, config.Peer.Endpoint)
 	if config.AWG != nil {
 		logs.Printf("awg obfuscation: jc=%v jmin=%v jmax=%v s1=%v s2=%v s3=%v s4=%v h1=%v h2=%v h3=%v h4=%v i1=%v i2=%v i3=%v i4=%v i5=%v hp=%v",
 			config.AWG.Jc, config.AWG.Jmin, config.AWG.Jmax,
@@ -325,7 +362,7 @@ func startDevice(config *Config, protector SocketProtector, logs *logBuffer) (*d
 		return nil, fmt.Errorf("create netstack: %w", err)
 	}
 	logs.Printf("netstack created")
-	bind := conn.NewStdNetBind()
+	bind := newProtectedBind(protector, logs)
 	logger := &device.Logger{
 		Verbosef: func(format string, args ...any) { logs.Printf(format, args...) },
 		Errorf:   func(format string, args ...any) { logs.Errorf(format, args...) },
@@ -338,21 +375,24 @@ func startDevice(config *Config, protector SocketProtector, logs *logBuffer) (*d
 		dev.Close()
 		return nil, err
 	}
-	logs.Printf("UAPI built (%d bytes), applying", len(uapi))
-	if err := dev.IpcSet(uapi); err != nil {
-		logs.Printf("IpcSet failed: %v", err)
-		dev.Close()
-		return nil, fmt.Errorf("apply amneziawg config: %w", err)
-	}
-	logs.Printf("UAPI applied, bringing device up")
+	// Bring the device up before applying the peer configuration. Up() opens
+	// the UDP sockets, and with no peers configured it cannot emit a handshake.
+	// That gives us a chance to protect the sockets with VpnService.protect
+	// before IpcSet starts the peer, whose persistent keepalive immediately
+	// sends the first handshake/signature packet.
+	logs.Printf("UAPI built (%d bytes), opening sockets", len(uapi))
 	if err := dev.Up(); err != nil {
 		logs.Printf("device Up failed: %v", err)
 		dev.Close()
 		return nil, fmt.Errorf("bring amneziawg up: %w", err)
 	}
-	logs.Printf("device up")
-	protectSockets(dev, protector, logs)
-	logs.Printf("socket protection complete")
+	logs.Printf("device up, sockets protected, applying UAPI")
+	if err := dev.IpcSet(uapi); err != nil {
+		logs.Printf("IpcSet failed: %v", err)
+		dev.Close()
+		return nil, fmt.Errorf("apply amneziawg config: %w", err)
+	}
+	logs.Printf("UAPI applied, peer started")
 	return &deviceBundle{device: dev, tun: tunDevice, net: tnet}, nil
 }
 
@@ -364,26 +404,6 @@ func stopDevice(bundle *deviceBundle) {
 	bundle.device = nil
 	bundle.net = nil
 	bundle.tun = nil
-}
-
-func protectSockets(dev *device.Device, protector SocketProtector, logs *logBuffer) {
-	if protector == nil {
-		return
-	}
-	bind, ok := dev.Bind().(conn.PeekLookAtSocketFd)
-	if !ok {
-		return
-	}
-	if fd, err := bind.PeekLookAtSocketFd4(); err == nil && fd >= 0 {
-		if !protector.Protect(int64(fd)) {
-			logs.Errorf("failed to protect IPv4 socket %d", fd)
-		}
-	}
-	if fd, err := bind.PeekLookAtSocketFd6(); err == nil && fd >= 0 {
-		if !protector.Protect(int64(fd)) {
-			logs.Errorf("failed to protect IPv6 socket %d", fd)
-		}
-	}
 }
 
 func pingThrough(tnet *netstack.Net, url string, timeout time.Duration) int64 {
@@ -446,6 +466,9 @@ func newLogBuffer() *logBuffer {
 func (l *logBuffer) Printf(format string, args ...any) {
 	line := fmt.Sprintf(format, args...)
 	log.Print(line)
+	if l == nil {
+		return
+	}
 	l.mu.Lock()
 	if l.b.Len() < 64*1024 {
 		l.b.WriteString(line)
@@ -459,6 +482,9 @@ func (l *logBuffer) Errorf(format string, args ...any) {
 }
 
 func (l *logBuffer) Read() string {
+	if l == nil {
+		return ""
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	value := l.b.String()

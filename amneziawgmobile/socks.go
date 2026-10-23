@@ -6,8 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amnezia-vpn/amneziawg-go/v3/tun/netstack"
 	"github.com/txthinking/socks5"
+
+	"amneziawgmobile/internal/netstack"
 )
 
 // socksHandler dials through the AmneziaWG netstack instead of the host
