@@ -60,4 +60,4 @@ veil/app/libs/
 ## Note
 
 - The standard upstream AAR from 2dust **does not contain** `mobile.*` / `openflux.*` / `amneziawg.*` — olcRTC, OpenFlux and AmneziaWG will not work without the custom build.
-- `olcrtc/` and `OpenFlux/` are git submodules with their own history; the `openfluxmobile/` gomobile binding lives in this repository.
+- `olcrtc/` and `OpenFlux/` are git submodules with their own history; the `openfluxmobile/` gomobile binding and the `amneziawgmobile/` AmneziaWG sidecar live in this repository.

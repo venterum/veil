@@ -38,7 +38,7 @@ AmneziaWG parameters:
 | `RandomTrailers`, `DisableCookies` | `on` / `off` |
 
 Unknown wg-quick keys (`Table`, `PostUp`, …) are ignored. Multiple peers are not supported
-yet; the first `[Peer]` section is imported.
+yet; a single `[Peer]` is used (repeated sections are merged).
 
 ## Runtime
 
@@ -48,6 +48,11 @@ yet; the first `[Peer]` section is imported.
    `localSocksPort`.
 3. Xray receives a SOCKS outbound pointing at that loopback port.
 4. The device's UDP sockets are passed to `VpnService.protect()` when available.
+
+The netstack registers IPv6 only for tunnels that have an IPv6 address, so an IPv4-only
+tunnel no longer emits NDP/MLD while starting (that used to deadlock the device setup). The
+native log prints a build marker (`starting device build=<id>`) that distinguishes a fresh
+APK from a stale installation.
 
 Real-ping uses the same native client and issues a short HTTP request through the tunnel.
 

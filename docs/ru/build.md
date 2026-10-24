@@ -22,9 +22,9 @@ bash compile-hevtun.sh
 cp -r libs veil/app/
 ```
 
-## Шаг 2: libv2ray.aar (Xray + olcRTC + OpenFlux)
+## Шаг 2: libv2ray.aar (Xray + olcRTC + OpenFlux + AmneziaWG)
 
-Сборка объединённого AAR из трёх Go-модулей с выравниванием ELF-сегментов под 16 KB:
+Сборка объединённого AAR из четырёх Go-модулей с выравниванием ELF-сегментов под 16 KB:
 
 ```bash
 export ANDROID_HOME=/path/to/android-sdk
@@ -34,7 +34,7 @@ bash compile-libv2ray.sh
 
 Скрипт использует `gomobile bind` с флагом `-Wl,-z,max-page-size=16384`, поэтому результирующий `libgojni.so` будет совместим с устройствами на 16 KB страницах памяти.
 
-Либо скачать стандартный `libv2ray.aar` из [релизов AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite/releases) — olcRTC и OpenFlux работать **не будут** (в стандартном AAR нет пакетов `mobile.*` / `openflux.*`).
+Либо скачать стандартный `libv2ray.aar` из [релизов AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite/releases) — olcRTC, OpenFlux и AmneziaWG работать **не будут** (в стандартном AAR нет пакетов `mobile.*` / `openflux.*` / `amneziawg.*`).
 
 ## Шаг 3: APK
 
@@ -50,7 +50,7 @@ APK в `veil/app/build/outputs/apk/debug/`.
 
 ```
 veil/app/libs/
-  ├── libv2ray.aar          # Xray core + olcRTC + OpenFlux (gomobile)
+  ├── libv2ray.aar          # Xray core + olcRTC + OpenFlux + AmneziaWG (gomobile)
   ├── arm64-v8a/libhev-socks5-tunnel.so
   ├── armeabi-v7a/libhev-socks5-tunnel.so
   ├── x86/libhev-socks5-tunnel.so
@@ -59,5 +59,5 @@ veil/app/libs/
 
 ## Примечание
 
-- Стандартный AAR от 2dust **не содержит** `mobile.*` / `openflux.*` — olcRTC и OpenFlux не будут работать без кастомной сборки.
-- `olcrtc/` и `OpenFlux/` — git-сабмодули со своей историей; gomobile-биндинг `openfluxmobile/` лежит в этом репозитории.
+- Стандартный AAR от 2dust **не содержит** `mobile.*` / `openflux.*` / `amneziawg.*` — olcRTC, OpenFlux и AmneziaWG не будут работать без кастомной сборки.
+- `olcrtc/`, `OpenFlux/` и `amneziawgmobile/` — Go-модули; `olcrtc/` и `OpenFlux/` подключены как git-сабмодули со своей историей, gomobile-биндинг `openfluxmobile/` и sidecar `amneziawgmobile/` лежат в этом репозитории.

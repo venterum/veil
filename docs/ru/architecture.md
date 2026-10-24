@@ -1,6 +1,6 @@
 # Архитектура
 
-veil использует **три независимых Go-модуля**, скомпилированных в один AAR через gomobile.
+veil использует **четыре независимых Go-модуля**, скомпилированных в один AAR через gomobile.
 
 ## Схема
 
@@ -15,44 +15,46 @@ veil использует **три независимых Go-модуля**, с�
                                                      routing, DNS, mux,
                                                      per-app proxy, geoip
                                                                 │
-                               ┌────────────────────────────────┼──────────────────────────────┐
-                               │                                │                              │
-                     Стандартный протокол                  olcRTC профиль                OpenFlux профиль
-                     (VMess, VLESS, ...)                   (EConfigType.OLCRTC)          (EConfigType.OPENFLUX)
-                               │                                │                              │
-                          интернет                     SOCKS5 → 127.0.0.1:10809      SOCKS5 → 127.0.0.1:10811
-                                                                │                              │
-                                                          olcRTC transport              OpenFlux transport
-                                                          (gomobile AAR)                (gomobile AAR)
-                                                                │                              │
-                                                    WebRTC/SFU сервер          Yandex Docs / Volga / Board / MAX / Cups / Mail.ru / Avito
-                                                                │                              │
-                                                     удалённый olcRTC сервер      удалённый OpenFlux exit node
-                                                                │                              │
-                                                           интернет                       интернет
+                               ┌────────────────────────────────┼──────────────────────────────────────────────┐
+                               │                                │                              │                              │
+                     Стандартный протокол                  olcRTC профиль                OpenFlux профиль              AmneziaWG профиль
+                     (VMess, VLESS, ...)                   (EConfigType.OLCRTC)          (EConfigType.OPENFLUX)        (EConfigType.AMNEZIAWG)
+                               │                                │                              │                              │
+                          интернет                     SOCKS5 → 127.0.0.1:10809      SOCKS5 → 127.0.0.1:10811      SOCKS5 → 127.0.0.1:10812
+                                                                │                              │                              │
+                                                          olcRTC transport              OpenFlux transport            amneziawg-go device
+                                                          (gomobile AAR)                (gomobile AAR)                + netstack gVisor
+                                                                │                              │                              │
+                                                    WebRTC/SFU сервер          Yandex Docs / Volga / Board / MAX / Cups / Mail.ru / Avito   UDP → AWG endpoint
+                                                                │                              │                              │
+                                                     удалённый olcRTC сервер      удалённый OpenFlux exit node          AmneziaWG сервер
+                                                                │                              │                              │
+                                                           интернет                       интернет                       интернет
 ```
 
-## Три модуля в одном AAR
+## Четыре модуля в одном AAR
 
-`libv2ray.aar` — кастомная сборка, объединяющая три Go-модуля:
+`libv2ray.aar` — кастомная сборка, объединяющая четыре Go-модуля:
 
 | Модуль                                | Пакет в AAR  | Назначение                                                        |
 | ------------------------------------- | ------------ | ----------------------------------------------------------------- |
 | `github.com/2dust/AndroidLibXrayLite` | `libv2ray.*` | Ядро Xray: роутинг, протоколы, DNS, статистика                    |
 | `olcrtc/mobile`                       | `mobile.*`   | Транспорт olcRTC: WebRTC-туннель, SOCKS5-сервер                   |
 | `openfluxmobile`                      | `openflux.*` | Транспорт OpenFlux: фасад над upstream-мостом `openflux-mobile` (Session-профили с классическим fallback, негоциация кодека, cookie-хранилище captcha), локальный SOCKS5-сервер |
+| `amneziawgmobile`                     | `amneziawg.*`| AmneziaWG: устройство `amneziawg-go` поверх netstack gVisor, локальный SOCKS5-сервер |
 
 Исходники модулей **не модифицированы**. Они компилируются вместе в единый `libgojni.so` и `classes.jar`.
 
 ## Общий процесс
 
-Все компоненты Xray, olcRTC и OpenFlux работают в **одном процессе** Android:
+Все компоненты Xray, olcRTC, OpenFlux и AmneziaWG работают в **одном процессе** Android:
 
 ```
 :RunSoLibV2RayDaemon
   ├── CoreVpnService / CoreProxyOnlyService   — точка входа
   ├── OlcrtcProxyService                       — управление olcRTC
   ├── OpenFluxProxyService                     — управление OpenFlux
+  ├── AmneziaWgManager                         — управление AWG (без отдельного сервиса)
   ├── CoreTestService                          — тестирование
   └── ...                                       — остальные сервисы
 ```
@@ -77,6 +79,19 @@ veil использует **три независимых Go-модуля**, с�
 4. `CoreOutboundBuilder.toOutboundOpenflux()` создаёт SOCKS5 outbound на `127.0.0.1:{port}`
 5. Трафик: Xray → SOCKS5 → OpenFlux → сменный транспорт → exit node → интернет
 
-## Стандартные протоколы (без olcRTC / OpenFlux)
+## Запуск AmneziaWG
+
+1. `CoreServiceManager.doStartCoreLoop()` определяет `EConfigType.AMNEZIAWG`
+2. Запускается `AmneziaWgManager.start(config)`:
+   - Собирает нативный JSON-конфиг (ключи, адреса, DNS, MTU, пир, параметры AWG)
+   - Поднимает устройство `amneziawg-go` поверх netstack gVisor
+   - Открывает SOCKS5-сервер на `127.0.0.1:{port}` (по умолчанию `10812`) и сохраняет порт в `localSocksPort`
+3. Xray core запускается со стандартным конфигом
+4. `CoreOutboundBuilder.toOutboundAmneziawg()` создаёт SOCKS5 outbound на `127.0.0.1:{port}`
+5. Трафик: Xray → SOCKS5 → amneziawg-go → UDP → AWG-сервер
+
+Нативный клиент также отдаёт `Ping`, поэтому действие «real ping» измеряет задержку через туннель.
+
+## Стандартные протоколы (без транспорта)
 
 Xray работает штатно — `CoreConfigManager` строит конфиг, outbound указывает напрямую на удалённый сервер. Ни один из транспортов не запускается.
