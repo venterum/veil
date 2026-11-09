@@ -37,8 +37,10 @@ object SettingsChangeManager {
         AppConfig.PREF_QUICK_ACTION_TEST_ALL,
         AppConfig.PREF_QUICK_ACTION_SORT,
         AppConfig.PREF_QUICK_ACTION_UPDATE,
+        AppConfig.PREF_SHOW_SUBSCRIPTION_INFO_BUTTON,
         AppConfig.PREF_UNSUPPORTED_PING_PILL,
         AppConfig.PREF_MAIN_BOLDER_FONT,
+        AppConfig.PREF_AUTO_RECONNECT_NETWORK,
     )
 
     /**

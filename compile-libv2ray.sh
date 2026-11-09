@@ -31,6 +31,15 @@ trap 'cleanup' EXIT
 mkdir -p "$TMPDIR/assets"
 ln -sfn "$__dir/AndroidLibXrayLite/assets/"* "$TMPDIR/assets/"
 
+# OpenFlux 0.17.1 imports pion/transport/v5 in its pacing wrapper (stdnet)
+# and in the vendored pion/sctp copy (deadline). olcRTC implements
+# transport/v4 interfaces and the pinned webrtc (4.2.20) speaks v4, so the
+# whole binary has to stay on v4. Build OpenFlux from a patched copy that
+# swaps only those imports back to v4; the submodule itself stays pristine.
+mkdir -p "$TMPDIR/OpenFlux"
+git -C "$__dir/OpenFlux" archive HEAD | tar -x -C "$TMPDIR/OpenFlux"
+patch -p1 -d "$TMPDIR/OpenFlux" < "$__dir/patches/openflux-transport-v4.patch"
+
 cat > "$TMPDIR/go.mod" <<EOF
 module libv2ray
 
@@ -50,9 +59,9 @@ replace github.com/2dust/AndroidLibXrayLite => $__dir/AndroidLibXrayLite
 
 replace github.com/openlibrecommunity/olcrtc => $__dir/olcrtc
 
-replace github.com/p1neappleXpress/OpenFlux => $__dir/OpenFlux
+replace github.com/p1neappleXpress/OpenFlux => $TMPDIR/OpenFlux
 
-replace openflux-mobile => $__dir/OpenFlux/mobile
+replace openflux-mobile => $TMPDIR/OpenFlux/mobile
 
 replace openfluxmobile => $__dir/openfluxmobile
 
@@ -76,7 +85,9 @@ replace github.com/pion/mdns/v2 => github.com/pion/mdns/v2 v2.2.0
 
 replace github.com/pion/rtcp => github.com/pion/rtcp v1.2.17
 
-replace github.com/pion/sctp => github.com/pion/sctp v1.11.1
+// OpenFlux 0.17.1 calls the vendored sctp's SetOutboundMTU; the replace in
+// its own go.mod does not reach this main module, so wire it here.
+replace github.com/pion/sctp => $TMPDIR/OpenFlux/third_party/sctp
 
 replace github.com/pion/sdp/v3 => github.com/pion/sdp/v3 v3.0.19
 

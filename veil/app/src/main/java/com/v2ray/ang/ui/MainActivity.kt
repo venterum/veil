@@ -82,6 +82,7 @@ class MainActivity : HelperBaseActivity() {
         onSwapServers = { from, to -> mainViewModel.swapServer(from, to) },
         onEditServer = ::editServer,
         onRemoveServer = ::removeServer,
+        onTestServer = ::testSingleServer,
         onDrawerNavigate = ::handleDrawerNavigation,
         onImportAction = { actionId -> handleImportMenuAction(actionId) },
         onOverflowAction = { actionId -> handleOverflowAction(actionId) },
@@ -203,6 +204,7 @@ class MainActivity : HelperBaseActivity() {
             showQuickTestAll = MmkvManager.decodeSettingsBool(AppConfig.PREF_QUICK_ACTION_TEST_ALL, true),
             showQuickSort = MmkvManager.decodeSettingsBool(AppConfig.PREF_QUICK_ACTION_SORT, true),
             showQuickUpdate = MmkvManager.decodeSettingsBool(AppConfig.PREF_QUICK_ACTION_UPDATE, true),
+            showSubscriptionInfoButton = MmkvManager.decodeSettingsBool(AppConfig.PREF_SHOW_SUBSCRIPTION_INFO_BUTTON, true),
             showUnsupportedPingPill = MmkvManager.decodeSettingsBool(AppConfig.PREF_UNSUPPORTED_PING_PILL, true),
             bolderFont = MmkvManager.decodeSettingsBool(AppConfig.PREF_MAIN_BOLDER_FONT, true),
         )
@@ -405,6 +407,12 @@ class MainActivity : HelperBaseActivity() {
 
     private fun removeServer(guid: String) {
         mainViewModel.removeServer(guid)
+    }
+
+    private fun testSingleServer(guid: String) {
+        if (guid.isEmpty()) return
+        toast(getString(R.string.connection_test_testing_count, 1))
+        mainViewModel.testSingleRealPing(guid)
     }
 
     private fun editServer(guid: String, profile: ProfileItem) {

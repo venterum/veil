@@ -39,7 +39,9 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -98,6 +100,7 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.ui.compose.ConfirmDialog
 import com.v2ray.ang.ui.compose.ConnectionInfoSheet
 import com.v2ray.ang.ui.compose.ConnectionInfoSheetState
@@ -108,6 +111,7 @@ import com.v2ray.ang.ui.compose.ExpressiveToolbarActions
 import com.v2ray.ang.ui.compose.QRCodeDialog
 import com.v2ray.ang.ui.compose.SelectListDialog
 import com.v2ray.ang.ui.compose.ServerListScreen
+import com.v2ray.ang.ui.compose.SubscriptionInfoSheet
 import com.v2ray.ang.ui.compose.VeilSearchBar
 import com.v2ray.ang.ui.compose.buildServerSections
 import kotlinx.coroutines.Dispatchers
@@ -131,6 +135,7 @@ data class MainScreenActions(
     val onSwapServers: (Int, Int) -> Unit,
     val onEditServer: (String, ProfileItem) -> Unit,
     val onRemoveServer: (String) -> Unit,
+    val onTestServer: (String) -> Unit,
     val onDrawerNavigate: (MainDrawerDestination) -> Unit,
     val onImportAction: (Int) -> Unit,
     val onOverflowAction: (Int) -> Unit,
@@ -183,6 +188,7 @@ fun MainScreen(
     var searchVisible by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var showModeSheet by rememberSaveable { mutableStateOf(false) }
+    var infoSubscription by remember { mutableStateOf<SubscriptionItem?>(null) }
     var addMenuExpanded by rememberSaveable { mutableStateOf(false) }
     var shareTarget by remember { mutableStateOf<ShareTarget?>(null) }
     var pendingRemoveGuid by remember { mutableStateOf<String?>(null) }
@@ -326,6 +332,9 @@ fun MainScreen(
     }
 
     val selectedGroup = groups.getOrNull(pagerState.currentPage)
+    val selectedSubscription = selectedGroup?.id
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { MmkvManager.decodeSubscription(it) }
     val selectedGroupId = selectedGroup?.id ?: currentSubscriptionId
     val selectedGroupCount = counts[selectedGroupId] ?: 0
     val selectedGroupLabel = selectedGroup?.remarks ?: stringResource(R.string.app_name)
@@ -364,9 +373,14 @@ fun MainScreen(
         }
     }
 
-    val onGroupSelect: (Int) -> Unit = remember {
-        { index: Int ->
-            tabHaptic()
+    val onGroupSelect: (Int) -> Unit = { index ->
+        tabHaptic()
+        if (index == pagerState.currentPage) {
+            val groupId = groups.getOrNull(index)?.id.orEmpty()
+            if (groupId.isNotEmpty()) {
+                infoSubscription = MmkvManager.decodeSubscription(groupId)
+            }
+        } else {
             scope.launch { pagerState.animateScrollToPage(index) }
         }
     }
@@ -551,6 +565,11 @@ fun MainScreen(
                                 showTestAll = display.showQuickTestAll,
                                 showSort = display.showQuickSort,
                                 showUpdate = display.showQuickUpdate,
+                                showSubscriptionInfo = display.showSubscriptionInfoButton &&
+                                    selectedSubscription != null,
+                                onShowSubscriptionInfo = {
+                                    infoSubscription = selectedSubscription
+                                },
                                 importing = importing,
                                 onAction = ::handleOverflow,
                             )
@@ -627,6 +646,7 @@ fun MainScreen(
                                     onShare = onShareServer,
                                     onEdit = actions.onEditServer,
                                     onRemove = onRemoveServer,
+                                    onTestProfile = actions.onTestServer,
                                     onSwap = actions.onSwapServers,
                                     onToggleGroup = onToggleGroup,
                                 )
@@ -758,6 +778,13 @@ fun MainScreen(
             onDismiss = { showModeSheet = false },
         )
     }
+
+    infoSubscription?.let { subItem ->
+        SubscriptionInfoSheet(
+            subItem = subItem,
+            onDismiss = { infoSubscription = null },
+        )
+    }
 }
 
 @Composable
@@ -765,10 +792,12 @@ private fun MainQuickActions(
     showTestAll: Boolean,
     showSort: Boolean,
     showUpdate: Boolean,
+    showSubscriptionInfo: Boolean,
+    onShowSubscriptionInfo: () -> Unit,
     importing: Boolean,
     onAction: (Int) -> Unit,
 ) {
-    if (!showTestAll && !showSort && !showUpdate) return
+    if (!showTestAll && !showSort && !showUpdate && !showSubscriptionInfo) return
 
     val haptic = LocalHapticFeedback.current
     Row(
@@ -813,6 +842,22 @@ private fun MainQuickActions(
                     onAction(R.id.sub_update)
                 },
             )
+        }
+        if (showSubscriptionInfo) {
+            FilledTonalIconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                    onShowSubscriptionInfo()
+                },
+                modifier = Modifier.size(36.dp),
+                shape = CircleShape,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = stringResource(R.string.sub_meta_title),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }

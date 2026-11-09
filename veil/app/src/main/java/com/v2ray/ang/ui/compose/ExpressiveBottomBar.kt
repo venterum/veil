@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -86,8 +88,6 @@ fun ExpressiveBottomBar(
     val floatSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val sizeSpec = MaterialTheme.motionScheme.slowSpatialSpec<IntSize>()
     val paddingSpec = MaterialTheme.motionScheme.slowSpatialSpec<androidx.compose.ui.unit.Dp>()
-    val startWidth by animateDpAsState(if (startPressed) 88.dp else 80.dp, spatialSpec, label = "start width")
-    val tunWidth by animateDpAsState(if (tunPressed) 48.dp else 44.dp, spatialSpec, label = "tun width")
     val startScale = remember { Animatable(1f) }
     val tunScale = remember { Animatable(1f) }
     val density = LocalDensity.current
@@ -115,12 +115,42 @@ fun ExpressiveBottomBar(
         }
     }
 
-    Row(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(bottom = 14.dp),
     ) {
+        // A 360dp phone leaves ~320dp for the card; the fixed TUN + start
+        // cluster then squeezes the status text and clips the toggle. Switch
+        // to compact metrics on narrow screens and at large system font sizes.
+        val compact = maxWidth < 380.dp || LocalDensity.current.fontScale > 1.2f
+        val outerPadding = if (compact) 12.dp else 20.dp
+        val contentStart = if (compact) 16.dp else 22.dp
+        val startWidth by animateDpAsState(
+            targetValue = if (startPressed) {
+                if (compact) 70.dp else 88.dp
+            } else {
+                if (compact) 64.dp else 80.dp
+            },
+            animationSpec = spatialSpec,
+            label = "start width",
+        )
+        val tunWidth by animateDpAsState(
+            targetValue = if (tunPressed) {
+                if (compact) 44.dp else 48.dp
+            } else {
+                if (compact) 40.dp else 44.dp
+            },
+            animationSpec = spatialSpec,
+            label = "tun width",
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = outerPadding, end = outerPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,7 +160,9 @@ fun ExpressiveBottomBar(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Row(
-                modifier = Modifier.padding(start = 22.dp, top = 16.dp, end = endPadding, bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = contentStart, top = 16.dp, end = endPadding, bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
@@ -160,15 +192,19 @@ fun ExpressiveBottomBar(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        state.connectionIp?.takeIf { it.isNotEmpty() }?.let {
-                            Text(
-                                text = it,
-                                modifier = Modifier.padding(start = 14.dp),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                        if (!compact) {
+                            state.connectionIp?.takeIf { it.isNotEmpty() }?.let {
+                                Text(
+                                    text = it,
+                                    modifier = Modifier
+                                        .padding(start = 14.dp)
+                                        .widthIn(max = 96.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
                     }
                     AnimatedVisibility(visible = !state.serverName.isNullOrEmpty()) {
@@ -186,7 +222,9 @@ fun ExpressiveBottomBar(
                             Text("↓ ${state.downloadSpeed}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("↑ ${state.uploadSpeed}", modifier = Modifier.padding(start = 10.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.weight(1f))
-                            Text(state.uptime, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (!compact) {
+                                Text(state.uptime, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }
@@ -305,4 +343,5 @@ fun ExpressiveBottomBar(
             }
         }
     }
+}
 }

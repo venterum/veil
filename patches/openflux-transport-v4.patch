@@ -1,0 +1,74 @@
+diff --git a/third_party/sctp/association.go b/third_party/sctp/association.go
+index 495b1d2..c829640 100644
+--- a/third_party/sctp/association.go
++++ b/third_party/sctp/association.go
+@@ -19,7 +19,7 @@ import (
+ 
+ 	"github.com/pion/logging"
+ 	"github.com/pion/randutil"
+-	"github.com/pion/transport/v5/deadline"
++	"github.com/pion/transport/v4/deadline"
+ )
+ 
+ // Port 5000 shows up in examples for SDPs used by WebRTC. Since this implementation
+diff --git a/third_party/sctp/stream.go b/third_party/sctp/stream.go
+index 7d93f85..02113ad 100644
+--- a/third_party/sctp/stream.go
++++ b/third_party/sctp/stream.go
+@@ -13,7 +13,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/pion/logging"
+-	"github.com/pion/transport/v5/deadline"
++	"github.com/pion/transport/v4/deadline"
+ )
+ 
+ const (
+@@ -327,7 +327,7 @@ func (s *Stream) WriteSCTP(payload []byte, ppi PayloadProtocolIdentifier) (int,
+ 	useInterleaving := s.association.useInterleaving
+ 	chunks, unordered := s.packetize(payload, ppi)
+ 	n := len(payload)
+-	err := s.association.sendPayloadData(s.writeDeadline.Context(), chunks)
++	err := s.association.sendPayloadData(s.writeDeadline, chunks)
+ 	if err != nil { //nolint:nestif
+ 		s.lock.Lock()
+ 		s.bufferedAmount -= uint64(n)
+diff --git a/transport/script/host_webrtc.go b/transport/script/host_webrtc.go
+index f47acb6..6f439ca 100644
+--- a/transport/script/host_webrtc.go
++++ b/transport/script/host_webrtc.go
+@@ -7,7 +7,7 @@ import (
+ 
+ 	"github.com/dop251/goja"
+ 	"github.com/pion/sctp"
+-	"github.com/pion/transport/v5/stdnet"
++	"github.com/pion/transport/v4/stdnet"
+ 	"github.com/pion/webrtc/v4"
+ 
+ 	"github.com/p1neappleXpress/OpenFlux/utils"
+diff --git a/transport/script/pace.go b/transport/script/pace.go
+index 38831fe..d64d4f0 100644
+--- a/transport/script/pace.go
++++ b/transport/script/pace.go
+@@ -9,7 +9,7 @@ import (
+ 	"sync/atomic"
+ 	"time"
+ 
+-	"github.com/pion/transport/v5/stdnet"
++	"github.com/pion/transport/v4/stdnet"
+ 
+ 	"github.com/p1neappleXpress/OpenFlux/utils"
+ )
+diff --git a/transport/script/pace_test.go b/transport/script/pace_test.go
+index 986f00e..81b5e78 100644
+--- a/transport/script/pace_test.go
++++ b/transport/script/pace_test.go
+@@ -6,7 +6,7 @@ import (
+ 	"testing"
+ 	"time"
+ 
+-	"github.com/pion/transport/v5/stdnet"
++	"github.com/pion/transport/v4/stdnet"
+ 	"github.com/pion/turn/v5"
+ 	"github.com/pion/webrtc/v4"
+ )

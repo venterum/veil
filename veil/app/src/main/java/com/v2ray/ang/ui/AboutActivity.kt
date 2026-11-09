@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,16 +26,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.toPath
@@ -63,6 +66,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -77,6 +81,7 @@ import com.v2ray.ang.core.CoreNativeManager
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.compose.AppTopBar
+import com.v2ray.ang.ui.compose.VeilMorphBadge
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -161,10 +166,9 @@ fun AboutScreen(onBackClick: () -> Unit) {
                 ),
             )
             ExpressiveEntrance(index = 1) {
-                AboutLinkGroup(
-                    title = stringResource(R.string.about_section_connect),
-                    items = connectItems
-                )
+                AboutTileSection(title = stringResource(R.string.about_section_connect)) {
+                    AboutTileGrid(items = connectItems)
+                }
             }
 
             val updateItems = listOf(
@@ -179,10 +183,11 @@ fun AboutScreen(onBackClick: () -> Unit) {
                 ),
             )
             ExpressiveEntrance(index = 2) {
-                AboutLinkGroup(
-                    title = stringResource(R.string.about_section_update),
-                    items = updateItems
-                )
+                AboutTileSection(title = stringResource(R.string.about_section_update)) {
+                    updateItems.forEach { item ->
+                        AboutWideTile(item = item)
+                    }
+                }
             }
 
             val legalItems = listOf(
@@ -202,10 +207,9 @@ fun AboutScreen(onBackClick: () -> Unit) {
                 ),
             )
             ExpressiveEntrance(index = 3) {
-                AboutLinkGroup(
-                    title = stringResource(R.string.about_section_legal),
-                    items = legalItems
-                )
+                AboutTileSection(title = stringResource(R.string.about_section_legal)) {
+                    AboutTileGrid(items = legalItems)
+                }
             }
 
             ExpressiveEntrance(index = 4) {
@@ -243,26 +247,7 @@ fun AboutScreen(onBackClick: () -> Unit) {
 
 @Composable
 private fun AboutHero() {
-    val haptic = LocalHapticFeedback.current
-    val scope = rememberCoroutineScope()
     val motionScheme = MaterialTheme.motionScheme
-
-    val heroShapes = remember {
-        listOf(
-            MaterialShapes.Cookie9Sided,
-            MaterialShapes.Clover4Leaf,
-            MaterialShapes.Sunny,
-            MaterialShapes.SoftBurst,
-            MaterialShapes.Gem,
-            MaterialShapes.Flower,
-        )
-    }
-    var shapeIndex by remember { mutableIntStateOf(0) }
-    var startShape by remember { mutableStateOf(heroShapes.first()) }
-    var endShape by remember { mutableStateOf(heroShapes.first()) }
-    val morph = remember(startShape, endShape) { Morph(startShape, endShape) }
-    val morphProgress = remember { Animatable(1f) }
-    val blobRotation = remember { Animatable(0f) }
 
     val entranceScale = remember { Animatable(0.4f) }
     val entranceAlpha = remember { Animatable(0f) }
@@ -270,19 +255,6 @@ private fun AboutHero() {
         launch { entranceScale.animateTo(1f, motionScheme.slowSpatialSpec()) }
         launch { entranceAlpha.animateTo(1f, motionScheme.defaultEffectsSpec()) }
     }
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val pressProgress = remember { Animatable(0f) }
-    LaunchedEffect(isPressed) {
-        pressProgress.animateTo(
-            targetValue = if (isPressed) 1f else 0f,
-            animationSpec = if (isPressed) motionScheme.fastSpatialSpec() else motionScheme.defaultSpatialSpec()
-        )
-    }
-
-    val blobColor = MaterialTheme.colorScheme.primaryContainer
-    val iconTint = MaterialTheme.colorScheme.onPrimaryContainer
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -295,50 +267,10 @@ private fun AboutHero() {
                 alpha = entranceAlpha.value
             }
     ) {
-        Box(
-            modifier = Modifier
-                .size(HERO_SIZE_DP.dp)
-                .graphicsLayer {
-                    val pressScale = lerp(1f, HERO_PRESS_SCALE, pressProgress.value)
-                    scaleX = pressScale
-                    scaleY = pressScale
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { rotationZ = blobRotation.value }
-                    .background(blobColor, MorphShape(morph, morphProgress.value))
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
-                        role = Role.Button,
-                        onClickLabel = stringResource(R.string.about_logo_description)
-                    ) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        shapeIndex = (shapeIndex + 1) % heroShapes.size
-                        startShape = endShape
-                        endShape = heroShapes[shapeIndex]
-                        scope.launch {
-                            morphProgress.snapTo(0f)
-                            morphProgress.animateTo(1f, motionScheme.slowSpatialSpec())
-                        }
-                        scope.launch {
-                            blobRotation.animateTo(
-                                blobRotation.value + HERO_ROTATION_STEP_DEG,
-                                motionScheme.slowSpatialSpec()
-                            )
-                        }
-                    }
-            )
-            Image(
-                painter = painterResource(R.mipmap.ic_launcher_foreground),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(iconTint),
-                modifier = Modifier.size(HERO_LOGO_DP.dp)
-            )
-        }
+        VeilMorphBadge(
+            size = HERO_SIZE_DP.dp,
+            logoSize = HERO_LOGO_DP.dp,
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
         Text(
@@ -425,56 +357,177 @@ private fun AboutSectionHeader(title: String, modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.primary,
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+            .padding(start = 4.dp, end = 4.dp, top = 16.dp, bottom = 8.dp)
     )
 }
 
 @Composable
-private fun AboutLinkGroup(
-    title: String,
-    items: List<AboutLinkItem>,
-    modifier: Modifier = Modifier
-) {
-    val containerColors = iconContainerColors
-    Column(modifier = modifier.fillMaxWidth()) {
+private fun AboutTileSection(title: String, content: @Composable () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         AboutSectionHeader(title = title)
-        Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
-            items.forEachIndexed { index, item ->
-                val (containerColor, contentColor) = containerColors[index % containerColors.size]
-                SegmentedListItem(
-                    onClick = item.onClick,
-                    shapes = ListItemDefaults.segmentedShapes(index = index, count = items.size),
-                    colors = ListItemDefaults.segmentedColors(),
-                    leadingContent = {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(containerColor, MaterialTheme.shapes.largeIncreased),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = item.icon,
-                                contentDescription = null,
-                                tint = contentColor,
-                                modifier = Modifier.size(item.iconSize)
-                            )
-                        }
-                    },
-                    supportingContent = item.subtitle?.let { subtitle ->
-                        { Text(subtitle) }
-                    },
-                    trailingContent = if (item.external) {
-                        {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_open_in_browser_24dp),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                    content = { Text(item.title) }
+        content()
+    }
+}
+
+@Composable
+private fun AboutTileGrid(items: List<AboutLinkItem>, modifier: Modifier = Modifier) {
+    val containerColors = iconContainerColors
+    val rows = items.chunked(2)
+    val tileShape = RoundedCornerShape(28.dp)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        rows.forEachIndexed { rowIndex, row ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                row.forEachIndexed { columnIndex, item ->
+                    val index = rowIndex * 2 + columnIndex
+                    val (containerColor, contentColor) = containerColors[index % containerColors.size]
+                    AboutTile(
+                        item = item,
+                        containerColor = containerColor,
+                        contentColor = contentColor,
+                        shape = tileShape,
+                        modifier = if (row.size == 1) {
+                            Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
+                        } else {
+                            Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutTile(
+    item: AboutLinkItem,
+    containerColor: Color,
+    contentColor: Color,
+    shape: Shape,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = item.onClick,
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier.heightIn(min = 118.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(containerColor, MaterialTheme.shapes.largeIncreased),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = item.icon,
+                        contentDescription = null,
+                        tint = contentColor,
+                        modifier = Modifier.size(item.iconSize)
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                item.subtitle?.let { subtitle ->
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            if (item.external) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_open_in_browser_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutWideTile(item: AboutLinkItem, modifier: Modifier = Modifier) {
+    val containerColors = iconContainerColors
+    val (containerColor, contentColor) = containerColors.first()
+    Surface(
+        onClick = item.onClick,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(containerColor, MaterialTheme.shapes.largeIncreased),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = item.icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(item.iconSize)
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                item.subtitle?.let { subtitle ->
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            if (item.external) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_open_in_browser_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }

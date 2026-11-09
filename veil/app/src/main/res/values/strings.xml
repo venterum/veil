@@ -375,6 +375,17 @@
     <string name="menu_item_import_proxy_app">Import from Clipboard</string>
     <string name="per_app_proxy_settings">Per-app settings</string>
     <string name="per_app_proxy_settings_enable">Enable per-app</string>
+    <string name="per_app_filter_all">All</string>
+    <string name="per_app_filter_selected">Selected</string>
+    <string name="per_app_filter_system">System</string>
+    <string name="per_app_filter_russian">Russian</string>
+    <string name="per_app_selected_count">%1$d of %2$d selected</string>
+    <string name="per_app_section_user">Apps</string>
+    <string name="per_app_section_system">System apps</string>
+    <string name="per_app_empty_search">No apps match your search</string>
+    <string name="per_app_empty_list">No apps available</string>
+    <string name="per_app_general_summary">Checked apps go through the proxy; the rest connect directly</string>
+    <string name="per_app_bypass_summary">Checked apps connect directly; the rest go through the proxy</string>
     <string
         name="app_picker_unknown_app"
     >Unknown app (unidentified UID)</string>
@@ -722,6 +733,10 @@
     <string
         name="summary_pref_quick_action_update"
     >Show the Update shortcut above the server list</string>
+    <string name="title_pref_show_subscription_info_button">Subscription info button</string>
+    <string
+        name="summary_pref_show_subscription_info_button"
+    >Show the round info button next to Test, Sort and Update on the main screen. Tapping the already selected subscription tab always opens the same info sheet.</string>
     <string name="title_pref_main_bolder_font">Use bolder font in main screen</string>
     <string
         name="summary_pref_main_bolder_font"
@@ -761,6 +776,10 @@
     <string
         name="title_pref_hev_tunnel_rw_timeout"
     >Hev Tun read/write timeout (seconds) (tcp,udp default 300,60)</string>
+    <string name="title_pref_auto_reconnect_network">Reconnect on network change</string>
+    <string
+        name="summary_pref_auto_reconnect_network"
+    >Restart Xray and AmneziaWG when the default network changes (for example Wi-Fi to mobile data). olcRTC and OpenFlux are not restarted.</string>
 
     <string name="title_logcat">Logcat</string>
     <string name="logcat_copy">Copy</string>
@@ -772,6 +791,22 @@
     <string name="title_del_invalid_config">Delete invalid config</string>
     <string name="title_export_all">Export configs to clipboard</string>
     <string name="title_sub_setting">Subscriptions</string>
+    <string name="sub_meta_title">Subscription info</string>
+    <string name="sub_meta_empty">No metadata yet — update the subscription</string>
+    <string name="sub_meta_announce">Announce</string>
+    <string name="sub_meta_uploaded">Uploaded</string>
+    <string name="sub_meta_downloaded">Downloaded</string>
+    <string name="sub_meta_traffic">Traffic</string>
+    <string name="sub_meta_expires">Expires</string>
+    <string name="sub_meta_updated">Updated</string>
+    <string name="sub_meta_expired">Expired</string>
+    <string name="sub_meta_until">until %1$s</string>
+    <string name="sub_meta_days_left">%1$d days left</string>
+    <string name="sub_meta_less_than_day">less than a day left</string>
+    <string name="sub_meta_support">Support</string>
+    <string name="sub_meta_webpage">Web page</string>
+    <string name="sub_meta_expand">Expand subscription info</string>
+    <string name="sub_meta_collapse">Collapse subscription info</string>
     <string name="sub_setting_remarks">remarks</string>
     <string name="sub_setting_url">Optional URL</string>
     <string name="sub_setting_user_agent">User Agent</string>

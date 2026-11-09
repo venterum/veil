@@ -36,6 +36,7 @@ data class MainDisplayFlags(
     val showQuickTestAll: Boolean = true,
     val showQuickSort: Boolean = true,
     val showQuickUpdate: Boolean = true,
+    val showSubscriptionInfoButton: Boolean = true,
     val showUnsupportedPingPill: Boolean = true,
     val bolderFont: Boolean = true,
 )

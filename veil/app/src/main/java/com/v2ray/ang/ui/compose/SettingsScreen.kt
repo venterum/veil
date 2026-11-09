@@ -276,6 +276,8 @@ private fun UiSettingsSection(
     val sQuickSort = stringResource(R.string.summary_pref_quick_action_sort)
     val tQuickUpdate = stringResource(R.string.title_pref_quick_action_update)
     val sQuickUpdate = stringResource(R.string.summary_pref_quick_action_update)
+    val tSubInfoButton = stringResource(R.string.title_pref_show_subscription_info_button)
+    val sSubInfoButton = stringResource(R.string.summary_pref_show_subscription_info_button)
     val tUnsupportedPing = stringResource(R.string.title_pref_unsupported_ping_pill)
     val sUnsupportedPing = stringResource(R.string.summary_pref_unsupported_ping_pill)
     val tBolderFont = stringResource(R.string.title_pref_main_bolder_font)
@@ -314,6 +316,7 @@ private fun UiSettingsSection(
         show(tSearchButton, sSearchButton) ||
         show(tQuickTest, sQuickTest) || show(tQuickSort, sQuickSort) ||
         show(tQuickUpdate, sQuickUpdate) || show(tUnsupportedPing, sUnsupportedPing) ||
+        show(tSubInfoButton, sSubInfoButton) ||
         show(tBolderFont, sBolderFont) || show(tGroupAll, sGroupAll) ||
         show(tGroupAllMode) || (show(tGroupAllIcons, sGroupAllIcons) && groupAllMode == "mode1") ||
         show(tLanguage) || show(tNight) || show(tDynamicColor, sDynamicColor) ||
@@ -384,6 +387,12 @@ private fun UiSettingsSection(
         if (show(tQuickUpdate, sQuickUpdate)) {
             SettingsSwitchRow(
                 state, AppConfig.PREF_QUICK_ACTION_UPDATE, tQuickUpdate, sQuickUpdate, default = true
+            )
+        }
+        if (show(tSubInfoButton, sSubInfoButton)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_SHOW_SUBSCRIPTION_INFO_BUTTON,
+                tSubInfoButton, sSubInfoButton, default = true
             )
         }
         if (show(tGroupAll, sGroupAll)) {
@@ -464,6 +473,8 @@ private fun VpnSettingsSection(state: SettingsState, query: String) {
     val sHevTun = stringResource(R.string.summary_pref_use_hev_tunnel)
     val tHevLog = stringResource(R.string.title_pref_hev_tunnel_loglevel)
     val tHevTimeout = stringResource(R.string.title_pref_hev_tunnel_rw_timeout)
+    val tAutoReconnect = stringResource(R.string.title_pref_auto_reconnect_network)
+    val sAutoReconnect = stringResource(R.string.summary_pref_auto_reconnect_network)
 
     fun show(title: String, summary: String? = null) =
         visible(query, title, summary.orEmpty())
@@ -472,7 +483,7 @@ private fun VpnSettingsSection(state: SettingsState, query: String) {
         show(tLocalDns, sLocalDns) || show(tFakeDns, sFakeDns) ||
         show(tAppendProxy, sAppendProxy) || show(tVpnDns) || show(tOlcrtcDns) ||
         show(tBypassLan) || show(tIfAddr) || show(tMtu) || show(tHevTun, sHevTun) ||
-        show(tHevLog) || show(tHevTimeout)
+        show(tHevLog) || show(tHevTimeout) || show(tAutoReconnect, sAutoReconnect)
     if (!sectionVisible) return
 
     val mode = state.string(AppConfig.PREF_MODE, VPN)
@@ -489,6 +500,12 @@ private fun VpnSettingsSection(state: SettingsState, query: String) {
 
     PreferenceGroupHeader(title = sectionTitle)
     SettingsSection {
+        if (show(tAutoReconnect, sAutoReconnect)) {
+            SettingsSwitchRow(
+                state, AppConfig.PREF_AUTO_RECONNECT_NETWORK, tAutoReconnect, sAutoReconnect,
+                default = true, enabled = isVpn
+            )
+        }
         if (show(tIpv6, sIpv6)) {
             SettingsSwitchRow(state, AppConfig.PREF_IPV6_ENABLED, tIpv6, sIpv6, enabled = isVpn)
         }

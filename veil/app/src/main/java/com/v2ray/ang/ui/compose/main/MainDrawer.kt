@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.ui.compose.VeilMorphBadge
 
 enum class MainDrawerDestination(val titleRes: Int, val iconRes: Int) {
     SUBSCRIPTIONS(R.string.title_sub_setting, R.drawable.ic_subscriptions_24dp),
@@ -132,20 +133,7 @@ private fun DrawerHeader() {
             .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.size(80.dp), contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(R.drawable.ic_cookie_bg),
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primaryContainer),
-            )
-            Image(
-                painter = painterResource(R.mipmap.ic_launcher_foreground),
-                contentDescription = null,
-                modifier = Modifier.size(52.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
-            )
-        }
+        VeilMorphBadge(size = 80.dp, logoSize = 52.dp)
         Spacer(Modifier.width(16.dp))
         Text(
             text = stringResource(R.string.app_name),

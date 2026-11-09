@@ -26,8 +26,8 @@ android {
         applicationId = "com.vntrum.veil"
         minSdk = 26
         targetSdk = 37
-        versionCode = 16
-        versionName = "1.0.0"
+        versionCode = 24
+        versionName = "1.1.0"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')

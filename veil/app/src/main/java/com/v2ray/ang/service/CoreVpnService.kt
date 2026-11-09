@@ -21,6 +21,7 @@ import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.contracts.ServiceControl
 import com.v2ray.ang.contracts.Tun2SocksControl
 import com.v2ray.ang.core.CoreServiceManager
+import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.NotificationManager
 import com.v2ray.ang.handler.SettingsManager
@@ -30,8 +31,10 @@ import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.ref.SoftReference
 
@@ -41,6 +44,15 @@ class CoreVpnService : VpnService(), ServiceControl {
     private var isRunning = false
     private var tun2SocksService: Tun2SocksControl? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Last non-VPN default network; kept across onLost so its replacement counts as a change. */
+    private var lastAvailableNetwork: Network? = null
+
+    /** True once any physical default network has been observed. */
+    private var hasObservedNetwork = false
+
+    /** Pending debounced core restart after a default-network change. */
+    private var networkChangeRestartJob: Job? = null
 
     /**destroy
      * Unfortunately registerDefaultNetworkCallback is going to return our VPN interface: https://android.googlesource.com/platform/frameworks/base/+/dda156ab0c5d66ad82bdcf76cda07cbc0a9c8a2e
@@ -56,6 +68,9 @@ class CoreVpnService : VpnService(), ServiceControl {
         NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
+            // Without NOT_VPN the request is satisfied by our own VPN interface:
+            // the callback then never sees the physical network change.
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
             .build()
     }
 
@@ -65,16 +80,114 @@ class CoreVpnService : VpnService(), ServiceControl {
     private val defaultNetworkCallback by lazy {
         object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
+                val caps = connectivity.getNetworkCapabilities(network)
+                val isVpn = caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+                val validated = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+                LogUtil.i(
+                    AppConfig.TAG,
+                    "StartCore-VPN: Network available network=$network vpn=$isVpn validated=$validated"
+                )
+                if (isVpn) return
+
                 setUnderlyingNetworks(arrayOf(network))
+                val previous = lastAvailableNetwork
+                val hadNetwork = hasObservedNetwork
+                lastAvailableNetwork = network
+                hasObservedNetwork = true
+
+                // The first network is the one we started on. Any later network —
+                // including the replacement after onLost — is a real switch.
+                if (hadNetwork && previous != network) {
+                    LogUtil.i(
+                        AppConfig.TAG,
+                        "StartCore-VPN: Default network changed $previous -> $network"
+                    )
+                    scheduleRestartAfterNetworkChange(network)
+                }
             }
 
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                if (network != lastAvailableNetwork) return
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return
                 // it's a good idea to refresh capabilities
                 setUnderlyingNetworks(arrayOf(network))
             }
 
             override fun onLost(network: Network) {
-                setUnderlyingNetworks(null)
+                LogUtil.i(AppConfig.TAG, "StartCore-VPN: Network lost network=$network")
+                if (lastAvailableNetwork == network) {
+                    // Keep lastAvailableNetwork as the baseline: the network that
+                    // replaces this one must be treated as a change, not as the
+                    // first callback after service start.
+                    setUnderlyingNetworks(null)
+                }
+            }
+        }
+    }
+
+    /**
+     * Restarts the core after the default network changed, so long-lived sockets
+     * (and AmneziaWG's UDP endpoint) are rebound to the new network instead of
+     * hanging on the old one.
+     *
+     * Applies to Xray-backed profiles and AmneziaWG only: olcRTC and OpenFlux
+     * manage their own WebRTC/HTTP transports and are restarted by their own
+     * reconnect logic. Bursts of connectivity callbacks are collapsed by the
+     * debounce, and [CoreServiceManager.restartCoreLoop] ignores overlapping
+     * restarts.
+     */
+    private fun scheduleRestartAfterNetworkChange(network: Network) {
+        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_RECONNECT_NETWORK, true)) {
+            LogUtil.i(AppConfig.TAG, "StartCore-VPN: Auto reconnect disabled, skipping restart")
+            return
+        }
+        if (!CoreServiceManager.isRunning()) {
+            LogUtil.i(AppConfig.TAG, "StartCore-VPN: Core not running, skipping restart")
+            return
+        }
+
+        val guid = MmkvManager.getSelectServer().orEmpty()
+        val config = MmkvManager.decodeServerConfig(guid) ?: return
+        if (config.configType == EConfigType.OLCRTC || config.configType == EConfigType.OPENFLUX) {
+            LogUtil.i(
+                AppConfig.TAG,
+                "StartCore-VPN: ${config.configType} manages its own transport, skipping restart"
+            )
+            return
+        }
+
+        networkChangeRestartJob?.cancel()
+        networkChangeRestartJob = serviceScope.launch {
+            delay(NETWORK_RESTART_DEBOUNCE_MS)
+            if (!isRunning) {
+                return@launch
+            }
+            if (lastAvailableNetwork != network) {
+                LogUtil.i(AppConfig.TAG, "StartCore-VPN: Network changed again, restart superseded")
+                return@launch
+            }
+
+            // Give the new network a moment to pass validation (captive portals
+            // and freshly attached Wi-Fi report VALIDATED a bit later).
+            var waited = 0L
+            while (waited < NETWORK_VALIDATION_TIMEOUT_MS) {
+                val validated = connectivity.getNetworkCapabilities(network)
+                    ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+                if (validated) break
+                delay(NETWORK_VALIDATION_POLL_MS)
+                waited += NETWORK_VALIDATION_POLL_MS
+                if (lastAvailableNetwork != network) {
+                    LogUtil.i(AppConfig.TAG, "StartCore-VPN: Network changed again while validating")
+                    return@launch
+                }
+            }
+
+            LogUtil.i(
+                AppConfig.TAG,
+                "StartCore-VPN: Restarting core after network change (${config.configType}, network=$network)"
+            )
+            if (!CoreServiceManager.restartCoreLoop()) {
+                LogUtil.w(AppConfig.TAG, "StartCore-VPN: Network-change restart was not started")
             }
         }
     }
@@ -368,6 +481,8 @@ class CoreVpnService : VpnService(), ServiceControl {
     }
 
     private fun stopAllService(isForced: Boolean = true) {
+        networkChangeRestartJob?.cancel()
+        networkChangeRestartJob = null
 //        val configName = defaultDPreference.getPrefString(PREF_CURR_CONFIG_GUID, "")
 //        val emptyInfo = VpnNetworkInfo()
 //        val info = loadVpnNetworkInfo(configName, emptyInfo)!! + (lastNetworkInfo ?: emptyInfo)
@@ -404,6 +519,12 @@ class CoreVpnService : VpnService(), ServiceControl {
                 LogUtil.e(AppConfig.TAG, "StartCore-VPN: Failed to close interface", e)
             }
         }
+    }
+
+    companion object {
+        private const val NETWORK_RESTART_DEBOUNCE_MS = 2_500L
+        private const val NETWORK_VALIDATION_TIMEOUT_MS = 6_000L
+        private const val NETWORK_VALIDATION_POLL_MS = 500L
     }
 }
 

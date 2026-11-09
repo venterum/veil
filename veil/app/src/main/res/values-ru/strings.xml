@@ -263,6 +263,17 @@
     <string
         name="per_app_proxy_settings_enable"
     >Использовать выбор приложений</string>
+    <string name="per_app_filter_all">Все</string>
+    <string name="per_app_filter_selected">Выбрано</string>
+    <string name="per_app_filter_system">Системные</string>
+    <string name="per_app_filter_russian">Российские</string>
+    <string name="per_app_selected_count">Выбрано %1$d из %2$d</string>
+    <string name="per_app_section_user">Приложения</string>
+    <string name="per_app_section_system">Системные приложения</string>
+    <string name="per_app_empty_search">Нет приложений по запросу</string>
+    <string name="per_app_empty_list">Нет доступных приложений</string>
+    <string name="per_app_general_summary">Отмеченные приложения идут через прокси, остальные подключаются напрямую</string>
+    <string name="per_app_bypass_summary">Отмеченные приложения подключаются напрямую, остальные идут через прокси</string>
     <string
         name="app_picker_unknown_app"
     >Неизвестное приложение (неопознанный UID)</string>
@@ -612,6 +623,14 @@
     <string
         name="title_pref_hev_tunnel_rw_timeout"
     >Ожидание чтения/записи HevTun (секунд, по умолчанию TCP,UDP 300,60)</string>
+    <string name="title_pref_auto_reconnect_network">Переподключаться при смене сети</string>
+    <string
+        name="summary_pref_auto_reconnect_network"
+    >Перезапускать Xray и AmneziaWG при смене сети по умолчанию (например, Wi-Fi → мобильный интернет). olcRTC и OpenFlux не перезапускаются.</string>
+    <string name="title_pref_show_subscription_info_button">Кнопка информации о подписке</string>
+    <string
+        name="summary_pref_show_subscription_info_button"
+    >Показывать круглую кнопку информации рядом с «Тест», «Сортировка» и «Обновить» на главном экране. Нажатие на уже открытую вкладку подписки всегда открывает ту же информацию.</string>
 
     <string name="title_logcat">Журнал</string>
     <string name="logcat_copy">Копировать</string>
@@ -625,6 +644,22 @@
     <string name="title_del_invalid_config">Удалить нерабочие профили</string>
     <string name="title_export_all">Экспорт профилей в буфер обмена</string>
     <string name="title_sub_setting">Группы</string>
+    <string name="sub_meta_title">О подписке</string>
+    <string name="sub_meta_empty">Метаданных пока нет — обновите подписку</string>
+    <string name="sub_meta_announce">Объявление</string>
+    <string name="sub_meta_uploaded">Отдано</string>
+    <string name="sub_meta_downloaded">Скачано</string>
+    <string name="sub_meta_traffic">Трафик</string>
+    <string name="sub_meta_expires">Истекает</string>
+    <string name="sub_meta_updated">Обновлено</string>
+    <string name="sub_meta_expired">Истекла</string>
+    <string name="sub_meta_until">до %1$s</string>
+    <string name="sub_meta_days_left">осталось %1$d дн.</string>
+    <string name="sub_meta_less_than_day">меньше дня</string>
+    <string name="sub_meta_support">Поддержка</string>
+    <string name="sub_meta_webpage">Страница</string>
+    <string name="sub_meta_expand">Развернуть информацию о подписке</string>
+    <string name="sub_meta_collapse">Свернуть информацию о подписке</string>
     <string name="sub_setting_remarks">Название</string>
     <string name="sub_setting_url">URL (необязательно)</string>
     <string name="sub_setting_user_agent">User Agent</string>

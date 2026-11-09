@@ -270,6 +270,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * Tests the real ping for one server, leaving the other results untouched.
+     */
+    fun testSingleRealPing(guid: String) {
+        if (guid.isEmpty()) return
+        viewModelScope.launch(Dispatchers.Default) {
+            MessageUtil.sendMsg2TestService(
+                getApplication(),
+                TestServiceMessage(
+                    key = AppConfig.MSG_MEASURE_CONFIG_START,
+                    serverGuids = listOf(guid)
+                )
+            )
+        }
+    }
+
+    /**
      * Tests the real ping for the current server.
      */
     fun testCurrentServerRealPing() {

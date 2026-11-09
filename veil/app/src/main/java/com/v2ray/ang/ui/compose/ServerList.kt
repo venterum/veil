@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NetworkPing
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -192,6 +193,7 @@ fun ServerListScreen(
     onShare: (String, ProfileItem, Int, Boolean) -> Unit,
     onEdit: (String, ProfileItem) -> Unit,
     onRemove: (String, Int) -> Unit,
+    onTestProfile: (String) -> Unit,
     onSwap: (Int, Int) -> Unit,
     onToggleGroup: (String) -> Unit,
 ) {
@@ -209,6 +211,7 @@ fun ServerListScreen(
             onShare = onShare,
             onEdit = onEdit,
             onRemove = onRemove,
+            onTestProfile = onTestProfile,
         )
 
         doubleColumn -> GridServerList(
@@ -224,6 +227,7 @@ fun ServerListScreen(
             onShare = onShare,
             onEdit = onEdit,
             onRemove = onRemove,
+            onTestProfile = onTestProfile,
             onSwap = onSwap,
         )
 
@@ -240,6 +244,7 @@ fun ServerListScreen(
             onShare = onShare,
             onEdit = onEdit,
             onRemove = onRemove,
+            onTestProfile = onTestProfile,
             onSwap = onSwap,
         )
     }
@@ -259,6 +264,7 @@ private fun FlatServerList(
     onShare: (String, ProfileItem, Int, Boolean) -> Unit,
     onEdit: (String, ProfileItem) -> Unit,
     onRemove: (String, Int) -> Unit,
+    onTestProfile: (String) -> Unit,
     onSwap: (Int, Int) -> Unit,
 ) {
     val reorderableState = rememberReorderableLazyListState(listState) { from, to ->
@@ -291,6 +297,7 @@ private fun FlatServerList(
                         onShare = { more -> onShare(sc.guid, sc.profile, index, more) },
                         onEdit = { onEdit(sc.guid, sc.profile) },
                         onRemove = { onRemove(sc.guid, index) },
+                        onTest = { onTestProfile(sc.guid) },
                     )
                 }
             }
@@ -312,6 +319,7 @@ private fun GridServerList(
     onShare: (String, ProfileItem, Int, Boolean) -> Unit,
     onEdit: (String, ProfileItem) -> Unit,
     onRemove: (String, Int) -> Unit,
+    onTestProfile: (String) -> Unit,
     onSwap: (Int, Int) -> Unit,
 ) {
     val reorderableState = rememberReorderableLazyGridState(gridState) { from, to ->
@@ -345,6 +353,7 @@ private fun GridServerList(
                         onShare = { more -> onShare(sc.guid, sc.profile, index, more) },
                         onEdit = { onEdit(sc.guid, sc.profile) },
                         onRemove = { onRemove(sc.guid, index) },
+                        onTest = { onTestProfile(sc.guid) },
                     )
                 }
             }
@@ -366,6 +375,7 @@ private fun GroupedServerList(
     onShare: (String, ProfileItem, Int, Boolean) -> Unit,
     onEdit: (String, ProfileItem) -> Unit,
     onRemove: (String, Int) -> Unit,
+    onTestProfile: (String) -> Unit,
 ) {
     LazyColumn(
         state = listState,
@@ -388,6 +398,7 @@ private fun GroupedServerList(
                 onShare = onShare,
                 onEdit = onEdit,
                 onRemove = onRemove,
+                onTestProfile = onTestProfile,
             )
         }
     }
@@ -409,6 +420,7 @@ private fun GroupSection(
     onShare: (String, ProfileItem, Int, Boolean) -> Unit,
     onEdit: (String, ProfileItem) -> Unit,
     onRemove: (String, Int) -> Unit,
+    onTestProfile: (String) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     val shape = sectionContainerShape(index, total)
@@ -557,6 +569,7 @@ private fun GroupSection(
                             onShare = { more -> onShare(sc.guid, sc.profile, i, more) },
                             onEdit = { onEdit(sc.guid, sc.profile) },
                             onRemove = { onRemove(sc.guid, i) },
+                            onTest = { onTestProfile(sc.guid) },
                             onLongPress = { onShare(sc.guid, sc.profile, i, true) },
                         )
                         if (i < section.servers.lastIndex) Spacer(Modifier.height(4.dp))
@@ -584,6 +597,7 @@ private fun ServerCard(
     onShare: (Boolean) -> Unit,
     onEdit: () -> Unit,
     onRemove: () -> Unit,
+    onTest: () -> Unit,
     onLongPress: (() -> Unit)? = null,
 ) {
     val profile = server.profile
@@ -634,6 +648,7 @@ private fun ServerCard(
                 onShare = onShare,
                 onEdit = onEdit,
                 onRemove = onRemove,
+                onTest = onTest,
             )
         } else {
             ClassicServerCardContent(
@@ -648,6 +663,7 @@ private fun ServerCard(
                 onShare = onShare,
                 onEdit = onEdit,
                 onRemove = onRemove,
+                onTest = onTest,
             )
         }
     }
@@ -666,6 +682,7 @@ private fun ClassicServerCardContent(
     onShare: (Boolean) -> Unit,
     onEdit: () -> Unit,
     onRemove: () -> Unit,
+    onTest: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -767,6 +784,7 @@ private fun ClassicServerCardContent(
                     onShare = { onShare(false) },
                     onEdit = onEdit,
                     onRemove = onRemove,
+                    onTest = onTest,
                 )
             }
         }
@@ -786,6 +804,7 @@ private fun NewServerCardContent(
     onShare: (Boolean) -> Unit,
     onEdit: () -> Unit,
     onRemove: () -> Unit,
+    onTest: () -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     Row(
@@ -882,6 +901,7 @@ private fun NewServerCardContent(
                     onShare = { onShare(false) },
                     onEdit = onEdit,
                     onRemove = onRemove,
+                    onTest = onTest,
                 )
             }
         }
@@ -895,6 +915,7 @@ private fun ServerCardOverflowMenu(
     onShare: () -> Unit,
     onEdit: () -> Unit,
     onRemove: () -> Unit,
+    onTest: () -> Unit,
 ) {
     DropdownMenu(
         expanded = expanded,
@@ -902,6 +923,16 @@ private fun ServerCardOverflowMenu(
         shape = MaterialTheme.shapes.extraLarge,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.connection_info_action_ping)) },
+            trailingIcon = {
+                Icon(Icons.Filled.NetworkPing, contentDescription = null, modifier = Modifier.size(20.dp))
+            },
+            onClick = {
+                onDismiss()
+                onTest()
+            },
+        )
         DropdownMenuItem(
             text = { Text(stringResource(R.string.menu_item_share)) },
             trailingIcon = {
