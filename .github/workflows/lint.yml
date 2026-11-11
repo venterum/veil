@@ -1,0 +1,29 @@
+name: Lint workflows
+
+# Cheap guard for the files Dependabot touches. The full APK build is 15+
+# minutes and needs signing secrets, which Dependabot PRs cannot read, so a
+# syntax/expression lint is the meaningful check these PRs can get.
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - ".github/dependabot.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/**"
+      - ".github/dependabot.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: actionlint
+        uses: raven-actions/actionlint@v2

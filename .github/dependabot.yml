@@ -1,6 +1,21 @@
 version: 2
+
+# Only GitHub Actions are tracked automatically. Gradle versions are pinned by
+# hand on purpose (material3 rc/alpha line, AGP, Kotlin): Dependabot would open
+# a PR for every AndroidX artifact and break the pinned alpha pairings.
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
